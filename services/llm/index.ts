@@ -17,7 +17,10 @@ export function getLLMProvider(): LLMProvider {
   if (!e.LLM_API_KEY) {
     throw new ProcessingError("LLM_API_KEY is not configured. Set LLM_PROVIDER, LLM_API_KEY and LLM_MODEL in .env.", "LLM_NOT_CONFIGURED", false);
   }
-  instance = e.LLM_PROVIDER === "anthropic" ? new AnthropicProvider(e.LLM_API_KEY, e.LLM_BASE_URL) : new OpenAICompatibleProvider(e.LLM_API_KEY, e.LLM_BASE_URL);
+  instance =
+    e.LLM_PROVIDER === "anthropic"
+      ? new AnthropicProvider(e.LLM_API_KEY, e.LLM_BASE_URL)
+      : new OpenAICompatibleProvider(e.LLM_API_KEY, e.LLM_BASE_URL, e.APP_URL);
   return instance;
 }
 

@@ -167,11 +167,29 @@ LLM_PROVIDER=anthropic
 LLM_API_KEY=sk-ant-...
 LLM_MODEL=claude-sonnet-5
 
-# Groq / OpenRouter / Together / Azure / local Ollama (OpenAI-compatible)
+# OpenRouter (one key, many models)
 LLM_PROVIDER=openai
-LLM_BASE_URL=https://api.groq.com/openai/v1      # or http://localhost:11434/v1 for Ollama
-LLM_MODEL=llama-3.3-70b-versatile
+LLM_BASE_URL=https://openrouter.ai/api/v1
+LLM_API_KEY=sk-or-v1-...
+LLM_MODEL=meta-llama/llama-3.3-70b-instruct
+
+# Groq / Together / Azure / local Ollama (all OpenAI-compatible)
+LLM_PROVIDER=openai
+LLM_BASE_URL=http://localhost:11434/v1           # Ollama, no spend
+LLM_MODEL=llama3.1
 ```
+
+Pick a model with evidence rather than by reputation — `npm run bench:models` runs the real extraction prompt over the
+bundled CV fixtures and scores name / phone / role accuracy:
+
+```bash
+npx tsx scripts/bench-models.ts "openai/gpt-4o-mini,meta-llama/llama-3.3-70b-instruct"
+```
+
+**OpenRouter and candidate privacy.** Models with a `:free` suffix are served by providers that may retain and train on
+prompts. A CV prompt contains a real person's name and phone number, so those endpoints are blocked automatically for
+accounts that require Zero Data Retention. Keep that setting on and use a paid model (a 70B model costs roughly
+$0.15 per 1,000 CVs) unless you have deliberately accepted the trade-off.
 
 The extraction prompt is versioned in `services/llm/prompts/` (`LLM_PROMPT_VERSION=v1`). Output is schema-enforced
 (`response_format: json_schema` / Anthropic tool input) and validated again server-side.

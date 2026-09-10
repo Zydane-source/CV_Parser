@@ -16,9 +16,18 @@ export class OpenAICompatibleProvider implements LLMProvider {
   private baseUrl: string;
   private supportsJsonSchema: boolean | null = null;
 
-  constructor(apiKey: string, baseUrl?: string) {
+  private extraHeaders: Record<string, string> = {};
+
+  constructor(apiKey: string, baseUrl?: string, appUrl?: string) {
     this.apiKey = apiKey;
     this.baseUrl = (baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
+    // OpenRouter asks callers to identify the app; it also improves rate limits.
+    if (/openrouter\.ai/i.test(this.baseUrl)) {
+      this.extraHeaders = {
+        "HTTP-Referer": appUrl || "http://localhost:3000",
+        "X-Title": "CV Parser",
+      };
+    }
   }
 
   private async call(opts: LLMRequestOptions, mode: "json_schema" | "json_object" | "none"): Promise<Response> {
@@ -47,6 +56,7 @@ export class OpenAICompatibleProvider implements LLMProvider {
         headers: {
           "content-type": "application/json",
           authorization: `Bearer ${this.apiKey}`,
+          ...this.extraHeaders,
         },
         body: JSON.stringify(body),
         signal: controller.signal,
