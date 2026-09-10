@@ -38,10 +38,18 @@ export async function listJobs(f: JobFilters) {
   return { items, total, page: f.page, pageSize: f.pageSize, pages: Math.max(1, Math.ceil(total / f.pageSize)) };
 }
 
-/** Progress summary for a batch or the whole system (latest job per file is what CVFile.status reflects). */
+/**
+ * Progress summary for a batch (or the last 24 hours).
+ *
+ * Counts distinct CVs, not ProcessingJob rows: a CV that was retried has several
+ * job rows, and counting those inflated the totals and made "Retry all failed
+ * (N)" disagree with the number of CVs the retry action actually re-queues.
+ */
 export async function batchProgress(batchId?: string) {
-  const where: Prisma.ProcessingJobWhereInput = batchId ? { batchId } : { createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } };
-  const rows = await prisma.processingJob.groupBy({ by: ["status"], where, _count: { _all: true } });
+  const where: Prisma.CVFileWhereInput = batchId
+    ? { jobs: { some: { batchId } } }
+    : { jobs: { some: { createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } } } };
+  const rows = await prisma.cVFile.groupBy({ by: ["status"], where, _count: { _all: true } });
   const c = (s: string) => rows.find((r) => r.status === s)?._count._all ?? 0;
   const total = rows.reduce((a, r) => a + r._count._all, 0);
   const done = c("PROCESSED") + c("NEEDS_REVIEW") + c("FAILED") + c("SKIPPED");
