@@ -10,7 +10,9 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function upsert(email: string, password: string, name: string, role: UserRole) {
-  if (!email || !password) throw new Error("email and password are required");
+  // `email` is the login identifier: an address or a bare username such as "admin".
+  if (!email || !password) throw new Error("identifier and password are required");
+  if (/\s/.test(email.trim())) throw new Error(`Login identifier must not contain spaces: "${email}"`);
   if (password.length < 8) throw new Error(`Password for ${email} must be at least 8 characters`);
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await prisma.user.upsert({

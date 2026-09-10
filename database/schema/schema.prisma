@@ -49,6 +49,9 @@ enum ExtractionMethod {
 
 model User {
   id           String   @id @default(cuid())
+  /// Login identifier, stored lower-cased. Usually an email, but a bare username
+  /// such as "admin" is valid too: accounts are created by an administrator and
+  /// there is no public sign-up, so no address verification depends on this.
   email        String   @unique
   name         String
   passwordHash String

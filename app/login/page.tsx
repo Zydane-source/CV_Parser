@@ -40,8 +40,8 @@ function LoginForm() {
           <p className="text-xs text-gray-500">Sign in to continue</p>
         </div>
       </div>
-      <label className="label">Email</label>
-      <input className="input mb-4" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
+      <label className="label">Email or username</label>
+      <input className="input mb-4" type="text" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
       <label className="label">Password</label>
       <input className="input mb-4" type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
       {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div>}

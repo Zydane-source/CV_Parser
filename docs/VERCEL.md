@@ -66,7 +66,7 @@ For reference, the environment file sets:
 | `DIRECT_URL` | Neon **direct** (non-pooled) string. Optional: migrations fall back to `DATABASE_URL`. |
 | `AUTH_SECRET` | 48 random bytes, base64 |
 | `CRON_SECRET` | 32 random bytes, base64url |
-| `ADMIN_EMAIL` | your login email |
+| `ADMIN_EMAIL` | login identifier — an email or a bare username such as `admin` |
 | `ADMIN_PASSWORD` | a strong password, 8+ characters |
 | `MAX_FILE_SIZE_MB` | `4` — Vercel caps request bodies at 4.5 MB |
 | `STORAGE_DRIVER` | `vercel-blob` |
@@ -100,8 +100,11 @@ migrations to `DIRECT_URL` when it is set and to `DATABASE_URL` otherwise.
 
 ## 6. Your login — already created
 
-`hello@caller.digital` is already seeded on the Neon database with the password in the environment
+The account **`admin`** is already seeded on the Neon database, with the password in the environment
 file you were given. Open `https://<your-project>.vercel.app` and sign in.
+
+The login identifier does not have to be an email address. Accounts are created only by an
+administrator and nothing is ever sent to that address, so a bare username such as `admin` is valid.
 
 To add or reset a user later, run from your machine against the same database:
 
