@@ -1,12 +1,20 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "buildCommand": "prisma generate && node scripts/migrate.mjs && next build",
   "framework": "nextjs",
   "functions": {
-    "app/api/jobs/drain/route.ts": { "maxDuration": 60 },
-    "app/api/uploads/route.ts": { "maxDuration": 60 },
-    "app/api/candidates/export/route.ts": { "maxDuration": 60 },
-    "app/api/google-sheets/export/route.ts": { "maxDuration": 60 }
+    "app/api/jobs/drain/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/uploads/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/candidates/export/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/google-sheets/export/route.ts": {
+      "maxDuration": 60
+    }
   },
   "crons": [
     {

@@ -9,11 +9,14 @@ datasource db {
   provider = "postgresql"
   // Runtime queries. On Neon/Supabase use the POOLED connection string: serverless
   // functions open many short-lived connections and would exhaust a direct one.
+  //
+  // `directUrl` is deliberately NOT declared here. Prisma treats it as mandatory
+  // once present and fails validation when it resolves to empty, which breaks any
+  // deployment that has no pooler. Migrations instead receive the direct host by
+  // overriding DATABASE_URL for that one command — see the `db:migrate` script and
+  // the Vercel buildCommand, which both fall back to DATABASE_URL when DIRECT_URL
+  // is unset.
   url      = env("DATABASE_URL")
-  // Schema migrations. Connection poolers run in transaction mode and cannot run
-  // DDL or advisory locks, so migrations need the direct (non-pooled) host.
-  // Falls back to DATABASE_URL when unset, which is correct for a plain Postgres.
-  directUrl = env("DIRECT_URL")
 }
 
 enum SourceType {

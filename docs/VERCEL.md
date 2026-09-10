@@ -22,7 +22,7 @@ Render or Fly.io against the same database, then switch to `queue`.
 ## 1. Database and repository — already done
 
 - **Neon** project `neondb` in **us-east-2**: schema migrated (8 tables, 29 indexes) and the admin
-  user seeded. `vercel.json` pins the deployment to `cle1` so the functions sit beside it.
+  user seeded. Vercel Hobby deploys to its default region, `iad1`, one short hop away.
 - **GitHub**: <https://github.com/Zydane-source/CV_Parser>, branch `main`.
 
 ## 2. Import into Vercel
@@ -63,7 +63,7 @@ For reference, the environment file sets:
 |---|---|
 | `PROCESSING_MODE` | `inline` |
 | `DATABASE_URL` | Neon **pooled** connection string |
-| `DIRECT_URL` | Neon **direct** (non-pooled) string, used only for migrations |
+| `DIRECT_URL` | Neon **direct** (non-pooled) string. Optional: migrations fall back to `DATABASE_URL`. |
 | `AUTH_SECRET` | 48 random bytes, base64 |
 | `CRON_SECRET` | 32 random bytes, base64url |
 | `ADMIN_EMAIL` | your login email |
@@ -94,8 +94,9 @@ Vercel is wiped between invocations. Confirm the store is linked to *this* proje
 
 ## 5. Deploy
 
-Click **Deploy**. The build command in `vercel.json` runs `prisma generate && prisma migrate deploy
-&& next build`, so the database schema is created as part of the first deploy.
+Click **Deploy**. The build command in `vercel.json` runs `prisma generate && node scripts/migrate.mjs
+&& next build`, so the database schema is created as part of the first deploy. That script sends
+migrations to `DIRECT_URL` when it is set and to `DATABASE_URL` otherwise.
 
 ## 6. Your login — already created
 
