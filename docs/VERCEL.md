@@ -19,36 +19,29 @@ about 9 seconds including OCR, so a 100-CV batch finishes in roughly 8 minutes w
 If you later need heavier throughput, keep the Vercel front end and run the worker on Railway,
 Render or Fly.io against the same database, then switch to `queue`.
 
-## 1. Create the database (Neon)
+## 1. Database and repository — already done
 
-1. Go to <https://neon.tech>, sign up, create a project in a region near you (`ap-south-1` for India).
-2. Copy the **pooled** connection string. It looks like
-   `postgresql://user:pass@ep-xxx-pooler.ap-south-1.aws.neon.tech/neondb?sslmode=require`.
-   The pooled host matters: serverless functions open many short connections.
-3. Keep it for step 4 as `DATABASE_URL`.
+- **Neon** project `neondb` in **us-east-2**: schema migrated (8 tables, 29 indexes) and the admin
+  user seeded. `vercel.json` pins the deployment to `cle1` so the functions sit beside it.
+- **GitHub**: <https://github.com/Zydane-source/CV_Parser>, branch `main`.
 
-Supabase, Railway Postgres or any managed Postgres 14+ works equally well. The schema is created
-automatically on first deploy by the build command in `vercel.json`.
-
-## 2. Push the code to GitHub
-
-```bash
-git remote add origin https://github.com/<you>/cv-parser.git
-git push -u origin main
-```
-
-`.env` is gitignored, so no secrets leave your machine.
-
-## 3. Import into Vercel
+## 2. Import into Vercel
 
 1. <https://vercel.com/new> → import the repository.
 2. Framework preset: **Next.js** (detected automatically).
 3. Do not deploy yet — add the environment variables first.
 
-## 4. Environment variables
+## 3. Environment variables
 
-In **Project → Settings → Environment Variables**, add these for Production (and Preview if you
-want previews to work):
+In **Project → Settings → Environment Variables** use **Import .env** and paste the file you were
+given, which already contains every value below filled in. Add `APP_URL` separately after the first
+deploy, once you know the domain:
+
+| Variable | Value |
+|---|---|
+| `APP_URL` | `https://<your-project>.vercel.app` |
+
+For reference, the imported file sets:
 
 | Variable | Value |
 |---|---|
@@ -75,29 +68,30 @@ Optional, for Google Drive and Sheets:
 
 Do **not** set `REDIS_URL` in inline mode. Leave it unset.
 
-## 5. Attach a Blob store
+## 4. Blob store — already attached
 
-**Project → Storage → Create Database → Blob**. Vercel injects `BLOB_READ_WRITE_TOKEN`
-automatically, which is what `STORAGE_DRIVER=vercel-blob` reads. Uploaded CVs go there instead of
-the filesystem, which on Vercel is wiped between invocations.
+The `CV_Parser` Blob store is attached, so Vercel injects `BLOB_READ_WRITE_TOKEN` for you — that is
+what `STORAGE_DRIVER=vercel-blob` reads. Uploaded CVs go there instead of the filesystem, which on
+Vercel is wiped between invocations. Confirm the store is linked to *this* project under
+**Project → Storage**; a store attached to a different project will not inject its token here.
 
-## 6. Deploy
+## 5. Deploy
 
 Click **Deploy**. The build command in `vercel.json` runs `prisma generate && prisma migrate deploy
 && next build`, so the database schema is created as part of the first deploy.
 
-## 7. Create your login
+## 6. Your login — already created
 
-The admin user is created from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. Run once from your machine,
-pointing at the deployed database:
+`hello@caller.digital` is already seeded on the Neon database with the password in the environment
+file you were given. Open `https://<your-project>.vercel.app` and sign in.
+
+To add or reset a user later, run from your machine against the same database:
 
 ```bash
-DATABASE_URL="<your Neon connection string>" ADMIN_EMAIL="you@example.com" ADMIN_PASSWORD="<strong password>" npm run db:seed
+DATABASE_URL="<neon pooled url>" ADMIN_EMAIL="you@example.com" ADMIN_PASSWORD="<strong password>" npm run db:seed
 ```
 
-Then open `https://<your-project>.vercel.app` and sign in.
-
-## 8. Confirm it works
+## 7. Confirm it works
 
 ```bash
 curl https://<your-project>.vercel.app/api/health
