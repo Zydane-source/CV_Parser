@@ -7,7 +7,8 @@ import { api } from "@/lib/client/api";
 import { formatRelative, SOURCE_LABEL } from "@/lib/client/format";
 import { useJobStream } from "@/lib/client/useJobStream";
 import { StatusBadge } from "./StatusBadge";
-import { SystemAlerts, WorkerPill } from "./SystemAlerts";
+import { WorkerPill } from "./SystemAlerts";
+import { WorkerBanner } from "./WorkerBanner";
 
 const STATUSES = ["", "PENDING", "PROCESSING", "PROCESSED", "NEEDS_REVIEW", "FAILED", "SKIPPED"];
 
@@ -39,7 +40,7 @@ export function JobsMonitor({ initialBatchId }: { initialBatchId?: string }) {
 
   return (
     <div className="space-y-4">
-      <SystemAlerts worker={data?.worker} pendingCount={p?.pending ?? 0} />
+      <WorkerBanner />
       <div className="card p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[260px] flex-1">

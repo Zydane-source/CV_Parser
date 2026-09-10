@@ -13,7 +13,7 @@ import { randomToken } from "@/lib/crypto";
  * Files are never served with an executable content type.
  */
 export interface StorageProvider {
-  readonly name: "local" | "s3";
+  readonly name: "local" | "s3" | "vercel-blob";
   put(key: string, data: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
@@ -113,12 +113,79 @@ class S3StorageProvider implements StorageProvider {
   }
 }
 
+/**
+ * Vercel Blob. Chosen for serverless deployments because the filesystem there is
+ * ephemeral: an upload written to disk disappears with the function instance.
+ */
+class VercelBlobStorageProvider implements StorageProvider {
+  readonly name = "vercel-blob" as const;
+  private token: string;
+  /** Blob keys map to absolute URLs; cache them so get/delete need no lookup. */
+  private urlCache = new Map<string, string>();
+
+  constructor(token: string) {
+    if (!token) throw new Error('STORAGE_DRIVER=vercel-blob requires BLOB_READ_WRITE_TOKEN (Vercel sets it when you attach a Blob store)');
+    this.token = token;
+  }
+
+  private async resolveUrl(key: string): Promise<string> {
+    const cached = this.urlCache.get(key);
+    if (cached) return cached;
+    const { list } = await import("@vercel/blob");
+    const res = await list({ prefix: key, limit: 1, token: this.token });
+    const found = res.blobs.find((b) => b.pathname === key);
+    if (!found) throw new Error(`Blob not found: ${key}`);
+    this.urlCache.set(key, found.url);
+    return found.url;
+  }
+
+  async put(key: string, data: Buffer, contentType: string): Promise<void> {
+    const { put } = await import("@vercel/blob");
+    const res = await put(key, data, {
+      access: "public",
+      contentType,
+      token: this.token,
+      // Keep our own opaque key as the pathname so the DB stays the index.
+      addRandomSuffix: false,
+      // CVs are personal data: never let a CDN or browser hold on to them.
+      cacheControlMaxAge: 0,
+    });
+    this.urlCache.set(key, res.url);
+  }
+
+  async get(key: string): Promise<Buffer> {
+    const url = await this.resolveUrl(key);
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Blob fetch failed for ${key}: HTTP ${res.status}`);
+    return Buffer.from(await res.arrayBuffer());
+  }
+
+  async delete(key: string): Promise<void> {
+    const { del } = await import("@vercel/blob");
+    const url = await this.resolveUrl(key).catch(() => null);
+    if (!url) return;
+    await del(url, { token: this.token });
+    this.urlCache.delete(key);
+  }
+
+  async exists(key: string): Promise<boolean> {
+    try {
+      await this.resolveUrl(key);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 let instance: StorageProvider | null = null;
 
 export function getStorage(): StorageProvider {
   if (instance) return instance;
   const e = env();
-  instance = e.STORAGE_DRIVER === "s3" ? new S3StorageProvider() : new LocalStorageProvider(e.LOCAL_STORAGE_PATH);
+  if (e.STORAGE_DRIVER === "s3") instance = new S3StorageProvider();
+  else if (e.STORAGE_DRIVER === "vercel-blob") instance = new VercelBlobStorageProvider(e.BLOB_READ_WRITE_TOKEN);
+  else instance = new LocalStorageProvider(e.LOCAL_STORAGE_PATH);
   return instance;
 }
 

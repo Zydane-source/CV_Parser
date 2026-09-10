@@ -10,7 +10,9 @@ import { jwtVerify } from "jose";
  */
 const SESSION_COOKIE = "cvp_session";
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/health", "/api/google-drive/webhook"];
+// "/api/jobs/drain" is listed here because a scheduler (Vercel Cron) calls it
+// with a bearer secret rather than a session cookie; the route authorizes itself.
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/health", "/api/google-drive/webhook", "/api/jobs/drain"];
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true;

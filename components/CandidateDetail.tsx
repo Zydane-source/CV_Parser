@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { ArrowLeft, ExternalLink, Pencil, RefreshCw, Save, X, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ExternalLink, Pencil, RefreshCw, Save, X, AlertTriangle, Trash2 } from "lucide-react";
 import { api, fetcher } from "@/lib/client/api";
 import { formatBytes, formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { StatusBadge } from "./StatusBadge";
 import { ConfidenceBar } from "./Confidence";
+import { DeleteCvDialog, type DeleteTarget } from "./DeleteCvDialog";
 
 interface Detail {
   id: string;
@@ -74,6 +76,8 @@ export function CandidateDetail({ id, threshold, startEditing }: { id: string; t
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [reprocessing, setReprocessing] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (data?.candidate && !editing) {
@@ -139,6 +143,7 @@ export function CandidateDetail({ id, threshold, startEditing }: { id: string; t
 
   return (
     <div className="space-y-5">
+      <DeleteCvDialog target={deleteTarget} onClose={() => setDeleteTarget(null)} onDeleted={() => router.push("/candidates")} />
       <div className="flex items-center justify-between">
         <Link href="/candidates" className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900">
           <ArrowLeft size={15} /> Back to candidates
@@ -164,6 +169,12 @@ export function CandidateDetail({ id, threshold, startEditing }: { id: string; t
           <a href={openUrl} target="_blank" rel="noreferrer" className="btn-primary btn-sm">
             <ExternalLink size={13} /> Open Original CV
           </a>
+          <button
+            className="btn btn-sm border border-red-200 bg-white text-red-700 hover:bg-red-50"
+            onClick={() => setDeleteTarget({ ids: [data.id], label: data.fileName, hasDriveFiles: data.sourceType === "GOOGLE_DRIVE" })}
+          >
+            <Trash2 size={13} /> Delete
+          </button>
         </div>
       </div>
 

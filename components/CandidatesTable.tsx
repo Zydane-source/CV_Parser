@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
-import { Search, RefreshCw, ExternalLink, Pencil, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, RefreshCw, ExternalLink, Pencil, Eye, ChevronLeft, ChevronRight, Trash2, Plus } from "lucide-react";
 import { api, fetcher } from "@/lib/client/api";
 import { formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { StatusBadge } from "./StatusBadge";
 import { ConfidenceBar } from "./Confidence";
 import { ExportButton } from "./ExportButton";
 import { DownloadCsvButton } from "./DownloadCsvButton";
+import { DeleteCvDialog, type DeleteTarget } from "./DeleteCvDialog";
 
 export interface CandidateRowDto {
   id: string;
@@ -50,12 +51,18 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
   const [to, setTo] = useState("");
   const [page, setPage] = useState(1);
   const [busy, setBusy] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 300);
     return () => clearTimeout(t);
   }, [q]);
-  useEffect(() => setPage(1), [debouncedQ, source, status, role, from, to]);
+  useEffect(() => {
+    setPage(1);
+    setSelected(new Set());
+  }, [debouncedQ, source, status, role, from, to]);
 
   const query = useMemo(() => {
     const p = new URLSearchParams();
@@ -85,8 +92,38 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
 
   const filters = { q: debouncedQ || undefined, source: source || undefined, status: status || undefined, role: role || undefined, from: from || undefined, to: to || undefined };
 
+  const rows = data?.items ?? [];
+  const allOnPageSelected = rows.length > 0 && rows.every((r) => selected.has(r.id));
+  const toggleRow = (id: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  const togglePage = () =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allOnPageSelected) rows.forEach((r) => next.delete(r.id));
+      else rows.forEach((r) => next.add(r.id));
+      return next;
+    });
+  const selectedRows = rows.filter((r) => selected.has(r.id));
+  const askDeleteSelected = () =>
+    setDeleteTarget({ ids: [...selected], hasDriveFiles: selectedRows.some((r) => r.sourceType === "GOOGLE_DRIVE") });
+
   return (
     <div className="space-y-4">
+      <DeleteCvDialog
+        target={deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onDeleted={(n) => {
+          setSelected(new Set());
+          setNotice(`Deleted ${n} CV${n === 1 ? "" : "s"}.`);
+          setTimeout(() => setNotice(null), 4000);
+          void mutate();
+        }}
+      />
       <div className="card p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
           <div className="relative md:col-span-2">
@@ -121,10 +158,19 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
         </div>
       </div>
 
+      {notice && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">{notice}</div>}
+
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
           <div className="text-sm text-gray-600">
-            {data ? (
+            {selected.size > 0 ? (
+              <span className="inline-flex items-center gap-3">
+                <span className="font-semibold text-gray-900">{selected.size} selected</span>
+                <button className="text-xs font-medium text-gray-500 hover:text-gray-900 hover:underline" onClick={() => setSelected(new Set())}>
+                  Clear
+                </button>
+              </span>
+            ) : data ? (
               <>
                 <span className="font-semibold text-gray-900">{data.total.toLocaleString("en-IN")}</span> candidate{data.total === 1 ? "" : "s"}
               </>
@@ -133,6 +179,14 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
             )}
           </div>
           <div className="flex items-center gap-2">
+            {selected.size > 0 && (
+              <button className="btn btn-sm border border-red-200 bg-white text-red-700 hover:bg-red-50" onClick={askDeleteSelected}>
+                <Trash2 size={13} /> Delete {selected.size}
+              </button>
+            )}
+            <Link href="/upload" className="btn-secondary btn-sm">
+              <Plus size={13} /> Add CVs
+            </Link>
             <button className="btn-secondary btn-sm" onClick={() => mutate()} disabled={isLoading}>
               <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} /> Refresh
             </button>
@@ -144,6 +198,18 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
           <table className="table">
             <thead>
               <tr>
+                <th className="w-9 pr-0">
+                  <input
+                    type="checkbox"
+                    className="cursor-pointer"
+                    checked={allOnPageSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !allOnPageSelected && rows.some((r) => selected.has(r.id));
+                    }}
+                    onChange={togglePage}
+                    aria-label="Select all on this page"
+                  />
+                </th>
                 <th>Candidate Name</th>
                 <th>Phone Number</th>
                 <th>Job Role</th>
@@ -155,8 +221,17 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
               </tr>
             </thead>
             <tbody>
-              {data?.items.map((row) => (
-                <tr key={row.id}>
+              {rows.map((row) => (
+                <tr key={row.id} className={selected.has(row.id) ? "bg-brand-50/40" : undefined}>
+                  <td className="pr-0">
+                    <input
+                      type="checkbox"
+                      className="cursor-pointer"
+                      checked={selected.has(row.id)}
+                      onChange={() => toggleRow(row.id)}
+                      aria-label={`Select ${row.fileName}`}
+                    />
+                  </td>
                   <td>
                     <Link href={`/candidates/${row.id}`} className="font-medium text-gray-900 hover:text-brand-700">
                       {row.candidate?.candidateName ?? <span className="text-gray-400">—</span>}
@@ -201,13 +276,20 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
                       >
                         <ExternalLink size={15} />
                       </a>
+                      <button
+                        onClick={() => setDeleteTarget({ ids: [row.id], label: row.fileName, hasDriveFiles: row.sourceType === "GOOGLE_DRIVE" })}
+                        className="rounded p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-700"
+                        title="Delete CV"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
               {data && data.items.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-sm text-gray-500">
+                  <td colSpan={9} className="py-12 text-center text-sm text-gray-500">
                     No candidates match these filters.
                   </td>
                 </tr>

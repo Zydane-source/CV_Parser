@@ -33,6 +33,7 @@
     "@aws-sdk/s3-request-presigner": "^3.700.0",
     "@napi-rs/canvas": "^0.1.60",
     "@prisma/client": "^6.5.0",
+    "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.2",
     "bullmq": "^5.40.0",
     "clsx": "^2.1.1",

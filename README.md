@@ -262,6 +262,10 @@ Mutating requests must be same-origin (CSRF). Every request body / query is vali
 | POST | `/api/candidates/:id/reprocess` | re-run pipeline (manual corrections preserved) |
 | GET | `/api/candidates/roles` | job roles for filters |
 | GET | `/api/candidates/export?<filters>[&columns=all]` | stream the current selection as CSV (name, phone, job role; `columns=all` adds file name, link, source, status, confidence, date) |
+| DELETE | `/api/candidates/:id` | delete one CV, its candidate, its jobs and the stored file |
+| POST | `/api/candidates/bulk-delete` | delete up to 500 CVs `{ids, ignoreFutureSync?}` |
+| POST/GET | `/api/jobs/drain` | process pending CVs without a worker (serverless mode; session or `CRON_SECRET`) |
+| GET | `/api/worker-status` | worker liveness, pending count and processing mode |
 | GET | `/api/cv-files/:id/download` | original CV (attachment, nosniff) |
 | GET | `/api/jobs` · `/api/jobs/stream` (SSE) | job list / live progress |
 | POST | `/api/jobs/retry-failed` · `/api/jobs/:id/retry` | retry failed CVs |
@@ -293,8 +297,12 @@ reproducible offline; the real providers are tested with mocked HTTP for error h
 
 ## Production deployment
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (Docker Compose, PaaS, Kubernetes; HTTPS, managed Postgres/Redis,
-S3 storage, worker scaling, migrations, security checklist).
+**Vercel:** [docs/VERCEL.md](docs/VERCEL.md) — a live, shareable HTTPS deployment in about 20 minutes using Neon
+Postgres and Vercel Blob, with no separate worker host. Read the first section: Vercel cannot run the always-on
+worker, so the app switches to `PROCESSING_MODE=inline` there.
+
+**Everything else:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (Docker Compose, PaaS, Kubernetes; HTTPS, managed
+Postgres/Redis, S3 storage, worker scaling, migrations, security checklist).
 
 ```bash
 npm run build && npm start          # web

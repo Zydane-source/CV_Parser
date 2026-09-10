@@ -1,0 +1,18 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "prisma generate && prisma migrate deploy && next build",
+  "framework": "nextjs",
+  "regions": ["bom1"],
+  "functions": {
+    "app/api/jobs/drain/route.ts": { "maxDuration": 300, "memory": 2048 },
+    "app/api/uploads/route.ts": { "maxDuration": 60, "memory": 1024 },
+    "app/api/candidates/export/route.ts": { "maxDuration": 300 },
+    "app/api/google-sheets/export/route.ts": { "maxDuration": 300 }
+  },
+  "crons": [
+    {
+      "path": "/api/jobs/drain",
+      "schedule": "*/5 * * * *"
+    }
+  ]
+}

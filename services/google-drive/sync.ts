@@ -4,6 +4,7 @@ import { errorMessage } from "@/lib/errors";
 import { enqueueCVFile, reprocessCVFile } from "@/services/processing/enqueue";
 import { listCvFilesInFolder, listChanges, getStartPageToken, effectiveMime, type DriveCvFile } from "./files";
 import { ensureWatch } from "./watch";
+import { getIgnoredDriveFileIds } from "@/backend/delete";
 
 /**
  * Google Drive synchronisation.
@@ -47,6 +48,9 @@ export async function syncConnection(connectionId: string, opts: { full?: boolea
       newToken = changes.newStartPageToken;
       result.mode = "incremental";
     }
+    // Files the user deleted from the app must not be silently re-imported.
+    const ignored = new Set(await getIgnoredDriveFileIds());
+    if (ignored.size) files = files.filter((f) => !ignored.has(f.id));
     result.discovered = files.length;
 
     for (const f of files) {

@@ -61,7 +61,21 @@ const envSchema = z.object({
   OCR_MIN_TEXT_CHARS: num(150),
   OCR_MAX_PAGES: num(5),
 
-  STORAGE_DRIVER: z.enum(["local", "s3"]).optional().default("local"),
+  /**
+   * "queue"  – a separate always-on worker consumes BullMQ (best for bulk).
+   * "inline" – no worker process: jobs are drained by /api/jobs/drain, driven by
+   *            the browser while a batch is in flight and by a scheduled cron.
+   *            This is what makes a serverless deployment (Vercel) work.
+   */
+  PROCESSING_MODE: z.enum(["queue", "inline"]).optional().default("queue"),
+  /** Shared secret for the scheduled drain endpoint (Vercel Cron sends it). */
+  CRON_SECRET: str(""),
+  /** Max CVs one drain invocation will process, and how long it may run. */
+  DRAIN_BATCH_SIZE: num(2),
+  DRAIN_TIME_BUDGET_MS: num(45000),
+  BLOB_READ_WRITE_TOKEN: str(""),
+
+  STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob"]).optional().default("local"),
   LOCAL_STORAGE_PATH: str("./uploads"),
   STORAGE_BUCKET: str(""),
   STORAGE_REGION: str(""),

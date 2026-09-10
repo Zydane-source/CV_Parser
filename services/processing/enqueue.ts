@@ -1,6 +1,7 @@
 import type { CVFile, ProcessingJob } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
+import { env } from "@/lib/config";
 import { getCVQueue, cvJobOptions } from "./queue";
 
 /**
@@ -19,6 +20,10 @@ export async function enqueueCVFile(cvFile: Pick<CVFile, "id">, opts: { batchId?
     },
   });
   await prisma.cVFile.update({ where: { id: cvFile.id }, data: { status: "PENDING", statusMessage: null } });
+
+  // Inline mode has no worker and no Redis: the DB row *is* the queue, and
+  // /api/jobs/drain picks it up. Returning here keeps uploads fast.
+  if (env().PROCESSING_MODE === "inline") return job;
 
   try {
     // BullMQ custom ids must not contain ":" – use "cv-<jobId>".
