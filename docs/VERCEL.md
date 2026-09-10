@@ -133,20 +133,40 @@ is deliberate: the app holds candidates' personal data.
 
 ## Limits and costs on Vercel
 
-| Concern | Hobby | Pro |
+`vercel.json` is committed **configured for Hobby**, because exceeding a plan limit is a hard
+deployment failure, not a warning.
+
+| Concern | Hobby (current config) | Pro |
 |---|---|---|
-| Function duration | 60s (the drain endpoint requests 300s and is capped to the plan limit) | 300s |
-| Cron frequency | once per day | as configured (`*/5 * * * *` in `vercel.json`) |
+| Function duration | 60s | up to 300s |
+| Cron frequency | once per day (`0 3 * * *`) | any (`*/5 * * * *`) |
+| Function region | default only, so `regions` is omitted | selectable |
+| Memory per function | fixed | configurable |
 | Upload body size | 4.5 MB per request | 4.5 MB per request |
 
-Two consequences worth planning for:
+Consequences worth planning for:
 
-- **On Hobby the cron only runs daily.** Batches still finish while the tab is open, because the
-  browser drives the drain; the cron is the safety net for anything left behind. On Pro it retries
-  every 5 minutes.
-- **The 4.5 MB request limit** applies to the whole upload request. The upload page already chunks
-  large batches, but a single CV over about 4 MB will be rejected. Lower `MAX_FILE_SIZE_MB` to `4`
-  to fail early with a clear message.
+- **The cron only runs daily.** Batches still finish while the tab is open, because the browser
+  drives the drain; the cron is only the safety net for anything left behind.
+- **The 4.5 MB request limit** applies to the whole upload request, which is why
+  `MAX_FILE_SIZE_MB=4` — a larger CV then fails immediately with a clear message instead of a
+  confusing platform error.
+- **Region.** The default region is `iad1` (Washington DC), one short hop from a Neon `us-east-2`
+  project, so the omission costs little. Pairing a database with a distant region is expensive: the
+  same 2-CV drain measured 25s across continents versus 9.5s co-located.
+
+### Raising these on Pro
+
+1. In `vercel.json`, set the four `maxDuration` values to `300`, change the cron to `*/5 * * * *`,
+   and add `"regions": ["cle1"]` to match a `us-east-2` database.
+2. Change `export const maxDuration` to `300` in the four route files under `app/api/`.
+3. Raise `DRAIN_BATCH_SIZE` from `2` to about `8` so each invocation earns its cold start.
+
+### `vercel.json` gotcha
+
+That file is validated against a strict schema that rejects unknown properties, and JSON has no
+comment syntax. A key like `_comment_regions` fails the deployment with
+`Invalid request: should NOT have additional property`. Keep explanations in this document.
 
 Running costs: Neon and Vercel Blob both have free tiers that comfortably cover a recruiting team.
 The LLM is the only usage-based cost, at roughly $0.15 per 1,000 CVs on the configured model.

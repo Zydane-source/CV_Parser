@@ -5,7 +5,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { deleteCVs, deleteRequestSchema } from "@/backend/delete";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 /**
  * POST /api/candidates/bulk-delete  { ids: string[], ignoreFutureSync?: boolean }

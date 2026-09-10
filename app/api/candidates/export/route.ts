@@ -8,7 +8,7 @@ import { UTF8_BOM, csvRow, csvFileName } from "@/services/export/csv";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 /**
  * GET /api/candidates/export?<same filters as /api/candidates>[&columns=all]

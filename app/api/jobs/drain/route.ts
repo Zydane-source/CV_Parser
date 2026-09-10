@@ -7,8 +7,10 @@ import { drainPendingJobs } from "@/services/processing/drain";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-// Serverless ceiling. OCR of a scanned PDF plus an LLM call needs headroom.
-export const maxDuration = 300;
+// 60s is the Vercel Hobby ceiling; a higher value fails the build there. Raise to
+// 300 on Pro if you also raise DRAIN_BATCH_SIZE. The drain loop stops starting new
+// CVs at 60% of DRAIN_TIME_BUDGET_MS, so it finishes well inside this limit.
+export const maxDuration = 60;
 
 /**
  * POST /api/jobs/drain – process a few pending CVs and return.

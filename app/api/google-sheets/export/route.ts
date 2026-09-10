@@ -7,7 +7,7 @@ import { candidateFiltersSchema } from "@/backend/candidates";
 import { exportCandidatesToSheets } from "@/services/google-sheets";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 const schema = z.object({
   filters: candidateFiltersSchema.omit({ page: true, pageSize: true }).partial().optional(),
