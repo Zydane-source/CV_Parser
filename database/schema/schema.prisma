@@ -7,7 +7,13 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  // Runtime queries. On Neon/Supabase use the POOLED connection string: serverless
+  // functions open many short-lived connections and would exhaust a direct one.
   url      = env("DATABASE_URL")
+  // Schema migrations. Connection poolers run in transaction mode and cannot run
+  // DDL or advisory locks, so migrations need the direct (non-pooled) host.
+  // Falls back to DATABASE_URL when unset, which is correct for a plain Postgres.
+  directUrl = env("DIRECT_URL")
 }
 
 enum SourceType {
