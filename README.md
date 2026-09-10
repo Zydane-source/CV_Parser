@@ -8,6 +8,9 @@ PostgreSQL. Recruiters search, filter, review, correct, reprocess and export can
 Extracted fields: **Candidate Name**, **Phone Number** (normalised to `+91XXXXXXXXXX`), **Job Role Applied For**,
 each with a confidence score. Missing information is reported as `Not Found` – never invented.
 
+Results leave the system two ways: **Download CSV** (the three fields, or every column) and **Export to Google
+Sheets**. Both apply whatever search and filters are active on the Candidates page.
+
 ## Contents
 
 - [Architecture](#architecture)
@@ -258,6 +261,7 @@ Mutating requests must be same-origin (CSRF). Every request body / query is vali
 | GET / PATCH | `/api/candidates/:id` | detail / manual correction (`is_manually_corrected`) |
 | POST | `/api/candidates/:id/reprocess` | re-run pipeline (manual corrections preserved) |
 | GET | `/api/candidates/roles` | job roles for filters |
+| GET | `/api/candidates/export?<filters>[&columns=all]` | stream the current selection as CSV (name, phone, job role; `columns=all` adds file name, link, source, status, confidence, date) |
 | GET | `/api/cv-files/:id/download` | original CV (attachment, nosniff) |
 | GET | `/api/jobs` · `/api/jobs/stream` (SSE) | job list / live progress |
 | POST | `/api/jobs/retry-failed` · `/api/jobs/:id/retry` | retry failed CVs |

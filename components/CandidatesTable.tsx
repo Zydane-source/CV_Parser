@@ -9,6 +9,7 @@ import { formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { StatusBadge } from "./StatusBadge";
 import { ConfidenceBar } from "./Confidence";
 import { ExportButton } from "./ExportButton";
+import { DownloadCsvButton } from "./DownloadCsvButton";
 
 export interface CandidateRowDto {
   id: string;
@@ -135,6 +136,7 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
             <button className="btn-secondary btn-sm" onClick={() => mutate()} disabled={isLoading}>
               <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} /> Refresh
             </button>
+            <DownloadCsvButton filters={filters} total={data?.total} />
             <ExportButton filters={filters} />
           </div>
         </div>
