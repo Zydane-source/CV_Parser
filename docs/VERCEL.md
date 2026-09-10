@@ -33,25 +33,42 @@ Render or Fly.io against the same database, then switch to `queue`.
 
 ## 3. Environment variables
 
-In **Project → Settings → Environment Variables** use **Import .env** and paste the file you were
-given, which already contains every value below filled in. Add `APP_URL` separately after the first
-deploy, once you know the domain:
+**Do not use the Environment Variables box on the import screen.** Vercel pre-fills that form with
+all ~50 keys from this repo's `.env.example`, and anything you paste is *added* to them rather than
+replacing them. Keys then exist twice with different values and Vercel reports
+`Environment variable "PROCESSING_MODE" is invalid`. That screen has no bulk-clear.
 
-| Variable | Value |
+Do this instead:
+
+1. On the import screen leave Environment Variables **untouched** and click **Deploy**.
+2. The first build fails at `prisma migrate deploy` because `DATABASE_URL` is missing. That is
+   expected and harmless.
+3. Open **Project → Settings → Environment Variables**. This screen does *not* pre-fill from
+   `.env.example`.
+4. Paste the whole environment file there; Vercel accepts a multi-line `KEY=value` paste.
+5. Add one more variable now that you know the domain:
+   `APP_URL` = `https://<your-project>.vercel.app`.
+6. Go to **Deployments**, open the failed one, and choose **Redeploy**.
+
+Two variables Vercel rejects if you add them by hand:
+
+| Variable | Why |
 |---|---|
-| `APP_URL` | `https://<your-project>.vercel.app` |
+| `NODE_ENV` | Reserved. Vercel always sets it to `production`. |
+| `BLOB_READ_WRITE_TOKEN` | Injected automatically by the attached Blob store. |
 
-For reference, the imported file sets:
+For reference, the environment file sets:
 
 | Variable | Value |
 |---|---|
 | `PROCESSING_MODE` | `inline` |
-| `DATABASE_URL` | the Neon pooled connection string |
-| `APP_URL` | `https://<your-project>.vercel.app` (update after the first deploy if the domain changes) |
-| `AUTH_SECRET` | `node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"` |
-| `CRON_SECRET` | `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
+| `DATABASE_URL` | Neon **pooled** connection string |
+| `DIRECT_URL` | Neon **direct** (non-pooled) string, used only for migrations |
+| `AUTH_SECRET` | 48 random bytes, base64 |
+| `CRON_SECRET` | 32 random bytes, base64url |
 | `ADMIN_EMAIL` | your login email |
 | `ADMIN_PASSWORD` | a strong password, 8+ characters |
+| `MAX_FILE_SIZE_MB` | `4` — Vercel caps request bodies at 4.5 MB |
 | `STORAGE_DRIVER` | `vercel-blob` |
 | `OCR_CACHE_PATH` | `/tmp/tesseract` (the only writable path on Vercel) |
 | `LLM_PROVIDER` | `openai` |
