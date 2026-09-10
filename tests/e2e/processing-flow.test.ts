@@ -77,6 +77,8 @@ d("end-to-end processing flow", () => {
     setLLMProvider(null);
     setOCRProvider(null);
     await prisma.cVFile.deleteMany({ where: { fileName: { startsWith: TAG } } });
+    // Remove the isolated test queue so repeated runs leave no Redis residue.
+    await getCVQueue().obliterate({ force: true }).catch(() => undefined);
     await getCVQueue().close().catch(() => undefined);
     await prisma.$disconnect();
   });

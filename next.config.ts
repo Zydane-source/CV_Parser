@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   output: "standalone",
+  // Allows a verification build to run without clobbering the .next directory a
+  // dev server is currently using (CI: NEXT_DIST_DIR=.next-build npm run build).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Native / worker-heavy packages must not be bundled by webpack.
   serverExternalPackages: [
     "@prisma/client",

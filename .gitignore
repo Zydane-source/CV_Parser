@@ -48,3 +48,6 @@ Thumbs.db
 next-env.d.ts
 /.vscode/
 /.idea/
+
+# verification build output
+/.next-build/

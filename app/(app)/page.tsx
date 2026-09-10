@@ -6,6 +6,7 @@ import { StatCard } from "@/components/StatCard";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { DashboardLive } from "@/components/DashboardLive";
+import { WorkerBanner } from "@/components/WorkerBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +38,7 @@ export default async function DashboardPage() {
       </div>
 
       <DashboardLive initial={stats} />
+      <WorkerBanner />
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
         <StatCard label="Total CVs" value={stats.total} icon={Files} hint={`${stats.bySource.manual} manual · ${stats.bySource.googleDrive} Drive`} />

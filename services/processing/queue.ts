@@ -7,8 +7,15 @@ import { getRedis } from "@/lib/redis";
  *  - drive-sync    : repeatable job that polls Google Drive for new files
  *                    (plus on-demand syncs triggered by "Sync Now" / webhooks).
  */
-export const CV_QUEUE_NAME = "cv-processing";
-export const DRIVE_SYNC_QUEUE_NAME = "drive-sync";
+/**
+ * Optional namespace for queue names. Lets an automated test run against the
+ * same Redis instance as a live worker without the two stealing each other's
+ * jobs. Unset in normal operation.
+ */
+const QUEUE_PREFIX = process.env.QUEUE_PREFIX ? `${process.env.QUEUE_PREFIX}-` : "";
+
+export const CV_QUEUE_NAME = `${QUEUE_PREFIX}cv-processing`;
+export const DRIVE_SYNC_QUEUE_NAME = `${QUEUE_PREFIX}drive-sync`;
 
 export interface CVJobData {
   cvFileId: string;

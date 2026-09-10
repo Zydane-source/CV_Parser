@@ -13,3 +13,6 @@ process.env.STORAGE_DRIVER = process.env.STORAGE_DRIVER || "local";
 process.env.LOCAL_STORAGE_PATH = process.env.TEST_STORAGE_PATH || "./tests/fixtures/generated/storage";
 process.env.OCR_CACHE_PATH = process.env.OCR_CACHE_PATH || "./.tesseract-cache";
 process.env.LOG_LEVEL = process.env.TEST_LOG_LEVEL || "silent";
+// Isolate test queues so a live `npm run worker` on the same Redis does not
+// consume (and fail) jobs that the e2e suite enqueues for its own worker.
+process.env.QUEUE_PREFIX = process.env.QUEUE_PREFIX || `test${process.pid}`;

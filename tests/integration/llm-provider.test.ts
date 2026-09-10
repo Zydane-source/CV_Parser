@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { getLLMProvider, extractWithLLM } from "@/services/llm";
+import { getLLMProvider, extractWithLLM, verifyLLMCredentials } from "@/services/llm";
 import { OpenAICompatibleProvider } from "@/services/llm/openai-provider";
 import { AnthropicProvider } from "@/services/llm/anthropic-provider";
 import { validateExtraction } from "@/services/cv-parser/validate";
@@ -8,11 +8,16 @@ import { normalizeText } from "@/services/cv-parser/normalize";
 import { ensureFixtures, fixture } from "../helpers/fixtures";
 
 /**
- * Real LLM provider tests. They run only when LLM_API_KEY is configured;
- * otherwise they are skipped (reported as skipped, never faked).
+ * Real LLM provider tests. They run only when the configured credentials are
+ * actually usable; a missing key, a rejected key or an exhausted credit balance
+ * skips them (reported as skipped, never faked with a stub response).
  */
 const hasKey = Boolean(process.env.LLM_API_KEY);
-const describeLive = hasKey ? describe : describe.skip;
+const credentials = hasKey ? await verifyLLMCredentials(15_000) : { ok: false, error: "LLM_API_KEY not set", provider: "", model: "" };
+if (hasKey && !credentials.ok) {
+  console.warn(`[llm-provider.test] Skipping live LLM tests – ${credentials.error}`);
+}
+const describeLive = credentials.ok ? describe : describe.skip;
 
 describe("LLM provider wiring", () => {
   it("throws a clear error when LLM_API_KEY is missing", async () => {
@@ -34,7 +39,7 @@ describe("LLM provider wiring", () => {
     }) as typeof fetch;
     try {
       const opts = { model: "m", temperature: 0, timeoutMs: 5000, prompt: "p" };
-      await expect(provider.extract(opts)).rejects.toMatchObject({ code: "LLM_TRANSIENT", transient: true });
+      await expect(provider.extract(opts)).rejects.toMatchObject({ code: "LLM_RATE_LIMITED", transient: true });
       await expect(provider.extract(opts)).rejects.toMatchObject({ code: "LLM_AUTH", transient: false });
       await expect(provider.extract(opts)).rejects.toMatchObject({ code: "LLM_TRANSIENT", transient: true });
     } finally {

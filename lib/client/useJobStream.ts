@@ -41,12 +41,20 @@ export interface Stats {
   last24h: number;
 }
 
+export interface WorkerStatus {
+  online: boolean;
+  count: number;
+  configError: string | null;
+  workers?: Array<{ id: string; pid: number; host: string; startedAt: string; concurrency: number; llm: { provider: string; model: string; keyConfigured: boolean; lastError: string | null } }>;
+}
+
 export interface StreamUpdate {
   at: number;
   progress: Progress;
   stats: Stats;
   jobs: JobRow[];
   total: number;
+  worker?: WorkerStatus;
 }
 
 /**
@@ -79,7 +87,7 @@ export function useJobStream(params: { batchId?: string; status?: string; pageSi
           const j = await res.json();
           const statsRes = await fetch("/api/stats", { credentials: "same-origin" });
           const stats = statsRes.ok ? await statsRes.json() : null;
-          setData({ at: Date.now(), progress: j.progress, stats, jobs: j.items, total: j.total });
+          setData({ at: Date.now(), progress: j.progress, stats, jobs: j.items, total: j.total, worker: j.worker });
           setError(null);
         } catch (err) {
           setError((err as Error).message);

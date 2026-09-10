@@ -1,4 +1,5 @@
 import { ProcessingError } from "@/lib/errors";
+import { classifyLLMHttpError } from "./error-classify";
 import { LLM_EXTRACTION_JSON_SCHEMA, llmExtractionSchema, parseExtractionJson, type LLMProvider, type LLMRequestOptions, type LLMResponse } from "./types";
 
 /**
@@ -56,14 +57,13 @@ export class AnthropicProvider implements LLMProvider {
       clearTimeout(timer);
     }
 
-    if (res.status === 429 || res.status === 529 || res.status >= 500) {
-      throw new ProcessingError(`LLM API error ${res.status}: ${(await res.text()).slice(0, 300)}`, "LLM_TRANSIENT", true);
-    }
-    if (res.status === 401 || res.status === 403) {
-      throw new ProcessingError("LLM API key rejected (401/403). Check LLM_API_KEY.", "LLM_AUTH", false);
-    }
     if (!res.ok) {
-      throw new ProcessingError(`LLM API error ${res.status}: ${(await res.text()).slice(0, 300)}`, "LLM_ERROR", false);
+      // 529 = Anthropic "overloaded"; low credit balance arrives as a 400 with an
+      // invalid_request_error, so classification reads the body, not just status.
+      const raw = (await res.text()).slice(0, 500);
+      if (res.status === 529) throw new ProcessingError(`LLM service overloaded (HTTP 529): ${raw}`, "LLM_TRANSIENT", true);
+      const c = classifyLLMHttpError(res.status, raw);
+      throw new ProcessingError(c.message, c.code, c.transient);
     }
 
     const json = (await res.json()) as {

@@ -186,17 +186,29 @@ mostly symbols. To plug in another engine, implement `OCRProvider` in `services/
 
 ## Local development
 
-Terminal 1 – web:
+Run the web app **and** the worker together (recommended — CVs stay `Pending` forever without a worker):
+
+```bash
+npm run dev:all
+```
+
+Or in two terminals:
 
 ```bash
 npm run dev
 ```
 
-Terminal 2 – worker (required for parsing and Drive sync):
-
 ```bash
 npm run worker
 ```
+
+Both must run from the project root so they resolve the same `LOCAL_STORAGE_PATH`. If anything looks stuck, ask the app:
+
+```bash
+npm run diagnose
+```
+
+It prints the job/queue state, whether a worker is actually consuming the queue, and the LLM/storage configuration (secrets masked).
 
 Open <http://localhost:3000>, sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`, then **Upload CVs**.
 
@@ -271,10 +283,16 @@ docker build --target web -t cv-parser-web . && docker build --target worker -t 
 
 ## Troubleshooting
 
+First step for anything unexpected: `npm run diagnose`. The UI also tells you directly — a red banner when no worker is consuming the queue, an amber one when the worker runs but the LLM is unusable.
+
 | Problem | Fix |
 |---|---|
-| CVs stay **Pending** | The worker is not running (`npm run worker`) or cannot reach Redis (`REDIS_URL`). Check `/api/health`. |
-| Every CV **Failed** with `LLM_NOT_CONFIGURED` / `LLM_AUTH` | Set `LLM_API_KEY` (and `LLM_PROVIDER`/`LLM_MODEL`), restart the worker, click **Retry all failed**. |
+| CVs stay **Pending** | No worker is consuming the queue. Run `npm run worker` (or `npm run dev:all`) from the project root; queued CVs are picked up automatically within seconds. If it is running, check `REDIS_URL` and `/api/health`. |
+| CVs **Pending** and the worker *is* running | The worker cannot reach Redis, or it was started from a different folder than the web server so `LOCAL_STORAGE_PATH` resolves elsewhere. The worker logs its resolved storage path at startup. |
+| Every CV **Failed** with `LLM_QUOTA` | The LLM account has no credit left (OpenAI returns HTTP 429 `insufficient_quota`). Add credits, or point `LLM_BASE_URL`/`LLM_MODEL` at another provider. This is not retried, by design — retrying a billing problem never helps. |
+| Every CV **Failed** with `LLM_NOT_CONFIGURED` / `LLM_AUTH` | Set `LLM_API_KEY` (and `LLM_PROVIDER`/`LLM_MODEL`), restart the worker, click **Retry all failed**. The worker preflights the credentials at startup and prints the reason. |
+| Every CV **Failed** with `LLM_MODEL_NOT_FOUND` | `LLM_MODEL` does not exist on the configured endpoint. |
+| Want to run with no LLM spend | Point at a local OpenAI-compatible server, e.g. Ollama: `LLM_PROVIDER=openai`, `LLM_BASE_URL=http://localhost:11434/v1`, `LLM_MODEL=llama3.1`, `LLM_API_KEY=ollama`. |
 | `NO_TEXT` failures | The file is blank/corrupt or an unreadable scan. Try a higher-resolution scan; check `OCR_LANGUAGES`. |
 | First OCR is slow | Tesseract downloads language data once into `OCR_CACHE_PATH`. |
 | Google `redirect_uri_mismatch` / `access_denied` | See [docs/GOOGLE_CLOUD_SETUP.md](docs/GOOGLE_CLOUD_SETUP.md) §6 and §8. |

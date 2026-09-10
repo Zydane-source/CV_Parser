@@ -7,6 +7,7 @@ import { api } from "@/lib/client/api";
 import { formatRelative, SOURCE_LABEL } from "@/lib/client/format";
 import { useJobStream } from "@/lib/client/useJobStream";
 import { StatusBadge } from "./StatusBadge";
+import { SystemAlerts, WorkerPill } from "./SystemAlerts";
 
 const STATUSES = ["", "PENDING", "PROCESSING", "PROCESSED", "NEEDS_REVIEW", "FAILED", "SKIPPED"];
 
@@ -38,6 +39,7 @@ export function JobsMonitor({ initialBatchId }: { initialBatchId?: string }) {
 
   return (
     <div className="space-y-4">
+      <SystemAlerts worker={data?.worker} pendingCount={p?.pending ?? 0} />
       <div className="card p-4">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[260px] flex-1">
@@ -57,9 +59,12 @@ export function JobsMonitor({ initialBatchId }: { initialBatchId?: string }) {
           <button className="btn-secondary" onClick={retryAllFailed} disabled={busy === "all" || !p?.failed}>
             <RotateCcw size={14} /> Retry all failed{p?.failed ? ` (${p.failed})` : ""}
           </button>
-          <div className="ml-auto inline-flex items-center gap-1.5 text-xs text-gray-500">
-            {connected ? <Wifi size={13} className="text-emerald-600" /> : <WifiOff size={13} className="text-gray-400" />}
-            {connected ? "Live" : error ? "Polling" : "Connecting…"}
+          <div className="ml-auto inline-flex items-center gap-2">
+            <WorkerPill worker={data?.worker} />
+            <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+              {connected ? <Wifi size={13} className="text-emerald-600" /> : <WifiOff size={13} className="text-gray-400" />}
+              {connected ? "Live" : error ? "Polling" : "Connecting…"}
+            </span>
           </div>
         </div>
       </div>

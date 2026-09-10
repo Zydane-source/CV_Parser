@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { jobFiltersSchema, listJobs, batchProgress } from "@/backend/jobs";
 import { getDashboardStats } from "@/backend/stats";
+import { getWorkerHealth } from "@/lib/worker-health";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -27,8 +28,13 @@ export async function GET(req: Request) {
       const send = async () => {
         if (closed) return;
         try {
-          const [jobs, progress, stats] = await Promise.all([listJobs({ ...filters, pageSize: Math.min(filters.pageSize, 100) }), batchProgress(filters.batchId), getDashboardStats()]);
-          const payload = JSON.stringify({ at: Date.now(), progress, stats, jobs: jobs.items, total: jobs.total });
+          const [jobs, progress, stats, worker] = await Promise.all([
+            listJobs({ ...filters, pageSize: Math.min(filters.pageSize, 100) }),
+            batchProgress(filters.batchId),
+            getDashboardStats(),
+            getWorkerHealth(),
+          ]);
+          const payload = JSON.stringify({ at: Date.now(), progress, stats, jobs: jobs.items, total: jobs.total, worker });
           controller.enqueue(encoder.encode(`event: update\ndata: ${payload}\n\n`));
         } catch (err) {
           controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: (err as Error).message })}\n\n`));

@@ -5,6 +5,8 @@
   "description": "Production CV parser: manual + Google Drive ingestion, OCR fallback, LLM extraction, PostgreSQL persistence, BullMQ background processing, Google Sheets export.",
   "scripts": {
     "dev": "next dev",
+    "dev:all": "node scripts/dev-all.mjs",
+    "diagnose": "tsx scripts/diagnose.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
