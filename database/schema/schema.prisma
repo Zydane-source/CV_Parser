@@ -1,0 +1,200 @@
+// CV Parser – Prisma schema (PostgreSQL)
+// Migrations live in database/migrations (see package.json "prisma.schema").
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SourceType {
+  MANUAL
+  GOOGLE_DRIVE
+}
+
+enum ProcessingStatus {
+  PENDING
+  PROCESSING
+  PROCESSED
+  NEEDS_REVIEW
+  FAILED
+  SKIPPED
+}
+
+enum UserRole {
+  ADMIN
+  RECRUITER
+}
+
+enum ExtractionMethod {
+  PDF_TEXT
+  DOCX
+  DOC
+  OCR_IMAGE
+  OCR_PDF
+  NONE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         UserRole @default(RECRUITER)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  uploads          CVFile[]
+  driveConnections GoogleDriveConnection[]
+  sheetsExports    SheetsExport[]
+}
+
+model CVFile {
+  id                String           @id @default(cuid())
+  sourceType        SourceType
+  /// Google Drive file ID for Drive files; null for manual uploads.
+  sourceFileId      String?
+  fileName          String
+  mimeType          String
+  /// SHA-256 hex digest of the file bytes.
+  fileHash          String
+  fileSize          Int
+  /// Object-storage key for manual uploads; null for Drive files (Drive is the source of truth).
+  storagePath       String?
+  driveUrl          String?
+  driveCreatedTime  DateTime?
+  driveModifiedTime DateTime?
+  /// Which Drive connection this file was discovered through (Drive files only).
+  driveConnectionId String?
+  /// Denormalised latest processing status for fast dashboard/listing queries.
+  status            ProcessingStatus @default(PENDING)
+  /// Human-readable reason for SKIPPED / FAILED (mirrors the latest job's error).
+  statusMessage     String?
+  uploadedById      String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  uploadedBy      User?                  @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  driveConnection GoogleDriveConnection? @relation(fields: [driveConnectionId], references: [id], onDelete: SetNull)
+  candidate       Candidate?
+  jobs            ProcessingJob[]
+
+  @@unique([sourceType, sourceFileId])
+  @@index([fileHash])
+  @@index([driveConnectionId])
+  @@index([sourceType])
+  @@index([status])
+  @@index([createdAt])
+  @@index([fileName])
+}
+
+model Candidate {
+  id                  String           @id @default(cuid())
+  cvFileId            String           @unique
+  candidateName       String           @default("Not Found")
+  phoneNumber         String           @default("Not Found")
+  jobRoleAppliedFor   String           @default("Not Found")
+  nameConfidence      Float            @default(0)
+  phoneConfidence     Float            @default(0)
+  roleConfidence      Float            @default(0)
+  overallConfidence   Float            @default(0)
+  isManuallyCorrected Boolean          @default(false)
+  /// Field names that were manually corrected; these are never overwritten by reprocessing.
+  correctedFields     String[]         @default([])
+  /// Reasons the record was flagged for review (validation failures, low confidence).
+  reviewReasons       String[]         @default([])
+  extractionMethod    ExtractionMethod @default(NONE)
+  llmModel            String?
+  promptVersion       String?
+  processedAt         DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  cvFile CVFile @relation(fields: [cvFileId], references: [id], onDelete: Cascade)
+
+  @@index([candidateName])
+  @@index([phoneNumber])
+  @@index([jobRoleAppliedFor])
+  @@index([createdAt])
+  @@index([processedAt])
+}
+
+model ProcessingJob {
+  id           String           @id @default(cuid())
+  cvFileId     String
+  /// Client-side batch identifier (one per upload session / drive sync) for live progress views.
+  batchId      String?
+  queueJobId   String?
+  status       ProcessingStatus @default(PENDING)
+  stage        String?
+  attempts     Int              @default(0)
+  maxAttempts  Int              @default(3)
+  errorMessage String?
+  errorCode    String?
+  startedAt    DateTime?
+  completedAt  DateTime?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  cvFile CVFile @relation(fields: [cvFileId], references: [id], onDelete: Cascade)
+
+  @@index([cvFileId])
+  @@index([status])
+  @@index([batchId])
+  @@index([createdAt])
+}
+
+model GoogleDriveConnection {
+  id                 String    @id @default(cuid())
+  userId             String
+  googleAccountEmail String?
+  /// AES-256-GCM encrypted OAuth tokens (see lib/crypto.ts).
+  accessTokenEnc     String
+  refreshTokenEnc    String?
+  tokenExpiry        DateTime?
+  scope              String?
+  folderId           String?
+  folderName         String?
+  folderPath         String?
+  /// Drive Changes API cursor for incremental sync.
+  startPageToken     String?
+  lastSyncAt         DateTime?
+  lastSyncError      String?
+  lastSyncFileCount  Int       @default(0)
+  watchChannelId     String?
+  watchResourceId    String?
+  watchExpiry        DateTime?
+  watchToken         String?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files CVFile[]
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}
+
+model SheetsExport {
+  id             String   @id @default(cuid())
+  userId         String?
+  spreadsheetId  String
+  spreadsheetUrl String
+  sheetTitle     String
+  rowCount       Int
+  createdAt      DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+}

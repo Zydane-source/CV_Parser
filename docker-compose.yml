@@ -1,0 +1,40 @@
+# Local infrastructure for CV Parser: PostgreSQL + Redis.
+# Production: use managed Postgres/Redis (see docs/DEPLOYMENT.md); the app + worker
+# images are defined in docker-compose.prod.yml.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: cv-parser-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cvparser
+      POSTGRES_PASSWORD: cvparser
+      POSTGRES_DB: cvparser
+    ports:
+      - "5432:5432"
+    volumes:
+      - cv_parser_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cvparser -d cvparser"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: cv-parser-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - cv_parser_redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  cv_parser_pgdata:
+  cv_parser_redisdata:

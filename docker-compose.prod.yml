@@ -1,0 +1,73 @@
+# Production-style deployment: web + worker built from the same image, behind
+# a TLS-terminating reverse proxy (Caddy shown; any HTTPS proxy works).
+# Postgres/Redis are included for single-host deployments; for cloud deployments
+# point DATABASE_URL / REDIS_URL at managed services and remove these two.
+#
+#   docker compose -f docker-compose.prod.yml up -d --build
+#   docker compose -f docker-compose.prod.yml run --rm web npx prisma migrate deploy
+#   docker compose -f docker-compose.prod.yml run --rm worker npx tsx scripts/seed-admin.ts
+services:
+  web:
+    build: { context: ., target: web }
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
+      OCR_CACHE_PATH: /data/tesseract-cache
+    depends_on: [postgres, redis]
+    restart: unless-stopped
+    volumes:
+      - app_data:/data
+    expose: ["3000"]
+
+  worker:
+    build: { context: ., target: worker }
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-s3}
+      OCR_CACHE_PATH: /data/tesseract-cache
+    depends_on: [postgres, redis]
+    restart: unless-stopped
+    volumes:
+      - app_data:/data
+    deploy:
+      replicas: 1 # scale horizontally: each replica processes WORKER_CONCURRENCY CVs in parallel
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      DOMAIN: ${DOMAIN:-cv.example.com}
+    command: caddy reverse-proxy --from ${DOMAIN:-cv.example.com} --to web:3000
+    volumes:
+      - caddy_data:/data
+    depends_on: [web]
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-cvparser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-cvparser}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cvparser}"]
+      interval: 10s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    volumes:
+      - redisdata:/data
+
+volumes:
+  app_data:
+  caddy_data:
+  pgdata:
+  redisdata:
