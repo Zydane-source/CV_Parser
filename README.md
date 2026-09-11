@@ -2,8 +2,9 @@
 
 Production-ready CV intake for HR/recruitment teams. CVs arrive by **manual upload** (single, multiple, bulk)
 or from a **Google Drive folder** (detected automatically), go through one parsing pipeline
-(text extraction → OCR fallback → LLM extraction → validation → confidence scoring), and are stored in
-PostgreSQL. Recruiters search, filter, review, correct, reprocess and export candidates to **Google Sheets**.
+(text extraction → OCR fallback → field extraction → validation → confidence scoring), and are stored in
+PostgreSQL. Extraction runs **locally and deterministically** — no API key, no per-CV cost, and no CV
+text sent to any external service. Recruiters search, filter, review, correct, reprocess and export candidates to **Google Sheets**.
 
 Extracted fields: **Candidate Name**, **Phone Number** (normalised to `+91XXXXXXXXXX`), **Job Role Applied For**,
 each with a confidence score. Missing information is reported as `Not Found` – never invented.
@@ -20,7 +21,7 @@ Sheets**. Both apply whatever search and filters are active on the Candidates pa
 - [Environment variables](#environment-variables)
 - [Database setup](#database-setup)
 - [Google Cloud / OAuth / Drive / Sheets setup](#google-cloud--oauth--drive--sheets-setup)
-- [LLM setup](#llm-setup)
+- [Extraction engine](#extraction-engine)
 - [OCR setup](#ocr-setup)
 - [Local development](#local-development)
 - [Background worker](#background-worker)
@@ -28,6 +29,11 @@ Sheets**. Both apply whatever search and filters are active on the Candidates pa
 - [Testing](#testing)
 - [Production deployment](#production-deployment)
 - [Troubleshooting](#troubleshooting)
+
+Deeper documentation: [architecture](docs/ARCHITECTURE.md) ·
+[extraction engine](docs/local-extraction-engine.md) · [benchmark](docs/benchmark.md) ·
+[migrating from the LLM](docs/migration-from-llm.md) · [security](docs/SECURITY.md) ·
+[deployment](docs/DEPLOYMENT.md) · [Vercel](docs/VERCEL.md)
 
 ## Architecture
 
@@ -37,10 +43,12 @@ Manual upload ──┐                                        ┌─ Dashboard 
 Google Drive ───┘   (dedupe: SHA-256 / Drive file id)     (BullMQ)     (see below)             └─ Google Sheets export
 
 Pipeline: File validation → Text extraction (pdf.js / mammoth / word-extractor) → OCR if needed (Tesseract)
-          → Normalisation → LLM extraction (JSON schema) → Validation → Confidence scoring → Database
+          → Normalisation → Field extraction (local engine) → Validation → Confidence scoring → Database
 ```
 
 Full description: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The extraction step is documented separately in
+[docs/local-extraction-engine.md](docs/local-extraction-engine.md).
 
 ## Folder structure
 
@@ -56,7 +64,8 @@ cv-parser/
 │   ├── cv-parser/           pipeline, normalisation, validation, phone rules, file validation
 │   ├── text-extraction/     PDF / DOC / DOCX text extraction + scanned-PDF detection
 │   ├── ocr/                 OCRProvider abstraction, Tesseract provider, PDF page rendering
-│   ├── llm/                 LLMProvider abstraction, OpenAI-compatible + Anthropic providers, versioned prompts
+│   ├── cv-engine/           local deterministic extraction: document model, name/phone/role, role taxonomy
+│   ├── llm/                 optional LLM path (shadow/legacy only): provider abstraction + versioned prompts
 │   ├── google-drive/        OAuth, file listing, Changes API sync, push-notification watch
 │   ├── google-sheets/       Sheets export
 │   ├── storage/             object storage (S3-compatible or local)
@@ -67,8 +76,8 @@ cv-parser/
 │   └── migrations/
 ├── lib/                     config, db, auth, crypto, logger, settings, rate limiting, API helpers, client helpers
 ├── tests/
-│   ├── unit/                validation, phone, normalisation, LLM JSON parsing, file validation, crypto, sheets/drive mapping
-│   ├── integration/         real text extraction, OCR, pipeline over 14 CV variations, LLM providers, DB, queue
+│   ├── unit/                local engine (name/phone/role), validation, normalisation, file validation, crypto, sheets/drive mapping
+│   ├── integration/         real text extraction, OCR, local pipeline over 14 CV variations, LLM providers, DB, queue
 │   ├── e2e/                 upload → queue → worker → DB, duplicates, reprocess, retry
 │   ├── helpers/             fixture loader, deterministic test LLM
 │   └── fixtures/            generated CV fixtures (npm run fixtures)
@@ -93,7 +102,8 @@ cv-parser/
 | Storage | S3-compatible object storage (AWS S3, R2, MinIO…) or local disk for development |
 | Text extraction | pdf.js (`unpdf`), mammoth (DOCX), word-extractor (DOC) |
 | OCR | Tesseract (`tesseract.js`, local WASM) behind an `OCRProvider` interface; PDF pages rendered with `@napi-rs/canvas` |
-| LLM | Provider-agnostic: any OpenAI-compatible chat endpoint or Anthropic Messages API, JSON-schema enforced output |
+| Extraction | Local deterministic engine (`services/cv-engine/`): structural document model, weighted signals, role taxonomy. No dependency. |
+| LLM (optional) | Provider-agnostic: any OpenAI-compatible chat endpoint or Anthropic Messages API. Only for `EXTRACTION_ENGINE=shadow` or `legacy`. |
 | Google | Google Drive API v3 (read-only + Changes API + push notifications), Google Sheets API v4, OAuth 2.0 (`googleapis`) |
 | Auth / security | bcrypt, signed HttpOnly cookies (jose), CSRF origin check, Zod validation, magic-byte file checks, rate limiting, AES-256-GCM token encryption, CSP |
 | Tests | Vitest |
@@ -121,12 +131,13 @@ All variables are documented in [`.env.example`](.env.example). Required to star
 | `REDIS_URL` | Redis connection string (`rediss://` for TLS) |
 | `AUTH_SECRET` | ≥32 random bytes; signs sessions and derives the token-encryption key |
 | `ADMIN_EMAIL`, `ADMIN_PASSWORD` | initial admin (used by `npm run db:seed`) |
-| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | LLM extraction (see [LLM setup](#llm-setup)) |
+| `EXTRACTION_ENGINE` | `local` (default), `shadow` or `legacy`. Optional — omit for local. |
+| `LLM_PROVIDER`, `LLM_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | **Not required.** Only read when `EXTRACTION_ENGINE` is `shadow` or `legacy` (see [Extraction engine](#extraction-engine)) |
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` | Google Drive + Sheets |
 | `STORAGE_DRIVER` + `STORAGE_*` | `local` (dev) or `s3` (production) |
 | `APP_URL` | public URL; HTTPS enables secure cookies and Drive push notifications |
 
-Optional tuning: `WORKER_CONCURRENCY`, `LLM_RATE_LIMIT_PER_MINUTE`, `MAX_RETRIES`, `RETRY_BACKOFF_MS`,
+Optional tuning: `WORKER_CONCURRENCY`, `MAX_RETRIES`, `RETRY_BACKOFF_MS`,
 `CONFIDENCE_THRESHOLD`, `MAX_FILE_SIZE_MB`, `MAX_FILES_PER_REQUEST`, `OCR_*`, `GOOGLE_DRIVE_SYNC_INTERVAL_MINUTES`,
 `GOOGLE_DRIVE_FOLDER_ID`, `GOOGLE_SHEETS_SPREADSHEET_ID`. Most of these can also be changed at runtime on the
 **Settings** page (admin only); secrets are environment-only and never shown in the UI.
@@ -155,47 +166,79 @@ In the app: **Google Drive → Connect Google Drive → Select Folder**. New fil
 worker's Changes-API poll (every `GOOGLE_DRIVE_SYNC_INTERVAL_MINUTES`) and, on HTTPS deployments, by push
 notifications within seconds. **Sync Now** forces a full folder scan.
 
-## LLM setup
+## Extraction engine
 
-Any OpenAI-compatible endpoint or Anthropic:
+Turning CV text into the three fields runs **locally**, in-process, with no API key and no network
+call. `services/cv-engine/` models the document structure (sections, headings, label/value lines,
+the header region) and then scores candidates for each field against weighted signals.
+
+Nothing needs configuring — it is the default:
+
+```bash
+npm run verify:no-llm     # proves extraction works with every LLM variable absent
+npm run benchmark         # score it against the 120-CV labelled corpus
+npm run measure:engine    # cold start, throughput, memory
+```
+
+| | measured |
+|---|---|
+| accuracy, name / phone / role | 100% / 100% / 100% on the benchmark corpus |
+| field extraction | 0.8 ms mean, 1.7 ms p95 |
+| throughput | ~2,100 CVs/second/core |
+| cold start | 31 ms import + 12 ms first call (taxonomy parse) |
+| memory | ~15 MB RSS |
+| cost | none |
+
+Those accuracy numbers come from a **synthetic** corpus the engine was tuned against, so treat them
+as a regression guard rather than a capability claim —
+[docs/benchmark.md](docs/benchmark.md) explains what they do and do not prove, including that 61% of
+the corpus is flagged for human review despite being extracted correctly.
+
+**Roles.** `services/cv-engine/taxonomy/role-taxonomy.json` holds ~90 canonical roles with aliases
+(`BDE` → `Business Development Executive`), seniority prefixes and generic terms that must never be
+returned as a role. It is data, not code: add the roles your organisation hires for and restart — no
+deploy needed. Unknown titles still resolve by token overlap.
+
+**Confidence.** Each field scores 0–1; `overall = name×0.40 + phone×0.35 + role×0.25`. Below
+`CONFIDENCE_THRESHOLD` (default 0.75) the record is marked `NEEDS_REVIEW`. The engine's evidence
+tiers are capped so weak evidence *cannot* reach the threshold — a role inferred from someone's
+current designation tops out at 0.55 and therefore always reaches a human. `fieldMethods` records
+which signal produced each field, so a wrong answer in production can be traced without re-running
+anything.
+
+Full description: [docs/local-extraction-engine.md](docs/local-extraction-engine.md).
+
+### Optional: running a model alongside it
+
+`EXTRACTION_ENGINE` selects the path.
+
+| value | behaviour |
+|---|---|
+| `local` (default) | deterministic engine. No credentials. |
+| `shadow` | local result is stored; an LLM runs too and the two are compared in the logs. LLM output is never stored. Costs the same per CV as `legacy`. |
+| `legacy` | the original LLM-only path, kept for rollback. |
+
+`shadow` and `legacy` need credentials — any OpenAI-compatible endpoint or Anthropic:
 
 ```env
-# OpenAI
+EXTRACTION_ENGINE=shadow
 LLM_PROVIDER=openai
 LLM_API_KEY=sk-...
 LLM_MODEL=gpt-4o-mini
-
-# Anthropic
-LLM_PROVIDER=anthropic
-LLM_API_KEY=sk-ant-...
-LLM_MODEL=claude-sonnet-5
-
-# OpenRouter (one key, many models)
-LLM_PROVIDER=openai
-LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_API_KEY=sk-or-v1-...
-LLM_MODEL=meta-llama/llama-3.3-70b-instruct
-
-# Groq / Together / Azure / local Ollama (all OpenAI-compatible)
-LLM_PROVIDER=openai
-LLM_BASE_URL=http://localhost:11434/v1           # Ollama, no spend
-LLM_MODEL=llama3.1
+# or LLM_BASE_URL=https://openrouter.ai/api/v1   (OpenRouter)
+# or LLM_BASE_URL=http://localhost:11434/v1      (Ollama, no spend)
 ```
 
-Pick a model with evidence rather than by reputation — `npm run bench:models` runs the real extraction prompt over the
-bundled CV fixtures and scores name / phone / role accuracy:
+Shadow mode is the honest way to evaluate a model against the local engine on **your own real CVs**,
+which is the evidence the synthetic benchmark cannot give you. `npm run bench:models` scores several
+models over the bundled fixtures.
 
-```bash
-npx tsx scripts/bench-models.ts "openai/gpt-4o-mini,meta-llama/llama-3.3-70b-instruct"
-```
+**Candidate privacy.** An LLM path sends the CV — a real person's name and phone number — to a third
+party. OpenRouter models with a `:free` suffix may retain and train on prompts, and are blocked
+automatically for accounts requiring Zero Data Retention. The local engine sends nothing anywhere,
+which removes the question rather than answering it.
 
-**OpenRouter and candidate privacy.** Models with a `:free` suffix are served by providers that may retain and train on
-prompts. A CV prompt contains a real person's name and phone number, so those endpoints are blocked automatically for
-accounts that require Zero Data Retention. Keep that setting on and use a paid model (a 70B model costs roughly
-$0.15 per 1,000 CVs) unless you have deliberately accepted the trade-off.
-
-The extraction prompt is versioned in `services/llm/prompts/` (`LLM_PROMPT_VERSION=v1`). Output is schema-enforced
-(`response_format: json_schema` / Anthropic tool input) and validated again server-side.
+See [docs/migration-from-llm.md](docs/migration-from-llm.md) for deploying, verifying and rolling back.
 
 ## OCR setup
 
@@ -229,7 +272,7 @@ Both must run from the project root so they resolve the same `LOCAL_STORAGE_PATH
 npm run diagnose
 ```
 
-It prints the job/queue state, whether a worker is actually consuming the queue, and the LLM/storage configuration (secrets masked).
+It prints the job/queue state, whether a worker is actually consuming the queue, and the engine/storage configuration (secrets masked).
 
 Open <http://localhost:3000>, sign in with `ADMIN_EMAIL` / `ADMIN_PASSWORD`, then **Upload CVs**.
 
@@ -240,8 +283,8 @@ multiple phones, references): `npm run fixtures` → `tests/fixtures/generated/`
 
 `workers/index.ts` consumes two queues:
 
-* `cv-processing` – one job per CV. Concurrency `WORKER_CONCURRENCY`, LLM calls capped at
-  `LLM_RATE_LIMIT_PER_MINUTE`, transient failures retried with exponential backoff up to `MAX_RETRIES`,
+* `cv-processing` – one job per CV. Concurrency `WORKER_CONCURRENCY`, transient failures retried
+  with exponential backoff up to `MAX_RETRIES`,
   permanent failures marked `FAILED` immediately.
 * `drive-sync` – repeatable job (interval from settings) plus on-demand jobs from **Sync Now**, folder changes and
   Drive webhooks.
@@ -283,7 +326,7 @@ Mutating requests must be same-origin (CSRF). Every request body / query is vali
 ```bash
 npm test                 # everything
 npm run test:unit        # pure logic (no services needed)
-npm run test:integration # real pdf.js / mammoth / Tesseract / pipeline; DB + Redis + LLM tests skip if unavailable
+npm run test:integration # real pdf.js / mammoth / Tesseract / local pipeline; DB + Redis tests skip if unavailable
 npm run test:e2e         # upload → queue → worker → DB (needs Postgres + Redis)
 npm run typecheck && npm run lint && npm run build
 ```
@@ -313,16 +356,17 @@ docker build --target web -t cv-parser-web . && docker build --target worker -t 
 
 ## Troubleshooting
 
-First step for anything unexpected: `npm run diagnose`. The UI also tells you directly — a red banner when no worker is consuming the queue, an amber one when the worker runs but the LLM is unusable.
+First step for anything unexpected: `npm run diagnose`. The UI also tells you directly — a red banner when no worker is consuming the queue, an amber one when the worker runs but a configured LLM is unusable (`shadow`/`legacy` only).
 
 | Problem | Fix |
 |---|---|
 | CVs stay **Pending** | No worker is consuming the queue. Run `npm run worker` (or `npm run dev:all`) from the project root; queued CVs are picked up automatically within seconds. If it is running, check `REDIS_URL` and `/api/health`. |
 | CVs **Pending** and the worker *is* running | The worker cannot reach Redis, or it was started from a different folder than the web server so `LOCAL_STORAGE_PATH` resolves elsewhere. The worker logs its resolved storage path at startup. |
-| Every CV **Failed** with `LLM_QUOTA` | The LLM account has no credit left (OpenAI returns HTTP 429 `insufficient_quota`). Add credits, or point `LLM_BASE_URL`/`LLM_MODEL` at another provider. This is not retried, by design — retrying a billing problem never helps. |
-| Every CV **Failed** with `LLM_NOT_CONFIGURED` / `LLM_AUTH` | Set `LLM_API_KEY` (and `LLM_PROVIDER`/`LLM_MODEL`), restart the worker, click **Retry all failed**. The worker preflights the credentials at startup and prints the reason. |
-| Every CV **Failed** with `LLM_MODEL_NOT_FOUND` | `LLM_MODEL` does not exist on the configured endpoint. |
-| Want to run with no LLM spend | Point at a local OpenAI-compatible server, e.g. Ollama: `LLM_PROVIDER=openai`, `LLM_BASE_URL=http://localhost:11434/v1`, `LLM_MODEL=llama3.1`, `LLM_API_KEY=ollama`. |
+| Wrong **job role** extracted | Check `fieldMethods` on the candidate (API response, or the Extraction row on the detail page) — it names the signal that fired. If the role is one you hire for but is not recognised, add it to `services/cv-engine/taxonomy/role-taxonomy.json` and restart. |
+| Lots of candidates in **Needs review** | Expected when CVs do not state a role explicitly. The engine caps confidence for weaker evidence — a role inferred from a current designation tops out at 0.55 — so such rows always reach a human rather than being asserted. Lower `CONFIDENCE_THRESHOLD` only if you have measured that you can trust them. |
+| Wrong **name** or **phone** extracted | Correct it on the detail page: manual corrections are never overwritten by reprocessing. Then add the CV's shape to `scripts/generate-benchmark-corpus.ts` so the fix is measured from then on. |
+| Any `LLM_*` failure code (`LLM_QUOTA`, `LLM_AUTH`, `LLM_NOT_CONFIGURED`, `LLM_MODEL_NOT_FOUND`) | Only reachable with `EXTRACTION_ENGINE=shadow` or `legacy`. Unset `EXTRACTION_ENGINE` to use the local engine, which needs no credentials — or fix the credential and click **Retry all failed**. |
+| Want to confirm nothing calls an LLM | `npm run verify:no-llm` — deletes every LLM variable, blocks model-provider hosts, and runs a real CV end to end through the worker path. |
 | `NO_TEXT` failures | The file is blank/corrupt or an unreadable scan. Try a higher-resolution scan; check `OCR_LANGUAGES`. |
 | First OCR is slow | Tesseract downloads language data once into `OCR_CACHE_PATH`. |
 | Google `redirect_uri_mismatch` / `access_denied` | See [docs/GOOGLE_CLOUD_SETUP.md](docs/GOOGLE_CLOUD_SETUP.md) §6 and §8. |

@@ -25,7 +25,7 @@ CV INPUT ────┤
                     ↓
               Text Normalization   ligatures, whitespace, dedupe, truncation (normalize.ts)
                     ↓
-              LLM Extraction       versioned prompt, JSON-schema output  (services/llm)
+              Field Extraction     deterministic, in-process, no network  (services/cv-engine)
                     ↓
               Validation           name/phone/role rules, anti-hallucination (validate.ts)
                     ↓
@@ -43,15 +43,16 @@ CV INPUT ────┤
 | Text extraction | pdf.js returns items in reading order, so one- and two-column layouts, tables, headers and footers work without coordinates or templates. A *usable text* heuristic (letters/digits count, symbol ratio, per-page density) detects scanned PDFs and broken font encodings. |
 | OCR | `OCRProvider` interface (`extractFromImage`, `extractFromScannedPDF`). Default `TesseractOCRProvider` runs locally (WASM), pre-processes with sharp (grayscale, upscale, sharpen), renders PDF pages via pdf.js + `@napi-rs/canvas`. Provider is selected by `OCR_PROVIDER`; add Google Vision / Textract by implementing the interface. |
 | Normalisation | NFKC, ligature/quote/dash fixes, control-char and box-drawing removal, whitespace collapse, repeated header/footer removal, head+tail truncation to `MAX_CV_TEXT_CHARS`. |
-| LLM | `LLMProvider` interface. `OpenAICompatibleProvider` (OpenAI, Azure, Groq, OpenRouter, Ollama, vLLM…) tries `response_format: json_schema (strict)` → `json_object` → tolerant parsing. `AnthropicProvider` forces a tool call whose `input_schema` is the extraction schema. Prompt lives in `services/llm/prompts/v1.ts`; select with `LLM_PROMPT_VERSION`. Exactly one LLM call per CV. |
+| Field extraction | `services/cv-engine`. `document.ts` builds a structural model (sections, headings, label/value lines, header region) because position carries meaning a flat string discards — a number under *References* is somebody else's. `name.ts`, `phone.ts` and `role.ts` then score candidates against weighted signals, with per-tier confidence ceilings so weak evidence cannot reach the review threshold. Roles resolve through `taxonomy/role-taxonomy.json` (~90 canonical roles with aliases), editable without a deploy. Output is a superset of the LLM's `LLMExtraction`, so validation and persistence were untouched. Runs in ~0.8 ms with no network call. Detail: [local-extraction-engine.md](local-extraction-engine.md). |
+| LLM (optional) | `LLMProvider` interface, reachable only when `EXTRACTION_ENGINE` is `shadow` or `legacy`. `OpenAICompatibleProvider` (OpenAI, Azure, Groq, OpenRouter, Ollama, vLLM…) tries `response_format: json_schema (strict)` → `json_object` → tolerant parsing. `AnthropicProvider` forces a tool call whose `input_schema` is the extraction schema. Prompt lives in `services/llm/prompts/v1.ts`. |
 | Validation | Rejects labels ("Resume"), organisations, recruiters, generic roles ("Job Seeker"); normalises Indian phone numbers to `+91XXXXXXXXXX`; verifies the phone digits actually occur in the CV text (anti-hallucination) and lowers confidence when several numbers exist. Any failure → `Not Found` + review reason. |
-| Confidence | Per-field 0–1 from the model, clamped and adjusted by validation; overall = 0.4·name + 0.35·phone + 0.25·role. Any required field below `CONFIDENCE_THRESHOLD` (default 0.75) → `NEEDS_REVIEW`. |
+| Confidence | Per-field 0–1 from the engine, clamped and adjusted by validation; overall = 0.4·name + 0.35·phone + 0.25·role. Any required field below `CONFIDENCE_THRESHOLD` (default 0.75) → `NEEDS_REVIEW`. |
 | Persistence | `Candidate` upsert keyed by `cvFileId`. Fields listed in `correctedFields` are never overwritten and keep confidence 1.0. `CVFile.status` mirrors the latest job for fast listing. |
 
 ## Background processing
 
 * **Queue**: BullMQ on Redis. `cv-processing` (one job per CV) and `drive-sync` (repeatable poll + on-demand).
-* **Concurrency**: `WORKER_CONCURRENCY` per worker process + a global limiter (`LLM_RATE_LIMIT_PER_MINUTE`).
+* **Concurrency**: `WORKER_CONCURRENCY` per worker process. Extraction is CPU-bound and in-process, so there is no external rate limit to respect (`LLM_RATE_LIMIT_PER_MINUTE` applies only to `shadow`/`legacy`).
 * **Retries**: transient errors (timeouts, 429/5xx, network) are re-thrown → BullMQ retries with exponential backoff
   (`MAX_RETRIES`, `RETRY_BACKOFF_MS`). Permanent errors (bad API key, unreadable file, password-protected PDF)
   throw `UnrecoverableError` → `FAILED` immediately. One failed CV never affects others.

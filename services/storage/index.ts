@@ -142,18 +142,34 @@ class VercelBlobStorageProvider implements StorageProvider {
   async put(key: string, data: Buffer, contentType: string): Promise<void> {
     const { put } = await import("@vercel/blob");
     const res = await put(key, data, {
-      access: "public",
+      // A CV is personal data. A "public" blob is readable by anyone who has the
+      // URL, with no authentication — an unguessable key is obscurity, not
+      // access control, and URLs leak through logs, proxies and referrers.
+      access: "private",
       contentType,
       token: this.token,
       // Keep our own opaque key as the pathname so the DB stays the index.
       addRandomSuffix: false,
-      // CVs are personal data: never let a CDN or browser hold on to them.
+      // Never let a CDN or browser hold on to them.
       cacheControlMaxAge: 0,
     });
     this.urlCache.set(key, res.url);
   }
 
+  /**
+   * Reads through the authenticated endpoint. Blobs written before this store
+   * switched to private access are still public, so a failure there falls back
+   * to the URL read — otherwise every CV uploaded before the change would
+   * become undownloadable.
+   */
   async get(key: string): Promise<Buffer> {
+    const { get } = await import("@vercel/blob");
+    try {
+      const res = await get(key, { access: "private", token: this.token });
+      if (res?.stream) return Buffer.from(await new Response(res.stream).arrayBuffer());
+    } catch {
+      // fall through to the legacy public read
+    }
     const url = await this.resolveUrl(key);
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Blob fetch failed for ${key}: HTTP ${res.status}`);

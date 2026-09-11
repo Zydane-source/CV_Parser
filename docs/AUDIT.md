@@ -1,7 +1,11 @@
 # Pre-migration audit
 
-State of the deployed application before the local extraction engine was introduced.
+State of the deployed application **before** the local extraction engine was introduced.
 Written first so the migration could be judged against what actually existed, not against memory.
+
+> This is a historical snapshot and is deliberately not updated. For the system as it
+> now stands see [local-extraction-engine.md](local-extraction-engine.md) and
+> [migration-from-llm.md](migration-from-llm.md).
 
 ## Stack
 
