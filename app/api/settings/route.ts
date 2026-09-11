@@ -4,6 +4,8 @@ import { publicConfigSummary } from "@/lib/config";
 import { getSettings, settingsSchema, updateSettings } from "@/lib/settings";
 import { availablePromptVersions } from "@/services/llm/prompts";
 import { effectiveStorageDriver } from "@/services/storage";
+import { ENGINE_VERSION } from "@/services/cv-engine";
+import { isLocalOnly } from "@/lib/config";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +17,13 @@ export const GET = handler(async () => {
   // be honoured here; showing only the former hides why uploads land where they do.
   return ok({
     settings: await getSettings(),
-    env: { ...env, storage: { ...env.storage, effectiveDriver: effectiveStorageDriver() } },
+    env: {
+      ...env,
+      storage: { ...env.storage, effectiveDriver: effectiveStorageDriver() },
+      // The engine that actually runs. Without this the page shows LLM settings
+      // as though they were in force, which they are not.
+      extraction: { engine: env.extractionEngine, version: ENGINE_VERSION, localOnly: isLocalOnly() },
+    },
     promptVersions: availablePromptVersions(),
   });
 });

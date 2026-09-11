@@ -9,10 +9,11 @@ interface SettingsResponse {
   settings: Record<string, string | number | null>;
   env: {
     appUrl: string;
-    llm: { provider: string; model: string; baseUrl: string; apiKeyConfigured: boolean; promptVersion: string; timeoutMs: number };
+    llm: { required: boolean; provider: string; model: string; baseUrl: string; apiKeyConfigured: boolean; promptVersion: string; timeoutMs: number };
     google: { clientConfigured: boolean; redirectUri: string; defaultFolderId: string | null; defaultSpreadsheetId: string | null; webhooksEnabled: boolean };
     ocr: { provider: string; languages: string };
     storage: { driver: string; effectiveDriver: string; bucket: string | null; blobTokenConfigured: boolean };
+    extraction: { engine: string; version: string; localOnly: boolean };
     queue: { redisConfigured: boolean; workerConcurrency: number };
   };
   promptVersions: string[];
@@ -20,23 +21,26 @@ interface SettingsResponse {
 
 type Field = { key: string; label: string; type: "number" | "text" | "select"; step?: string; min?: number; max?: number; hint?: string; options?: string[] };
 
-const SECTIONS: Array<{ title: string; description: string; fields: Field[] }> = [
+const SECTIONS: Array<{ title: string; description: string; fields: Field[]; llmOnly?: boolean }> = [
   {
     title: "LLM configuration",
-    description: "Provider, API key and base URL come from the environment (never stored in the database). Model and prompt can be tuned here.",
+    description: "Only used when EXTRACTION_ENGINE is shadow or legacy. Provider, API key and base URL come from the environment (never stored in the database).",
+    llmOnly: true,
     fields: [
       { key: "llmModel", label: "Model", type: "text" },
       { key: "llmPromptVersion", label: "Prompt version", type: "select", options: [] },
       { key: "llmTemperature", label: "Temperature", type: "number", step: "0.1", min: 0, max: 2 },
       { key: "llmTimeoutMs", label: "Timeout (ms)", type: "number", min: 1000, max: 600000 },
-      { key: "maxCvTextChars", label: "Max CV text chars sent to LLM", type: "number", min: 1000, max: 200000 },
       { key: "llmRateLimitPerMinute", label: "LLM calls per minute (worker)", type: "number", min: 1, max: 10000, hint: "Protects the external API from bulk batches" },
     ],
   },
   {
-    title: "Confidence",
-    description: "Any required field below the threshold marks the CV as Needs Review.",
-    fields: [{ key: "confidenceThreshold", label: "Confidence threshold (0–1)", type: "number", step: "0.05", min: 0, max: 1 }],
+    title: "Extraction",
+    description: "How much of each CV the engine reads, and how confident it must be before a result is accepted without review.",
+    fields: [
+      { key: "maxCvTextChars", label: "Max CV text chars read per CV", type: "number", min: 1000, max: 200000, hint: "Longer CVs are truncated head and tail" },
+      { key: "confidenceThreshold", label: "Confidence threshold (0–1)", type: "number", step: "0.05", min: 0, max: 1, hint: "Any required field below this marks the CV as Needs Review" },
+    ],
   },
   {
     title: "Processing",
@@ -125,7 +129,33 @@ export function SettingsForm({ isAdmin }: { isAdmin: boolean }) {
         <h2 className="text-sm font-semibold text-gray-900">Environment status</h2>
         <p className="mt-1 text-xs text-gray-500">Secrets are read from .env only and are never displayed or stored in the database.</p>
         <div className="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
-          <Env k="LLM" v={`${e.llm.provider} · ${e.llm.model} · ${e.llm.baseUrl}`} chip={<Chip ok={e.llm.apiKeyConfigured} label={e.llm.apiKeyConfigured ? "API key set" : "LLM_API_KEY missing"} />} />
+          {/* The engine that actually runs comes first. Showing LLM settings at
+              the top implied they were in force, which they have not been since
+              extraction moved in-process. */}
+          <Env
+            k="Extraction engine"
+            v={`${e.extraction.engine} · v${e.extraction.version}${e.extraction.localOnly ? " · LOCAL_ONLY" : ""}`}
+            chip={
+              e.extraction.engine === "local" ? (
+                <Chip ok label="No AI API" />
+              ) : (
+                <Chip ok={false} label={`Calls an LLM (${e.extraction.engine})`} />
+              )
+            }
+          />
+          {/* Rendered as inactive rather than hidden: an operator who set an API
+              key deserves to see that nothing is using it. */}
+          <Env
+            k="LLM"
+            v={e.llm.required ? `${e.llm.provider} · ${e.llm.model} · ${e.llm.baseUrl}` : "Not used — extraction runs locally"}
+            chip={
+              e.llm.required ? (
+                <Chip ok={e.llm.apiKeyConfigured} label={e.llm.apiKeyConfigured ? "API key set" : "LLM_API_KEY missing"} />
+              ) : (
+                <Chip ok label="Not required" />
+              )
+            }
+          />
           <Env k="Google OAuth" v={e.google.redirectUri} chip={<Chip ok={e.google.clientConfigured} label={e.google.clientConfigured ? "Client configured" : "GOOGLE_CLIENT_ID/SECRET missing"} />} />
           {/* Configured and in-force can differ when a driver cannot be honoured
               here, and "where do uploads actually go" is the question worth
@@ -151,7 +181,7 @@ export function SettingsForm({ isAdmin }: { isAdmin: boolean }) {
         </div>
       </div>
 
-      {SECTIONS.map((s) => (
+      {SECTIONS.filter((sec) => !sec.llmOnly || e.llm.required).map((s) => (
         <div key={s.title} className="card p-5">
           <h2 className="text-sm font-semibold text-gray-900">{s.title}</h2>
           <p className="mt-1 text-xs text-gray-500">{s.description}</p>
