@@ -1,63 +1,82 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Design tokens.
+   Design tokens — "Precision Talent Interface" (Stitch).
 
-   Two layers, deliberately. The palette below is raw material; the semantic
-   tokens underneath name a *role* ("surface", "border-strong", "danger"). Screens
-   reference roles only, so changing the brand hue or the neutral temperature is
-   one edit here rather than a find-and-replace across the app.
+   Implements the DESIGN.md *prose* palette: slate neutrals under a deep cobalt
+   action colour. The YAML frontmatter in that file describes a different,
+   lavender Material-3 system; where the two disagree the prose wins, because
+   the component specs below it (row heights, badge fills, focus rings, button
+   sizes) are all written against slate and cobalt.
 
-   The brand hue is unchanged from the original product — this is a visual
-   refinement of an existing identity, not a rebrand.
+   The scale *names* are unchanged from before — `ink-*` and `brand-*` — so
+   every existing component picks up the new palette without being edited. Only
+   the values moved.
 --------------------------------------------------------------------------- */
 @theme {
-  /* Brand — a restrained indigo. Trust over excitement. */
-  --color-brand-50: #eef3ff;
-  --color-brand-100: #dbe5ff;
-  --color-brand-200: #bfd0ff;
-  --color-brand-300: #94aeff;
-  --color-brand-400: #6584fb;
-  --color-brand-500: #2f5bea;
-  --color-brand-600: #2449d4;
-  --color-brand-700: #1c3ca3;
-  --color-brand-800: #1a3583;
-  --color-brand-900: #1a3069;
+  /* Brand — deep cobalt. 600 is the action colour, 700 its hover. */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --color-brand-800: #1e3a8a;
+  --color-brand-900: #172554;
 
-  /* Neutrals — slightly cool, so the brand reads as deliberate against them. */
+  /* Neutrals — slate. High-contrast typography for long review sessions. */
   --color-ink-50: #f8fafc;
-  --color-ink-100: #f1f4f9;
-  --color-ink-200: #e4e8ef;
-  --color-ink-300: #cdd4df;
-  --color-ink-400: #98a2b3;
-  --color-ink-500: #667085;
-  --color-ink-600: #4a5567;
-  --color-ink-700: #344054;
-  --color-ink-800: #1d2839;
-  --color-ink-900: #101828;
+  --color-ink-100: #f1f5f9;
+  --color-ink-200: #e2e8f0;
+  --color-ink-300: #cbd5e1;
+  --color-ink-400: #94a3b8;
+  --color-ink-500: #64748b;
+  --color-ink-600: #475569;
+  --color-ink-700: #334155;
+  --color-ink-800: #1e293b;
+  --color-ink-900: #0f172a;
 
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Secondary process accent, for pipeline and in-flight states. */
+  --color-sky-accent: #0284c7;
 
-  /* Shadows: two steps only. More than that and "elevated" stops meaning anything. */
-  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.06);
-  --shadow-raised: 0 4px 8px -2px rgb(16 24 40 / 0.08), 0 2px 4px -2px rgb(16 24 40 / 0.04);
-  --shadow-overlay: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 12px -4px rgb(16 24 40 / 0.08);
+  /* Dual-font structure: Plus Jakarta Sans carries structural presence on
+     titles, Inter governs body and controls, JetBrains Mono sets parsed data
+     — phone numbers, timestamps, scores. */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-jakarta), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Four elevation tiers. Tonal separation over heavy shadow. */
+  --shadow-card: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-raised: 0 4px 6px -1px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.05);
+  --shadow-overlay: 0 10px 15px -3px rgb(15 23 42 / 0.08), 0 4px 6px -4px rgb(15 23 42 / 0.03);
+  --shadow-drawer: -4px 0 24px 0 rgb(15 23 42 / 0.09);
 }
 
 :root {
-  --background: #f7f8fb;
-  --foreground: #101828;
-  /* Semantic roles. */
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
   --surface: #ffffff;
-  --surface-sunken: #f7f8fb;
-  --border: #e4e8ef;
-  --border-strong: #cdd4df;
-  --text: #101828;
-  --text-muted: #667085;
-  --text-subtle: #98a2b3;
-  /* Layout constants, so the shell agrees with itself in every file. */
+  --surface-sunken: #f1f5f9;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
+  /* Focus fill, and the tint used for selected table rows. */
+  --brand-tint: #eff6ff;
+
   --sidebar-w: 15rem;
   --header-h: 3.5rem;
+
+  /* A disciplined "soft" radius scale: sharp enough to hold grid lines in
+     dense forms, soft enough not to read as brutalist. */
+  --radius-control: 0.25rem;
+  --radius-surface: 0.5rem;
+  --radius-overlay: 0.75rem;
 }
 
 html,
@@ -73,72 +92,89 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* A single visible focus treatment everywhere, including keyboard users on
-   custom controls. Removing outlines without replacing them is the most common
-   way an otherwise-good interface becomes unusable without a mouse. */
+/* Tabular lining figures across the interface: parsed numbers, dates and
+   scores line up in columns instead of shuffling. */
+body {
+  font-feature-settings: "tnum" 1;
+}
+
 :focus-visible {
-  outline: 2px solid var(--color-brand-500);
+  outline: 2px solid var(--color-brand-600);
   outline-offset: 2px;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-control);
 }
 
 ::selection {
-  background: var(--color-brand-100);
+  background: var(--brand-tint);
   color: var(--color-brand-900);
 }
 
-/* Tabular figures in data contexts: columns of numbers that do not jitter. */
 @utility numeric {
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-/* ---------------------------------------------------------------------------
-   Typography scale. Named by role so a page never picks a size at random.
---------------------------------------------------------------------------- */
-@utility text-page-title {
-  @apply text-[1.375rem] font-semibold tracking-[-0.015em] text-ink-900;
-}
-@utility text-section-title {
-  @apply text-sm font-semibold text-ink-900;
-}
-@utility text-body {
-  @apply text-sm text-ink-700;
-}
-@utility text-meta {
-  @apply text-xs text-ink-500;
-}
-@utility text-metric {
-  @apply text-[1.75rem] font-semibold tracking-[-0.02em] text-ink-900 numeric;
+/* Parsed machine output — phone numbers, ids, durations. */
+@utility data {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---------------------------------------------------------------------------
-   Surfaces
+   Typography. Display face on structure, Inter on everything read.
+--------------------------------------------------------------------------- */
+@utility text-page-title {
+  font-family: var(--font-display);
+  @apply text-[1.75rem] font-bold leading-[2.25rem] tracking-[-0.02em] text-ink-900;
+}
+@utility text-section-title {
+  font-family: var(--font-display);
+  @apply text-base font-semibold leading-6 text-ink-900;
+}
+@utility text-body {
+  @apply text-sm leading-5 text-ink-700;
+}
+@utility text-meta {
+  @apply text-[0.8125rem] leading-[1.125rem] text-ink-500;
+}
+@utility text-metric {
+  font-family: var(--font-display);
+  @apply text-[1.75rem] font-bold leading-9 tracking-[-0.02em] text-ink-900 numeric;
+}
+/* Uppercase metadata: confidence meters, file tags, step counters. */
+@utility text-label-xs {
+  @apply text-[0.6875rem] font-semibold uppercase leading-[0.875rem] tracking-[0.02em];
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces — white containers on a tinted canvas, held by micro-borders.
 --------------------------------------------------------------------------- */
 @utility card {
-  @apply rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)];
+  @apply rounded-[var(--radius-surface)] border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)];
 }
 
 @utility card-interactive {
-  @apply card transition-shadow duration-150 hover:shadow-[var(--shadow-raised)];
+  @apply card transition-[border-color,box-shadow] duration-150 hover:border-[var(--border-strong)] hover:shadow-[var(--shadow-raised)];
 }
 
 /* ---------------------------------------------------------------------------
-   Buttons — four levels of emphasis, and no more. If everything is primary,
-   nothing is.
+   Buttons — 36px standard, 32px dense, 4px radius.
 --------------------------------------------------------------------------- */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium
-         transition-[background-color,border-color,color,box-shadow] duration-150
+  @apply inline-flex h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-[var(--radius-control)] px-3.5
+         text-sm font-medium transition-[background-color,border-color,color,box-shadow] duration-150
          disabled:pointer-events-none disabled:opacity-45;
 }
 
 @utility btn-primary {
-  @apply btn bg-brand-600 text-white shadow-[var(--shadow-card)] hover:bg-brand-700 active:bg-brand-800;
+  @apply btn bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800;
 }
 
 @utility btn-secondary {
-  @apply btn border border-[var(--border-strong)] bg-white text-ink-700 shadow-[var(--shadow-card)] hover:bg-ink-50 hover:text-ink-900 active:bg-ink-100;
+  @apply btn border border-[var(--border)] bg-white text-ink-700 hover:border-[var(--border-strong)] hover:bg-ink-50 hover:text-ink-900;
 }
 
 @utility btn-tertiary {
@@ -146,26 +182,25 @@ body {
 }
 
 @utility btn-danger {
-  @apply btn border border-red-200 bg-white text-red-700 shadow-[var(--shadow-card)] hover:border-red-300 hover:bg-red-50;
+  @apply btn border border-red-200 bg-red-50 text-red-600 hover:bg-red-100;
 }
 
 @utility btn-sm {
-  @apply gap-1 px-2.5 py-1.5 text-xs;
+  @apply h-8 gap-1 px-2.5 text-xs;
 }
 
 @utility btn-lg {
-  @apply px-4 py-2.5 text-sm;
+  @apply h-10 px-4 text-sm;
 }
 
 /* ---------------------------------------------------------------------------
-   Form controls. Native selects and date inputs render differently in every
-   browser; these give them one appearance without losing native behaviour.
+   Form controls — 36px, 4px radius, unified focus ring.
 --------------------------------------------------------------------------- */
 @utility field {
-  @apply w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 py-2 text-sm text-ink-900 shadow-[var(--shadow-card)]
+  @apply w-full rounded-[var(--radius-control)] border border-[var(--border-strong)] bg-white px-3 py-2 text-sm text-ink-900
          transition-[border-color,box-shadow] duration-150
          placeholder:text-ink-400
-         focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10
+         focus:border-brand-600 focus:outline-none focus:ring-[3px] focus:ring-brand-600/15
          disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-400;
 }
 
@@ -175,13 +210,13 @@ body {
 
 @utility select {
   @apply field cursor-pointer appearance-none bg-no-repeat pr-9;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
   background-position: right 0.625rem center;
   background-size: 1.15rem;
 }
 
 @utility label {
-  @apply mb-1.5 block text-xs font-medium text-ink-700;
+  @apply mb-1.5 block text-xs font-semibold text-ink-700;
 }
 
 @utility hint {
@@ -192,36 +227,47 @@ body {
   @apply mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600;
 }
 
+/* Low-confidence override input: a warning edge without shouting. */
+@utility field-warn {
+  @apply field border-amber-300 focus:border-amber-500 focus:ring-amber-500/15;
+}
+
 /* ---------------------------------------------------------------------------
-   Table. Horizontal rules only — a full grid turns a list into a spreadsheet
-   and slows scanning.
+   Tables — 36px header, 44px rows, horizontal rules only.
 --------------------------------------------------------------------------- */
 @utility table {
-  @apply w-full text-left text-sm;
+  @apply w-full text-left text-[0.8125rem];
 }
 
 .table th {
-  @apply sticky top-0 z-10 whitespace-nowrap border-b border-[var(--border)] bg-ink-50/95 px-4 py-2.5
-         text-[0.6875rem] font-semibold uppercase tracking-[0.04em] text-ink-500 backdrop-blur;
+  @apply sticky top-0 z-10 h-9 whitespace-nowrap border-b border-[var(--border)] bg-ink-50 px-4
+         text-[0.6875rem] font-semibold uppercase leading-[0.875rem] tracking-[0.02em] text-ink-500;
 }
 .table td {
-  @apply border-b border-[var(--border)] px-4 py-3 align-middle text-ink-700;
+  @apply h-11 border-b border-[var(--border)] px-4 align-middle text-ink-700;
 }
 .table tbody tr {
   @apply transition-colors duration-100;
 }
 .table tbody tr:hover td {
-  @apply bg-brand-50/40;
+  @apply bg-ink-50;
 }
 .table tbody tr:last-child td {
   @apply border-b-0;
 }
+/* Selected row: tint plus a 3px leading strip, so selection is not colour alone. */
+.table tbody tr[data-selected="true"] td {
+  @apply bg-[var(--brand-tint)];
+}
+.table tbody tr[data-selected="true"] td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--color-brand-600);
+}
 
 /* ---------------------------------------------------------------------------
-   Skeletons — layout-preserving loading, so content does not jump in.
+   Skeletons
 --------------------------------------------------------------------------- */
 @utility skeleton {
-  @apply relative overflow-hidden rounded-md bg-ink-100;
+  @apply relative overflow-hidden rounded-[var(--radius-control)] bg-ink-100;
 }
 
 .skeleton::after {
@@ -239,7 +285,6 @@ body {
   }
 }
 
-/* Respect a stated preference for less motion. */
 @media (prefers-reduced-motion: reduce) {
   .skeleton::after {
     animation: none;
@@ -252,7 +297,6 @@ body {
   }
 }
 
-/* Screen-reader-only text, for labels that must exist but not be seen. */
 @utility sr-only-focusable {
   @apply absolute h-px w-px overflow-hidden whitespace-nowrap
          focus:static focus:h-auto focus:w-auto focus:overflow-visible;
