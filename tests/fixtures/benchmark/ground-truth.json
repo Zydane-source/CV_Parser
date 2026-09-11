@@ -1,0 +1,1869 @@
+{
+  "generated": "2026-09-11T06:32:26.611Z",
+  "count": 120,
+  "entries": [
+    {
+      "file": "000_Rahul_Sharma_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Rahul Sharma",
+        "phone": "+917000007919",
+        "role": "Java Developer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "001_Priya_Verma_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Priya Verma",
+        "phone": "+918000015838",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "002_Amit_Kumar_Resume.docx",
+      "layout": "traditional",
+      "expected": {
+        "name": "Amit Kumar",
+        "phone": "+919000023757",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:docx",
+        "honorific"
+      ]
+    },
+    {
+      "file": "003_Sneha_Reddy_scanned.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Sneha Reddy",
+        "phone": "+916000031676",
+        "role": "Data Analyst"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf",
+        "scanned",
+        "has_references"
+      ]
+    },
+    {
+      "file": "004_Arjun_Patel_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Arjun Patel",
+        "phone": "+917000039595",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "005_Rohan_Mehta_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Rohan Mehta",
+        "phone": null,
+        "role": "HR Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "decoy_numbers",
+        "no_phone",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "006_Neha_Gupta_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Neha Gupta",
+        "phone": "+919000055433",
+        "role": null
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:pdf",
+        "has_references",
+        "no_role"
+      ]
+    },
+    {
+      "file": "007_Vikram_Singh.png",
+      "layout": "modern",
+      "expected": {
+        "name": "Vikram Singh",
+        "phone": "+916000063352",
+        "role": "Digital Marketing Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:png",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "008_Anjali_Nair_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Anjali Nair",
+        "phone": "+917000071271",
+        "role": "Mechanical Engineer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "009_Karan_Malhotra_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Karan Malhotra",
+        "phone": "+918000079190",
+        "role": "Civil Engineer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ]
+    },
+    {
+      "file": "010_Deepak_Joshi_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Deepak Joshi",
+        "phone": "+919000087109",
+        "role": "Content Writer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "011_Meera_Iyer_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Meera Iyer",
+        "phone": "+916000095028",
+        "role": "Sales Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "012_Sanjay_Rao_Resume.docx",
+      "layout": "modern",
+      "expected": {
+        "name": "Sanjay Rao",
+        "phone": "+917000102947",
+        "role": "Full Stack Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:docx",
+        "has_references",
+        "cv_heading",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "013_Pooja_Desai_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Pooja Desai",
+        "phone": "+918000110866",
+        "role": null
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "alternate_phone",
+        "no_role"
+      ]
+    },
+    {
+      "file": "014_Aditya_Chauhan_scanned.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000118785",
+        "role": "QA Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf",
+        "scanned"
+      ]
+    },
+    {
+      "file": "015_Kavya_Krishnan_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000126704",
+        "role": "Operations Executive"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:position_label",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "016_Rajesh_Pillai_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Rajesh Pillai",
+        "phone": "+917000134623",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "017_Divya_Menon_Resume.docx",
+      "layout": "two_column",
+      "expected": {
+        "name": "Divya Menon",
+        "phone": "+918000142542",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:headline",
+        "format:docx"
+      ]
+    },
+    {
+      "file": "018_Suresh_Babu_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Suresh Babu",
+        "phone": "+919000150461",
+        "role": "Software Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "019_Ritu_Agarwal_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000158380",
+        "role": "HR Recruiter"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:current_only",
+        "format:pdf",
+        "alternate_phone",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "020_Harshit_Bansal.png",
+      "layout": "two_column",
+      "expected": {
+        "name": "Harshit Bansal",
+        "phone": "+917000166299",
+        "role": null
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:absent",
+        "format:png",
+        "decoy_numbers",
+        "cv_heading",
+        "no_role"
+      ]
+    },
+    {
+      "file": "021_Tanvi_Kulkarni_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000174218",
+        "role": "Machine Learning Engineer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "022_Manish_Tiwari_Resume.docx",
+      "layout": "table",
+      "expected": {
+        "name": "Manish Tiwari",
+        "phone": null,
+        "role": "Java Developer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:position_label",
+        "format:docx",
+        "no_phone"
+      ]
+    },
+    {
+      "file": "023_Shreya_Ghosh_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000190056",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific"
+      ]
+    },
+    {
+      "file": "024_Nikhil_Jain_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Nikhil Jain",
+        "phone": "+917000197975",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:headline",
+        "format:pdf",
+        "has_references",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "025_Ananya_Chatterjee_scanned.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000205894",
+        "role": "Data Analyst"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:header_title",
+        "format:pdf",
+        "scanned",
+        "alternate_phone",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "026_Vivek_Saxena_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Vivek Saxena",
+        "phone": "+919000213813",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:current_only",
+        "format:pdf",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "027_Ishita_Bose_Resume.docx",
+      "layout": "table",
+      "expected": {
+        "name": "Ishita Bose",
+        "phone": "+916000221732",
+        "role": null
+      },
+      "traits": [
+        "layout:table",
+        "role_style:absent",
+        "format:docx",
+        "has_references",
+        "no_role"
+      ]
+    },
+    {
+      "file": "028_Gaurav_Khanna_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000229651",
+        "role": "Accountant"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:applied_label",
+        "format:pdf",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "029_Lakshmi_Subramanian_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000237570",
+        "role": "Digital Marketing Executive"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:position_label",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "030_Abhirup_Chakraborty_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000245489",
+        "role": "Mechanical Engineer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "honorific"
+      ]
+    },
+    {
+      "file": "031_Farhan_Sheikh_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000253408",
+        "role": "Civil Engineer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:headline",
+        "format:pdf",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "032_Nandini_Prasad_Resume.docx",
+      "layout": "minimal",
+      "expected": {
+        "name": "Nandini Prasad",
+        "phone": "+917000261327",
+        "role": "Content Writer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:header_title",
+        "format:docx",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "033_Yogesh_Pawar.png",
+      "layout": "minimal",
+      "expected": {
+        "name": "Yogesh Pawar",
+        "phone": "+918000269246",
+        "role": "Sales Executive"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:current_only",
+        "format:png",
+        "has_references",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "034_Swati_Bhat_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Swati Bhat",
+        "phone": "+919000277165",
+        "role": null
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ]
+    },
+    {
+      "file": "035_Imran_Qureshi_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Imran Qureshi",
+        "phone": "+916000285084",
+        "role": "Customer Support Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "036_Ritika_Sood_scanned.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Ritika Sood",
+        "phone": "+917000293003",
+        "role": "QA Engineer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf",
+        "scanned",
+        "has_references",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "037_Prakash_Nayak_Resume.docx",
+      "layout": "traditional",
+      "expected": {
+        "name": "Prakash Nayak",
+        "phone": "+918000300922",
+        "role": "Operations Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:docx",
+        "alternate_phone",
+        "honorific"
+      ]
+    },
+    {
+      "file": "038_Bhavya_Shetty_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000308841",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "039_Zoya_Ansari_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Zoya Ansari",
+        "phone": null,
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references",
+        "no_phone"
+      ]
+    },
+    {
+      "file": "040_Rahul_Sharma_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Rahul Sharma",
+        "phone": "+917000324679",
+        "role": "Software Engineer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "decoy_numbers",
+        "cv_heading",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "041_Priya_Verma_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Priya Verma",
+        "phone": "+918000332598",
+        "role": null
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ]
+    },
+    {
+      "file": "042_Amit_Kumar_Resume.docx",
+      "layout": "modern",
+      "expected": {
+        "name": "Amit Kumar",
+        "phone": "+919000340517",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:docx",
+        "has_references"
+      ]
+    },
+    {
+      "file": "043_Sneha_Reddy_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Sneha Reddy",
+        "phone": "+916000348436",
+        "role": "Machine Learning Engineer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "044_Arjun_Patel_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Arjun Patel",
+        "phone": "+917000356355",
+        "role": "Java Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "045_Rohan_Mehta_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Rohan Mehta",
+        "phone": "+918000364274",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "046_Neha_Gupta.png",
+      "layout": "modern",
+      "expected": {
+        "name": "Neha Gupta",
+        "phone": "+919000372193",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:png"
+      ]
+    },
+    {
+      "file": "047_Vikram_Singh_scanned.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Vikram Singh",
+        "phone": "+916000380112",
+        "role": "Data Analyst"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:pdf",
+        "scanned",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "048_Anjali_Nair_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Anjali Nair",
+        "phone": "+917000388031",
+        "role": null
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "has_references",
+        "cv_heading",
+        "no_role"
+      ]
+    },
+    {
+      "file": "049_Karan_Malhotra_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Karan Malhotra",
+        "phone": "+918000395950",
+        "role": "HR Executive"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "050_Deepak_Joshi_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Deepak Joshi",
+        "phone": "+919000403869",
+        "role": "Accountant"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:position_label",
+        "format:pdf",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "051_Meera_Iyer_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Meera Iyer",
+        "phone": "+916000411788",
+        "role": "Digital Marketing Executive"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ]
+    },
+    {
+      "file": "052_Sanjay_Rao_Resume.docx",
+      "layout": "two_column",
+      "expected": {
+        "name": "Sanjay Rao",
+        "phone": "+917000419707",
+        "role": "Mechanical Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:headline",
+        "format:docx",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "053_Pooja_Desai_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Pooja Desai",
+        "phone": "+918000427626",
+        "role": "Civil Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:header_title",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "054_Aditya_Chauhan_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000435545",
+        "role": "Content Writer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:current_only",
+        "format:pdf",
+        "has_references",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "055_Kavya_Krishnan_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000443464",
+        "role": null
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:absent",
+        "format:pdf",
+        "alternate_phone",
+        "decoy_numbers",
+        "no_role"
+      ]
+    },
+    {
+      "file": "056_Rajesh_Pillai_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Rajesh Pillai",
+        "phone": null,
+        "role": "Full Stack Developer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:applied_label",
+        "format:pdf",
+        "cv_heading",
+        "no_phone"
+      ]
+    },
+    {
+      "file": "057_Divya_Menon_Resume.docx",
+      "layout": "table",
+      "expected": {
+        "name": "Divya Menon",
+        "phone": "+918000459302",
+        "role": "Customer Support Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:position_label",
+        "format:docx",
+        "has_references"
+      ]
+    },
+    {
+      "file": "058_Suresh_Babu_scanned.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Suresh Babu",
+        "phone": "+919000467221",
+        "role": "QA Engineer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "scanned",
+        "honorific"
+      ]
+    },
+    {
+      "file": "059_Ritu_Agarwal.png",
+      "layout": "table",
+      "expected": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000475140",
+        "role": "Operations Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:headline",
+        "format:png"
+      ]
+    },
+    {
+      "file": "060_Harshit_Bansal_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Harshit Bansal",
+        "phone": "+917000483059",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "061_Tanvi_Kulkarni_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000490978",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:current_only",
+        "format:pdf",
+        "alternate_phone",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "062_Manish_Tiwari_Resume.docx",
+      "layout": "table",
+      "expected": {
+        "name": "Manish Tiwari",
+        "phone": "+919000498897",
+        "role": null
+      },
+      "traits": [
+        "layout:table",
+        "role_style:absent",
+        "format:docx",
+        "no_role"
+      ]
+    },
+    {
+      "file": "063_Shreya_Ghosh_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000506816",
+        "role": "HR Recruiter"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "064_Nikhil_Jain_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Nikhil Jain",
+        "phone": "+917000514735",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:position_label",
+        "format:pdf",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "065_Ananya_Chatterjee_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000522654",
+        "role": "Machine Learning Engineer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "decoy_numbers",
+        "honorific"
+      ]
+    },
+    {
+      "file": "066_Vivek_Saxena_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Vivek Saxena",
+        "phone": "+919000530573",
+        "role": "Java Developer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:headline",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "067_Ishita_Bose_Resume.docx",
+      "layout": "minimal",
+      "expected": {
+        "name": "Ishita Bose",
+        "phone": "+916000538492",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:header_title",
+        "format:docx",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "068_Gaurav_Khanna_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000546411",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:current_only",
+        "format:pdf",
+        "cv_heading",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "069_Lakshmi_Subramanian_scanned.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000554330",
+        "role": null
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:absent",
+        "format:pdf",
+        "scanned",
+        "has_references",
+        "no_role"
+      ]
+    },
+    {
+      "file": "070_Abhirup_Chakraborty_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000562249",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "071_Farhan_Sheikh_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000570168",
+        "role": "HR Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "072_Nandini_Prasad.png",
+      "layout": "traditional",
+      "expected": {
+        "name": "Nandini Prasad",
+        "phone": "+917000578087",
+        "role": "Accountant"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:png",
+        "has_references",
+        "honorific",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "073_Yogesh_Pawar_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Yogesh Pawar",
+        "phone": null,
+        "role": "Digital Marketing Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf",
+        "alternate_phone",
+        "no_phone"
+      ]
+    },
+    {
+      "file": "074_Swati_Bhat_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Swati Bhat",
+        "phone": "+919000593925",
+        "role": "Mechanical Engineer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "075_Imran_Qureshi_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Imran Qureshi",
+        "phone": "+916000601844",
+        "role": "Civil Engineer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "076_Ritika_Sood_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Ritika Sood",
+        "phone": "+917000609763",
+        "role": null
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:pdf",
+        "cv_heading",
+        "no_role"
+      ]
+    },
+    {
+      "file": "077_Prakash_Nayak_Resume.docx",
+      "layout": "modern",
+      "expected": {
+        "name": "Prakash Nayak",
+        "phone": "+918000617682",
+        "role": "Sales Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:docx"
+      ]
+    },
+    {
+      "file": "078_Bhavya_Shetty_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000625601",
+        "role": "Full Stack Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "079_Zoya_Ansari_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Zoya Ansari",
+        "phone": "+916000633520",
+        "role": "Customer Support Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "alternate_phone",
+        "honorific"
+      ]
+    },
+    {
+      "file": "080_Rahul_Sharma_scanned.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Rahul Sharma",
+        "phone": "+917000641439",
+        "role": "QA Engineer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "scanned",
+        "decoy_numbers",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "081_Priya_Verma_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Priya Verma",
+        "phone": "+918000649358",
+        "role": "Operations Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "082_Amit_Kumar_Resume.docx",
+      "layout": "modern",
+      "expected": {
+        "name": "Amit Kumar",
+        "phone": "+919000657277",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:docx",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "083_Sneha_Reddy_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Sneha Reddy",
+        "phone": "+916000665196",
+        "role": null
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ]
+    },
+    {
+      "file": "084_Arjun_Patel_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Arjun Patel",
+        "phone": "+917000673115",
+        "role": "Software Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "085_Rohan_Mehta.png",
+      "layout": "two_column",
+      "expected": {
+        "name": "Rohan Mehta",
+        "phone": "+918000681034",
+        "role": "HR Recruiter"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:position_label",
+        "format:png",
+        "alternate_phone",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "086_Neha_Gupta_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Neha Gupta",
+        "phone": "+919000688953",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific"
+      ]
+    },
+    {
+      "file": "087_Vikram_Singh_Resume.docx",
+      "layout": "two_column",
+      "expected": {
+        "name": "Vikram Singh",
+        "phone": "+916000696872",
+        "role": "Machine Learning Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:headline",
+        "format:docx",
+        "has_references"
+      ]
+    },
+    {
+      "file": "088_Anjali_Nair_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Anjali Nair",
+        "phone": "+917000704791",
+        "role": "Java Developer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:header_title",
+        "format:pdf",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "089_Karan_Malhotra_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Karan Malhotra",
+        "phone": "+918000712710",
+        "role": "Backend Developer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:current_only",
+        "format:pdf",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "090_Deepak_Joshi_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Deepak Joshi",
+        "phone": null,
+        "role": null
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:absent",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "no_phone",
+        "no_role"
+      ]
+    },
+    {
+      "file": "091_Meera_Iyer_scanned.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Meera Iyer",
+        "phone": "+916000728548",
+        "role": "Data Analyst"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:applied_label",
+        "format:pdf",
+        "scanned",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "092_Sanjay_Rao_Resume.docx",
+      "layout": "table",
+      "expected": {
+        "name": "Sanjay Rao",
+        "phone": "+917000736467",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:position_label",
+        "format:docx",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "093_Pooja_Desai_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Pooja Desai",
+        "phone": "+918000744386",
+        "role": "HR Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ]
+    },
+    {
+      "file": "094_Aditya_Chauhan_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000752305",
+        "role": "Accountant"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:headline",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "095_Kavya_Krishnan_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000760224",
+        "role": "Digital Marketing Executive"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:header_title",
+        "format:pdf",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "096_Rajesh_Pillai_Resume.pdf",
+      "layout": "table",
+      "expected": {
+        "name": "Rajesh Pillai",
+        "phone": "+917000768143",
+        "role": "Mechanical Engineer"
+      },
+      "traits": [
+        "layout:table",
+        "role_style:current_only",
+        "format:pdf",
+        "has_references",
+        "cv_heading",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "097_Divya_Menon_Resume.docx",
+      "layout": "table",
+      "expected": {
+        "name": "Divya Menon",
+        "phone": "+918000776062",
+        "role": null
+      },
+      "traits": [
+        "layout:table",
+        "role_style:absent",
+        "format:docx",
+        "alternate_phone",
+        "no_role"
+      ]
+    },
+    {
+      "file": "098_Suresh_Babu.png",
+      "layout": "minimal",
+      "expected": {
+        "name": "Suresh Babu",
+        "phone": "+919000783981",
+        "role": "Content Writer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:applied_label",
+        "format:png"
+      ]
+    },
+    {
+      "file": "099_Ritu_Agarwal_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000791900",
+        "role": "Sales Executive"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:position_label",
+        "format:pdf",
+        "has_references"
+      ]
+    },
+    {
+      "file": "100_Harshit_Bansal_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Harshit Bansal",
+        "phone": "+917000799819",
+        "role": "Full Stack Developer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "decoy_numbers",
+        "honorific",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "101_Tanvi_Kulkarni_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000807738",
+        "role": "Customer Support Executive"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:headline",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "102_Manish_Tiwari_scanned.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Manish Tiwari",
+        "phone": "+919000815657",
+        "role": "QA Engineer"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:header_title",
+        "format:pdf",
+        "scanned",
+        "has_references"
+      ]
+    },
+    {
+      "file": "103_Shreya_Ghosh_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000823576",
+        "role": "Operations Executive"
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:current_only",
+        "format:pdf",
+        "alternate_phone",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "104_Nikhil_Jain_Resume.pdf",
+      "layout": "minimal",
+      "expected": {
+        "name": "Nikhil Jain",
+        "phone": "+917000831495",
+        "role": null
+      },
+      "traits": [
+        "layout:minimal",
+        "role_style:absent",
+        "format:pdf",
+        "cv_heading",
+        "no_role"
+      ]
+    },
+    {
+      "file": "105_Ananya_Chatterjee_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000839414",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "106_Vivek_Saxena_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Vivek Saxena",
+        "phone": "+919000847333",
+        "role": "Software Engineer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf"
+      ]
+    },
+    {
+      "file": "107_Ishita_Bose_Resume.docx",
+      "layout": "traditional",
+      "expected": {
+        "name": "Ishita Bose",
+        "phone": null,
+        "role": "HR Recruiter"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:docx",
+        "honorific",
+        "no_phone"
+      ]
+    },
+    {
+      "file": "108_Gaurav_Khanna_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000863171",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf",
+        "has_references",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "109_Lakshmi_Subramanian_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000871090",
+        "role": "Machine Learning Engineer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf",
+        "alternate_phone"
+      ]
+    },
+    {
+      "file": "110_Abhirup_Chakraborty_Resume.pdf",
+      "layout": "traditional",
+      "expected": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000879009",
+        "role": "Java Developer"
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "decoy_numbers",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "111_Farhan_Sheikh.png",
+      "layout": "traditional",
+      "expected": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000886928",
+        "role": null
+      },
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:png",
+        "has_references",
+        "no_role"
+      ]
+    },
+    {
+      "file": "112_Nandini_Prasad_Resume.docx",
+      "layout": "modern",
+      "expected": {
+        "name": "Nandini Prasad",
+        "phone": "+917000894847",
+        "role": "Frontend Developer"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:docx",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "113_Yogesh_Pawar_scanned.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Yogesh Pawar",
+        "phone": "+918000902766",
+        "role": "Data Analyst"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "scanned"
+      ]
+    },
+    {
+      "file": "114_Swati_Bhat_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Swati Bhat",
+        "phone": "+919000910685",
+        "role": "Business Development Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ]
+    },
+    {
+      "file": "115_Imran_Qureshi_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Imran Qureshi",
+        "phone": "+916000918604",
+        "role": "HR Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "alternate_phone",
+        "decoy_numbers"
+      ]
+    },
+    {
+      "file": "116_Ritika_Sood_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Ritika Sood",
+        "phone": "+917000926523",
+        "role": "Accountant"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:pdf",
+        "cv_heading"
+      ]
+    },
+    {
+      "file": "117_Prakash_Nayak_Resume.docx",
+      "layout": "modern",
+      "expected": {
+        "name": "Prakash Nayak",
+        "phone": "+918000934442",
+        "role": "Digital Marketing Executive"
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:docx",
+        "has_references",
+        "current_role_only"
+      ]
+    },
+    {
+      "file": "118_Bhavya_Shetty_Resume.pdf",
+      "layout": "modern",
+      "expected": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000942361",
+        "role": null
+      },
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ]
+    },
+    {
+      "file": "119_Zoya_Ansari_Resume.pdf",
+      "layout": "two_column",
+      "expected": {
+        "name": "Zoya Ansari",
+        "phone": "+916000950280",
+        "role": "Civil Engineer"
+      },
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf"
+      ]
+    }
+  ]
+}

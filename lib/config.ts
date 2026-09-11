@@ -47,6 +47,16 @@ const envSchema = z.object({
   GOOGLE_SHEETS_SPREADSHEET_ID: str(""),
   GOOGLE_DRIVE_SYNC_INTERVAL_MINUTES: num(5),
 
+  /**
+   * Which extraction engine runs in production.
+   *   "local"  – deterministic in-process engine. No external AI API. Default.
+   *   "shadow" – local engine produces the stored result; the LLM runs too and
+   *              the two are compared and logged. Never exposes LLM output as
+   *              production data. Requires LLM credentials.
+   *   "legacy" – the original LLM path. Kept for rollback only.
+   */
+  EXTRACTION_ENGINE: z.enum(["local", "shadow", "legacy"]).optional().default("local"),
+
   LLM_PROVIDER: z.enum(["openai", "anthropic"]).optional().default("openai"),
   LLM_API_KEY: str(""),
   LLM_MODEL: str("gpt-4o-mini"),
@@ -129,7 +139,10 @@ export function publicConfigSummary() {
   const e = env();
   return {
     appUrl: e.APP_URL,
+    extractionEngine: e.EXTRACTION_ENGINE,
     llm: {
+      /** Only consulted when EXTRACTION_ENGINE is "shadow" or "legacy". */
+      required: e.EXTRACTION_ENGINE !== "local",
       provider: e.LLM_PROVIDER,
       model: e.LLM_MODEL,
       baseUrl: e.LLM_BASE_URL || (e.LLM_PROVIDER === "anthropic" ? "https://api.anthropic.com" : "https://api.openai.com/v1"),

@@ -26,6 +26,7 @@ import { writeHeartbeat, clearHeartbeat, HEARTBEAT_INTERVAL_MS } from "@/lib/wor
 import { CV_QUEUE_NAME, DRIVE_SYNC_QUEUE_NAME, getDriveSyncQueue, type CVJobData, type DriveSyncJobData } from "@/services/processing/queue";
 import { processCVJob } from "@/services/processing/processor";
 import { verifyLLMCredentials } from "@/services/llm";
+import { ENGINE_VERSION } from "@/services/cv-engine";
 import { syncConnection, syncAllConnections } from "@/services/google-drive/sync";
 import { shutdownOCR } from "@/services/ocr";
 
@@ -62,32 +63,38 @@ async function main() {
   const log = logger.child({ component: "worker", workerId: WORKER_ID });
 
   log.info(
-    { concurrency: settings.workerConcurrency, llmRateLimitPerMinute: settings.llmRateLimitPerMinute, provider: e.LLM_PROVIDER, model: settings.llmModel, cwd: process.cwd() },
+    { concurrency: settings.workerConcurrency, engine: e.EXTRACTION_ENGINE, llmRateLimitPerMinute: settings.llmRateLimitPerMinute, cwd: process.cwd() },
     "Starting CV worker",
   );
 
   await checkStorage(log);
 
   // ── LLM preflight ─────────────────────────────────────────────────────────
+  // Only meaningful when an LLM is actually in the extraction path. With the
+  // local engine there is nothing to preflight and no credential to demand.
   let llmError: string | null = null;
-  const check = await verifyLLMCredentials();
-  if (check.ok) {
-    log.info({ provider: check.provider, model: check.model }, "LLM credentials verified");
+  if (e.EXTRACTION_ENGINE === "local") {
+    log.info({ engine: "local", engineVersion: ENGINE_VERSION }, "Local extraction engine active — no LLM credentials required");
   } else {
-    llmError = check.error;
-    log.error({ provider: check.provider, model: check.model }, `LLM PREFLIGHT FAILED: ${check.error}`);
-    console.error(
-      [
-        "",
-        "  ┌──────────────────────────────────────────────────────────────────────┐",
-        "  │  LLM is not usable – every CV will fail until this is fixed.        │",
-        "  └──────────────────────────────────────────────────────────────────────┘",
-        `  ${check.error}`,
-        "",
-        "  Fix .env, restart this worker, then click 'Retry all failed' in the UI.",
-        "",
-      ].join("\n"),
-    );
+    const check = await verifyLLMCredentials();
+    if (check.ok) {
+      log.info({ provider: check.provider, model: check.model }, "LLM credentials verified");
+    } else {
+      llmError = check.error;
+      log.error({ provider: check.provider, model: check.model }, `LLM PREFLIGHT FAILED: ${check.error}`);
+      console.error(
+        [
+          "",
+          "  ┌──────────────────────────────────────────────────────────────────────┐",
+          "  │  LLM is not usable – every CV will fail until this is fixed.        │",
+          "  └──────────────────────────────────────────────────────────────────────┘",
+          `  ${check.error}`,
+          "",
+          `  Or set EXTRACTION_ENGINE=local to run without any LLM at all.`,
+          "",
+        ].join("\n"),
+      );
+    }
   }
 
   // ── Heartbeat ─────────────────────────────────────────────────────────────
@@ -100,7 +107,7 @@ async function main() {
         host: os.hostname(),
         startedAt,
         concurrency: settings.workerConcurrency,
-        llm: { provider: e.LLM_PROVIDER, model: settings.llmModel, keyConfigured: Boolean(e.LLM_API_KEY), lastError: llmError },
+        llm: { provider: e.EXTRACTION_ENGINE === "local" ? "local-engine" : e.LLM_PROVIDER, model: e.EXTRACTION_ENGINE === "local" ? "deterministic" : settings.llmModel, keyConfigured: e.EXTRACTION_ENGINE === "local" ? true : Boolean(e.LLM_API_KEY), lastError: llmError },
       });
     } catch (err) {
       log.warn({ err: errorMessage(err) }, "heartbeat write failed");
@@ -131,7 +138,7 @@ async function main() {
   cvWorker.on("failed", (job, err) => {
     const message = errorMessage(err);
     // Keep the heartbeat's LLM status current so the UI banner reflects reality.
-    if (/API key|LLM_API_KEY|401|403/i.test(message) && /llm/i.test(message)) llmError = message;
+    if (e.EXTRACTION_ENGINE !== "local" && /API key|LLM_API_KEY|401|403/i.test(message) && /llm/i.test(message)) llmError = message;
     log.warn({ jobId: job?.id, attempts: job?.attemptsMade, err: message }, "job failed");
   });
   cvWorker.on("error", (err) => log.error({ err: errorMessage(err) }, "worker error"));

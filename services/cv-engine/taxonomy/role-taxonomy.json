@@ -1,0 +1,127 @@
+{
+  "version": "1.0.0",
+  "note": "Configurable role taxonomy. Add roles and aliases here rather than in code. 'canonical' is what gets stored; 'aliases' are matched case-insensitively with flexible word separators. Admins can override this file through the Setting table key 'roleTaxonomy'.",
+  "families": [
+    {
+      "family": "Software Engineering",
+      "roles": [
+        { "canonical": "Software Engineer", "aliases": ["Software Developer", "SDE", "SWE", "Software Development Engineer", "Programmer", "Software Engg"] },
+        { "canonical": "Backend Developer", "aliases": ["Backend Engineer", "Back End Developer", "Back-End Developer", "Server Side Developer", "Node Developer", "Node.js Developer", "NodeJS Developer"] },
+        { "canonical": "Frontend Developer", "aliases": ["Frontend Engineer", "Front End Developer", "Front-End Developer", "UI Developer", "React Developer", "ReactJS Developer", "Angular Developer", "Vue Developer", "Web Developer"] },
+        { "canonical": "Full Stack Developer", "aliases": ["Fullstack Developer", "Full-Stack Developer", "Full Stack Engineer", "MERN Stack Developer", "MEAN Stack Developer"] },
+        { "canonical": "Python Developer", "aliases": ["Python Engineer", "Django Developer", "Flask Developer"] },
+        { "canonical": "Java Developer", "aliases": ["Java Engineer", "Spring Boot Developer", "J2EE Developer", "Java Full Stack Developer"] },
+        { "canonical": "PHP Developer", "aliases": ["Laravel Developer", "WordPress Developer"] },
+        { "canonical": "Dot Net Developer", "aliases": [".NET Developer", "DotNet Developer", "C# Developer", "ASP.NET Developer"] },
+        { "canonical": "Mobile App Developer", "aliases": ["Android Developer", "iOS Developer", "Flutter Developer", "React Native Developer", "Mobile Developer"] },
+        { "canonical": "QA Engineer", "aliases": ["Test Engineer", "Software Tester", "QA Analyst", "Quality Analyst", "Automation Test Engineer", "SDET", "Manual Tester"] },
+        { "canonical": "DevOps Engineer", "aliases": ["Site Reliability Engineer", "SRE", "Cloud Engineer", "Platform Engineer", "AWS Engineer", "Infrastructure Engineer"] },
+        { "canonical": "Technical Lead", "aliases": ["Tech Lead", "Team Lead", "Engineering Manager", "Lead Engineer", "Lead Developer"] }
+      ]
+    },
+    {
+      "family": "Data and AI",
+      "roles": [
+        { "canonical": "Data Analyst", "aliases": ["Business Data Analyst", "Reporting Analyst", "MIS Executive", "MIS Analyst", "Analytics Executive"] },
+        { "canonical": "Data Scientist", "aliases": ["Applied Scientist", "Research Scientist"] },
+        { "canonical": "Data Engineer", "aliases": ["ETL Developer", "Big Data Engineer", "Data Warehouse Engineer", "Hadoop Developer"] },
+        { "canonical": "Machine Learning Engineer", "aliases": ["ML Engineer", "AI Engineer", "Deep Learning Engineer", "Computer Vision Engineer", "NLP Engineer"] },
+        { "canonical": "Business Analyst", "aliases": ["BA", "Business Systems Analyst", "Functional Analyst", "Product Analyst"] },
+        { "canonical": "Database Administrator", "aliases": ["DBA", "SQL Developer", "Oracle DBA", "PL/SQL Developer"] }
+      ]
+    },
+    {
+      "family": "Sales and Business Development",
+      "roles": [
+        { "canonical": "Sales Executive", "aliases": ["Sales Representative", "Sales Associate", "Field Sales Executive", "Inside Sales Executive", "Sales Officer"] },
+        { "canonical": "Business Development Executive", "aliases": ["BDE", "Business Development Associate", "BDA", "Business Development Officer"] },
+        { "canonical": "Business Development Manager", "aliases": ["BDM", "Business Development Lead"] },
+        { "canonical": "Sales Manager", "aliases": ["Area Sales Manager", "Regional Sales Manager", "Territory Sales Manager", "Zonal Sales Manager", "ASM"] },
+        { "canonical": "Relationship Manager", "aliases": ["Client Relationship Manager", "Customer Relationship Manager", "RM", "Key Account Manager", "Account Manager"] },
+        { "canonical": "Telecaller", "aliases": ["Tele Caller", "Telesales Executive", "Tele Sales Executive", "Telemarketing Executive", "Calling Executive"] }
+      ]
+    },
+    {
+      "family": "Marketing",
+      "roles": [
+        { "canonical": "Digital Marketing Executive", "aliases": ["Digital Marketer", "Digital Marketing Associate", "Online Marketing Executive"] },
+        { "canonical": "Digital Marketing Manager", "aliases": ["Digital Marketing Lead", "Head of Digital Marketing"] },
+        { "canonical": "Marketing Executive", "aliases": ["Marketing Associate", "Marketing Officer", "Brand Executive"] },
+        { "canonical": "SEO Specialist", "aliases": ["SEO Executive", "SEO Analyst", "Search Engine Optimization Executive"] },
+        { "canonical": "Performance Marketing Specialist", "aliases": ["Performance Marketer", "PPC Specialist", "Paid Media Specialist", "Google Ads Specialist"] },
+        { "canonical": "Content Writer", "aliases": ["Content Creator", "Copywriter", "Technical Writer", "Content Executive", "Content Specialist"] },
+        { "canonical": "Social Media Manager", "aliases": ["Social Media Executive", "Social Media Specialist"] },
+        { "canonical": "Graphic Designer", "aliases": ["Visual Designer", "Creative Designer", "UI Designer", "UI UX Designer", "UX Designer", "Motion Graphics Designer"] }
+      ]
+    },
+    {
+      "family": "Human Resources",
+      "roles": [
+        { "canonical": "HR Executive", "aliases": ["Human Resource Executive", "HR Associate", "HR Officer", "HR Generalist"] },
+        { "canonical": "HR Recruiter", "aliases": ["Recruiter", "IT Recruiter", "Technical Recruiter", "Recruitment Executive", "Talent Acquisition Executive", "Talent Acquisition Specialist"] },
+        { "canonical": "HR Manager", "aliases": ["Human Resource Manager", "HR Business Partner", "HRBP", "Head of HR"] },
+        { "canonical": "Payroll Executive", "aliases": ["Payroll Specialist", "Payroll Officer"] }
+      ]
+    },
+    {
+      "family": "Finance and Accounts",
+      "roles": [
+        { "canonical": "Accountant", "aliases": ["Accounts Executive", "Accounts Officer", "Junior Accountant", "Senior Accountant", "Accounts Assistant", "Account Executive"] },
+        { "canonical": "Financial Analyst", "aliases": ["Finance Analyst", "Investment Analyst", "Equity Research Analyst"] },
+        { "canonical": "Finance Executive", "aliases": ["Finance Officer", "Finance Associate"] },
+        { "canonical": "Chartered Accountant", "aliases": ["CA", "CA Inter", "Audit Executive", "Auditor", "Internal Auditor"] },
+        { "canonical": "Tax Consultant", "aliases": ["Taxation Executive", "GST Executive", "Tax Analyst"] }
+      ]
+    },
+    {
+      "family": "Operations and Support",
+      "roles": [
+        { "canonical": "Operations Executive", "aliases": ["Operations Associate", "Ops Executive", "Operations Officer"] },
+        { "canonical": "Operations Manager", "aliases": ["Ops Manager", "Branch Operations Manager"] },
+        { "canonical": "Customer Support Executive", "aliases": ["Customer Service Executive", "Customer Care Executive", "Support Executive", "Customer Success Executive", "Technical Support Executive", "Help Desk Executive"] },
+        { "canonical": "Back Office Executive", "aliases": ["Back Office Assistant", "Data Entry Operator", "Data Entry Executive", "Computer Operator"] },
+        { "canonical": "Supply Chain Executive", "aliases": ["Logistics Executive", "Warehouse Executive", "Procurement Executive", "Purchase Executive", "Store Keeper"] },
+        { "canonical": "Project Manager", "aliases": ["Program Manager", "Delivery Manager", "Scrum Master", "Project Coordinator"] },
+        { "canonical": "Product Manager", "aliases": ["Associate Product Manager", "APM", "Product Owner"] },
+        { "canonical": "Office Administrator", "aliases": ["Admin Executive", "Administrative Assistant", "Office Assistant", "Executive Assistant", "Personal Assistant", "Receptionist"] }
+      ]
+    },
+    {
+      "family": "Engineering (non-software)",
+      "roles": [
+        { "canonical": "Mechanical Engineer", "aliases": ["Design Engineer", "Production Engineer", "Maintenance Engineer", "HVAC Engineer", "CAD Engineer"] },
+        { "canonical": "Civil Engineer", "aliases": ["Site Engineer", "Structural Engineer", "Construction Engineer", "Quantity Surveyor", "Planning Engineer"] },
+        { "canonical": "Electrical Engineer", "aliases": ["Electrical Design Engineer", "Electrical Maintenance Engineer"] },
+        { "canonical": "Electronics Engineer", "aliases": ["Embedded Engineer", "Embedded Systems Engineer", "Hardware Engineer", "VLSI Engineer"] },
+        { "canonical": "Quality Engineer", "aliases": ["Quality Control Engineer", "QA QC Engineer", "Quality Inspector"] }
+      ]
+    },
+    {
+      "family": "Healthcare and Education",
+      "roles": [
+        { "canonical": "Teacher", "aliases": ["School Teacher", "Primary Teacher", "PGT", "TGT", "Lecturer", "Assistant Professor", "Professor", "Faculty", "Tutor", "Teaching Position", "Educator"] },
+        { "canonical": "Nurse", "aliases": ["Staff Nurse", "Registered Nurse", "GNM", "ANM"] },
+        { "canonical": "Pharmacist", "aliases": ["Clinical Pharmacist", "Medical Representative", "MR", "Pharmacy Executive"] },
+        { "canonical": "Lab Technician", "aliases": ["Laboratory Technician", "Medical Lab Technician", "Radiographer"] }
+      ]
+    },
+    {
+      "family": "Legal and Compliance",
+      "roles": [
+        { "canonical": "Legal Executive", "aliases": ["Legal Associate", "Legal Advisor", "Advocate", "Lawyer", "Paralegal"] },
+        { "canonical": "Compliance Officer", "aliases": ["Compliance Executive", "Risk Analyst", "KYC Analyst", "AML Analyst"] },
+        { "canonical": "Company Secretary", "aliases": ["CS", "CS Executive"] }
+      ]
+    }
+  ],
+  "seniorityPrefixes": [
+    "Senior", "Sr", "Sr.", "Junior", "Jr", "Jr.", "Lead", "Principal", "Chief", "Head", "Assistant",
+    "Associate", "Trainee", "Intern", "Graduate", "Entry Level", "Fresher", "Executive", "Deputy", "Vice"
+  ],
+  "genericRejects": [
+    "Job Seeker", "Candidate", "Professional", "Employee", "Worker", "Fresher", "Student", "Graduate",
+    "Any", "Any Role", "Any Position", "Suitable Position", "Challenging Position", "Looking For A Job",
+    "Seeking Employment", "Opportunity", "Career", "Position", "Role", "Job", "Work", "Employment",
+    "Resume", "CV", "Curriculum Vitae", "Bio Data", "Biodata", "Not Found", "N/A", "NA", "None"
+  ]
+}

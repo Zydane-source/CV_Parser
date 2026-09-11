@@ -118,9 +118,29 @@ model Candidate {
   correctedFields     String[]         @default([])
   /// Reasons the record was flagged for review (validation failures, low confidence).
   reviewReasons       String[]         @default([])
+  /// How the *text* was obtained (PDF layer, DOCX, OCR). Unchanged by the migration.
   extractionMethod    ExtractionMethod @default(NONE)
+  /// Retained for history. Holds the LLM model name for rows parsed before the
+  /// migration, and "local-engine" for rows parsed by the deterministic engine.
   llmModel            String?
+  /// Prompt version (LLM rows) or engine version (local rows).
   promptVersion       String?
+
+  /// Which engine produced the fields: "local" or "llm". Null for pre-migration rows.
+  extractionEngine    String?
+  /// Semantic version of the extraction algorithms, so a result can be traced to
+  /// the code that produced it and reprocessed when that code improves.
+  extractionVersion   String?
+  /// Per-field provenance from the local engine, e.g.
+  /// { "candidate_name": "explicit_label", "phone_number": "contact_section" }.
+  fieldMethods        Json?
+  /// Milliseconds spent in field extraction alone (excludes text extraction/OCR).
+  extractionMs        Int?
+  /// True when OCR supplied the text, which lowers confidence in every field.
+  ocrUsed             Boolean          @default(false)
+  /// Denormalised review flag. `reviewReasons` holds the why; this is for indexing.
+  reviewRequired      Boolean          @default(false)
+
   processedAt         DateTime?
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
@@ -132,6 +152,8 @@ model Candidate {
   @@index([jobRoleAppliedFor])
   @@index([createdAt])
   @@index([processedAt])
+  @@index([extractionEngine])
+  @@index([reviewRequired])
 }
 
 model ProcessingJob {

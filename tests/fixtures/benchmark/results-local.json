@@ -1,0 +1,4291 @@
+{
+  "engine": "local",
+  "at": "2026-09-11T07:07:10.659Z",
+  "summary": {
+    "name": {
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "accuracy": 1
+    },
+    "phone": {
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "accuracy": 1
+    },
+    "role": {
+      "precision": 1,
+      "recall": 1,
+      "f1": 1,
+      "accuracy": 1
+    }
+  },
+  "allThree": 120,
+  "count": 120,
+  "rows": [
+    {
+      "file": "000_Rahul_Sharma_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 290.8043,
+      "textMs": 277.69140000000004,
+      "ocrMs": 0,
+      "extractMs": 11.358099999999922,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rahul Sharma",
+        "phone": "+917000007919",
+        "role": "Java Developer"
+      },
+      "want": {
+        "name": "Rahul Sharma",
+        "phone": "+917000007919",
+        "role": "Java Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "001_Priya_Verma_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 5.279300000000035,
+      "textMs": 3.6340999999999894,
+      "ocrMs": 0,
+      "extractMs": 0.9960999999999558,
+      "ocrUsed": false,
+      "got": {
+        "name": "Priya Verma",
+        "phone": "+918000015838",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Priya Verma",
+        "phone": "+918000015838",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "002_Amit_Kumar_Resume.docx",
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:docx",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 19.343600000000038,
+      "textMs": 17.581999999999994,
+      "ocrMs": 0,
+      "extractMs": 1.5977000000000317,
+      "ocrUsed": false,
+      "got": {
+        "name": "Amit Kumar",
+        "phone": "+919000023757",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Amit Kumar",
+        "phone": "+919000023757",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "003_Sneha_Reddy_scanned.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf",
+        "scanned",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2753.9620999999997,
+      "textMs": 1.669499999999971,
+      "ocrMs": 2749.8660999999997,
+      "extractMs": 2.174800000000232,
+      "ocrUsed": true,
+      "got": {
+        "name": "Sneha Reddy",
+        "phone": "+916000031676",
+        "role": "Data Analyst"
+      },
+      "want": {
+        "name": "Sneha Reddy",
+        "phone": "+916000031676",
+        "role": "Data Analyst"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "004_Arjun_Patel_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.951600000000326,
+      "textMs": 4.273599999999988,
+      "ocrMs": 0,
+      "extractMs": 0.539600000000064,
+      "ocrUsed": false,
+      "got": {
+        "name": "Arjun Patel",
+        "phone": "+917000039595",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Arjun Patel",
+        "phone": "+917000039595",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "005_Rohan_Mehta_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "decoy_numbers",
+        "no_phone",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.059400000000096,
+      "textMs": 3.361200000000281,
+      "ocrMs": 0,
+      "extractMs": 0.6104000000000269,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rohan Mehta",
+        "phone": "Not Found",
+        "role": "HR Executive"
+      },
+      "want": {
+        "name": "Rohan Mehta",
+        "phone": null,
+        "role": "HR Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "006_Neha_Gupta_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:pdf",
+        "has_references",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.162699999999859,
+      "textMs": 3.1037999999998647,
+      "ocrMs": 0,
+      "extractMs": 0.9470999999998639,
+      "ocrUsed": false,
+      "got": {
+        "name": "Neha Gupta",
+        "phone": "+919000055433",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Neha Gupta",
+        "phone": "+919000055433",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "007_Vikram_Singh.png",
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:png",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1508.9099000000006,
+      "textMs": 0.01040000000011787,
+      "ocrMs": 1508.0599000000002,
+      "extractMs": 0.6893000000000029,
+      "ocrUsed": true,
+      "got": {
+        "name": "Vikram Singh",
+        "phone": "+916000063352",
+        "role": "Digital Marketing Executive"
+      },
+      "want": {
+        "name": "Vikram Singh",
+        "phone": "+916000063352",
+        "role": "Digital Marketing Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "008_Anjali_Nair_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.4488000000001193,
+      "textMs": 2.795499999999265,
+      "ocrMs": 0,
+      "extractMs": 0.5398999999997613,
+      "ocrUsed": false,
+      "got": {
+        "name": "Anjali Nair",
+        "phone": "+917000071271",
+        "role": "Mechanical Engineer"
+      },
+      "want": {
+        "name": "Anjali Nair",
+        "phone": "+917000071271",
+        "role": "Mechanical Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "009_Karan_Malhotra_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.9342999999998938,
+      "textMs": 2.7887999999993554,
+      "ocrMs": 0,
+      "extractMs": 1.034599999999955,
+      "ocrUsed": false,
+      "got": {
+        "name": "Karan Malhotra",
+        "phone": "+918000079190",
+        "role": "Civil Engineer"
+      },
+      "want": {
+        "name": "Karan Malhotra",
+        "phone": "+918000079190",
+        "role": "Civil Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "010_Deepak_Joshi_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.5288999999993393,
+      "textMs": 2.764900000000125,
+      "ocrMs": 0,
+      "extractMs": 0.6536999999998443,
+      "ocrUsed": false,
+      "got": {
+        "name": "Deepak Joshi",
+        "phone": "+919000087109",
+        "role": "Content Writer"
+      },
+      "want": {
+        "name": "Deepak Joshi",
+        "phone": "+919000087109",
+        "role": "Content Writer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "011_Meera_Iyer_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.819499999999607,
+      "textMs": 2.3121000000001004,
+      "ocrMs": 0,
+      "extractMs": 0.4169000000001688,
+      "ocrUsed": false,
+      "got": {
+        "name": "Meera Iyer",
+        "phone": "+916000095028",
+        "role": "Sales Executive"
+      },
+      "want": {
+        "name": "Meera Iyer",
+        "phone": "+916000095028",
+        "role": "Sales Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "012_Sanjay_Rao_Resume.docx",
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:docx",
+        "has_references",
+        "cv_heading",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.51470000000063,
+      "textMs": 2.993000000000393,
+      "ocrMs": 0,
+      "extractMs": 0.43510000000060245,
+      "ocrUsed": false,
+      "got": {
+        "name": "Sanjay Rao",
+        "phone": "+917000102947",
+        "role": "Full Stack Developer"
+      },
+      "want": {
+        "name": "Sanjay Rao",
+        "phone": "+917000102947",
+        "role": "Full Stack Developer"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "013_Pooja_Desai_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "alternate_phone",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.745100000000093,
+      "textMs": 1.816899999999805,
+      "ocrMs": 0,
+      "extractMs": 0.8541000000004715,
+      "ocrUsed": false,
+      "got": {
+        "name": "Pooja Desai",
+        "phone": "+918000110866",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Pooja Desai",
+        "phone": "+918000110866",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "014_Aditya_Chauhan_scanned.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf",
+        "scanned"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1423.5559000000003,
+      "textMs": 0.832300000000032,
+      "ocrMs": 1421.8899000000001,
+      "extractMs": 0.7103000000006432,
+      "ocrUsed": true,
+      "got": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000118785",
+        "role": "QA Engineer"
+      },
+      "want": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000118785",
+        "role": "QA Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "015_Kavya_Krishnan_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:position_label",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.250500000000102,
+      "textMs": 3.3593000000000757,
+      "ocrMs": 0,
+      "extractMs": 0.8041999999995824,
+      "ocrUsed": false,
+      "got": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000126704",
+        "role": "Operations Executive"
+      },
+      "want": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000126704",
+        "role": "Operations Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "016_Rajesh_Pillai_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.139900000000125,
+      "textMs": 2.6898000000001048,
+      "ocrMs": 0,
+      "extractMs": 1.3553000000001703,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rajesh Pillai",
+        "phone": "+917000134623",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Rajesh Pillai",
+        "phone": "+917000134623",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.74,
+        "phone": 0.75,
+        "role": 0.822
+      },
+      "needsReview": true
+    },
+    {
+      "file": "017_Divya_Menon_Resume.docx",
+      "traits": [
+        "layout:two_column",
+        "role_style:headline",
+        "format:docx"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.767699999999422,
+      "textMs": 3.5326999999997497,
+      "ocrMs": 0,
+      "extractMs": 1.11200000000008,
+      "ocrUsed": false,
+      "got": {
+        "name": "Divya Menon",
+        "phone": "+918000142542",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Divya Menon",
+        "phone": "+918000142542",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.614
+      },
+      "needsReview": true
+    },
+    {
+      "file": "018_Suresh_Babu_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.512200000000121,
+      "textMs": 2.8096999999997934,
+      "ocrMs": 0,
+      "extractMs": 0.6103999999995722,
+      "ocrUsed": false,
+      "got": {
+        "name": "Suresh Babu",
+        "phone": "+919000150461",
+        "role": "Software Engineer"
+      },
+      "want": {
+        "name": "Suresh Babu",
+        "phone": "+919000150461",
+        "role": "Software Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.574
+      },
+      "needsReview": true
+    },
+    {
+      "file": "019_Ritu_Agarwal_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:current_only",
+        "format:pdf",
+        "alternate_phone",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.1266999999998006,
+      "textMs": 2.4004000000004453,
+      "ocrMs": 0,
+      "extractMs": 0.6409999999996217,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000158380",
+        "role": "HR Recruiter"
+      },
+      "want": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000158380",
+        "role": "HR Recruiter"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.414
+      },
+      "needsReview": true
+    },
+    {
+      "file": "020_Harshit_Bansal.png",
+      "traits": [
+        "layout:two_column",
+        "role_style:absent",
+        "format:png",
+        "decoy_numbers",
+        "cv_heading",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1568.0236000000004,
+      "textMs": 0.011599999999816646,
+      "ocrMs": 1566.1662999999999,
+      "extractMs": 1.6995999999999185,
+      "ocrUsed": true,
+      "got": {
+        "name": "Harshit Bansal",
+        "phone": "+917000166299",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Harshit Bansal",
+        "phone": "+917000166299",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "021_Tanvi_Kulkarni_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.3804999999993015,
+      "textMs": 2.8758000000007087,
+      "ocrMs": 0,
+      "extractMs": 0.40869999999995343,
+      "ocrUsed": false,
+      "got": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000174218",
+        "role": "Machine Learning Engineer"
+      },
+      "want": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000174218",
+        "role": "Machine Learning Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.834
+      },
+      "needsReview": false
+    },
+    {
+      "file": "022_Manish_Tiwari_Resume.docx",
+      "traits": [
+        "layout:table",
+        "role_style:position_label",
+        "format:docx",
+        "no_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.871299999999792,
+      "textMs": 2.342999999999847,
+      "ocrMs": 0,
+      "extractMs": 0.45349999999962165,
+      "ocrUsed": false,
+      "got": {
+        "name": "Manish Tiwari",
+        "phone": "Not Found",
+        "role": "Java Developer"
+      },
+      "want": {
+        "name": "Manish Tiwari",
+        "phone": null,
+        "role": "Java Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0.84
+      },
+      "needsReview": true
+    },
+    {
+      "file": "023_Shreya_Ghosh_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.1638999999995576,
+      "textMs": 2.3581999999996697,
+      "ocrMs": 0,
+      "extractMs": 0.7106999999996333,
+      "ocrUsed": false,
+      "got": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000190056",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000190056",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "024_Nikhil_Jain_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:headline",
+        "format:pdf",
+        "has_references",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.6326999999982945,
+      "textMs": 2.121500000001106,
+      "ocrMs": 0,
+      "extractMs": 0.42519999999967695,
+      "ocrUsed": false,
+      "got": {
+        "name": "Nikhil Jain",
+        "phone": "+917000197975",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Nikhil Jain",
+        "phone": "+917000197975",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "025_Ananya_Chatterjee_scanned.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:header_title",
+        "format:pdf",
+        "scanned",
+        "alternate_phone",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1635.3805999999986,
+      "textMs": 0.5842000000011467,
+      "ocrMs": 1633.1324000000004,
+      "extractMs": 1.3794999999990978,
+      "ocrUsed": true,
+      "got": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000205894",
+        "role": "Data Analyst"
+      },
+      "want": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000205894",
+        "role": "Data Analyst"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "026_Vivek_Saxena_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:current_only",
+        "format:pdf",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.25,
+      "textMs": 2.637700000001132,
+      "ocrMs": 0,
+      "extractMs": 0.5201000000015483,
+      "ocrUsed": false,
+      "got": {
+        "name": "Vivek Saxena",
+        "phone": "+919000213813",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Vivek Saxena",
+        "phone": "+919000213813",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "027_Ishita_Bose_Resume.docx",
+      "traits": [
+        "layout:table",
+        "role_style:absent",
+        "format:docx",
+        "has_references",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 4.203299999999217,
+      "textMs": 3.104299999999057,
+      "ocrMs": 0,
+      "extractMs": 1.0212000000010448,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ishita Bose",
+        "phone": "+916000221732",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Ishita Bose",
+        "phone": "+916000221732",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "028_Gaurav_Khanna_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:applied_label",
+        "format:pdf",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.238900000000285,
+      "textMs": 1.8148999999993976,
+      "ocrMs": 0,
+      "extractMs": 0.36750000000029104,
+      "ocrUsed": false,
+      "got": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000229651",
+        "role": "Accountant"
+      },
+      "want": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000229651",
+        "role": "Accountant"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "029_Lakshmi_Subramanian_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:position_label",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.1041999999997643,
+      "textMs": 1.5931000000000495,
+      "ocrMs": 0,
+      "extractMs": 0.44950000000062573,
+      "ocrUsed": false,
+      "got": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000237570",
+        "role": "Digital Marketing Executive"
+      },
+      "want": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000237570",
+        "role": "Digital Marketing Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "030_Abhirup_Chakraborty_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.0354000000006636,
+      "textMs": 2.1229000000002998,
+      "ocrMs": 0,
+      "extractMs": 0.825699999999415,
+      "ocrUsed": false,
+      "got": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000245489",
+        "role": "Mechanical Engineer"
+      },
+      "want": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000245489",
+        "role": "Mechanical Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "031_Farhan_Sheikh_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:headline",
+        "format:pdf",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.5498999999999796,
+      "textMs": 1.971400000000358,
+      "ocrMs": 0,
+      "extractMs": 0.5011999999987893,
+      "ocrUsed": false,
+      "got": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000253408",
+        "role": "Civil Engineer"
+      },
+      "want": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000253408",
+        "role": "Civil Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "032_Nandini_Prasad_Resume.docx",
+      "traits": [
+        "layout:minimal",
+        "role_style:header_title",
+        "format:docx",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.2765999999992346,
+      "textMs": 1.7942999999995664,
+      "ocrMs": 0,
+      "extractMs": 0.4073000000007596,
+      "ocrUsed": false,
+      "got": {
+        "name": "Nandini Prasad",
+        "phone": "+917000261327",
+        "role": "Content Writer"
+      },
+      "want": {
+        "name": "Nandini Prasad",
+        "phone": "+917000261327",
+        "role": "Content Writer"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "033_Yogesh_Pawar.png",
+      "traits": [
+        "layout:minimal",
+        "role_style:current_only",
+        "format:png",
+        "has_references",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1404.5095999999994,
+      "textMs": 0.010800000000017462,
+      "ocrMs": 1403.7752,
+      "extractMs": 0.5665000000008149,
+      "ocrUsed": true,
+      "got": {
+        "name": "Yogesh Pawar",
+        "phone": "+918000269246",
+        "role": "Sales Executive"
+      },
+      "want": {
+        "name": "Yogesh Pawar",
+        "phone": "+918000269246",
+        "role": "Sales Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "034_Swati_Bhat_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.6783999999988737,
+      "textMs": 2.6820000000006985,
+      "ocrMs": 0,
+      "extractMs": 0.9094999999997526,
+      "ocrUsed": false,
+      "got": {
+        "name": "Swati Bhat",
+        "phone": "+919000277165",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Swati Bhat",
+        "phone": "+919000277165",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "035_Imran_Qureshi_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3738999999986845,
+      "textMs": 1.863599999998769,
+      "ocrMs": 0,
+      "extractMs": 0.4503000000004249,
+      "ocrUsed": false,
+      "got": {
+        "name": "Imran Qureshi",
+        "phone": "+916000285084",
+        "role": "Customer Support Executive"
+      },
+      "want": {
+        "name": "Imran Qureshi",
+        "phone": "+916000285084",
+        "role": "Customer Support Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "036_Ritika_Sood_scanned.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf",
+        "scanned",
+        "has_references",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1469.8868000000002,
+      "textMs": 0.8377999999993335,
+      "ocrMs": 1467.1983999999993,
+      "extractMs": 1.6022999999986496,
+      "ocrUsed": true,
+      "got": {
+        "name": "Ritika Sood",
+        "phone": "+917000293003",
+        "role": "QA Engineer"
+      },
+      "want": {
+        "name": "Ritika Sood",
+        "phone": "+917000293003",
+        "role": "QA Engineer"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "037_Prakash_Nayak_Resume.docx",
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:docx",
+        "alternate_phone",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.646600000000035,
+      "textMs": 2.7402000000001863,
+      "ocrMs": 0,
+      "extractMs": 0.8350999999984197,
+      "ocrUsed": false,
+      "got": {
+        "name": "Prakash Nayak",
+        "phone": "+918000300922",
+        "role": "Operations Executive"
+      },
+      "want": {
+        "name": "Prakash Nayak",
+        "phone": "+918000300922",
+        "role": "Operations Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "038_Bhavya_Shetty_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.661099999999351,
+      "textMs": 2.2489000000005035,
+      "ocrMs": 0,
+      "extractMs": 0.36009999999987485,
+      "ocrUsed": false,
+      "got": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000308841",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000308841",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.614
+      },
+      "needsReview": true
+    },
+    {
+      "file": "039_Zoya_Ansari_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references",
+        "no_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.8669000000008964,
+      "textMs": 1.5077000000001135,
+      "ocrMs": 0,
+      "extractMs": 0.30719999999928405,
+      "ocrUsed": false,
+      "got": {
+        "name": "Zoya Ansari",
+        "phone": "Not Found",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Zoya Ansari",
+        "phone": null,
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0.574
+      },
+      "needsReview": true
+    },
+    {
+      "file": "040_Rahul_Sharma_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "decoy_numbers",
+        "cv_heading",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.0403000000005704,
+      "textMs": 1.6423999999988155,
+      "ocrMs": 0,
+      "extractMs": 0.34020000000055006,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rahul Sharma",
+        "phone": "+917000324679",
+        "role": "Software Engineer"
+      },
+      "want": {
+        "name": "Rahul Sharma",
+        "phone": "+917000324679",
+        "role": "Software Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.414
+      },
+      "needsReview": true
+    },
+    {
+      "file": "041_Priya_Verma_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3215999999993073,
+      "textMs": 1.668100000000777,
+      "ocrMs": 0,
+      "extractMs": 0.6024999999990541,
+      "ocrUsed": false,
+      "got": {
+        "name": "Priya Verma",
+        "phone": "+918000332598",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Priya Verma",
+        "phone": "+918000332598",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "042_Amit_Kumar_Resume.docx",
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:docx",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.6930000000011205,
+      "textMs": 2.2031999999999243,
+      "ocrMs": 0,
+      "extractMs": 0.4268000000010943,
+      "ocrUsed": false,
+      "got": {
+        "name": "Amit Kumar",
+        "phone": "+919000340517",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Amit Kumar",
+        "phone": "+919000340517",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.894
+      },
+      "needsReview": false
+    },
+    {
+      "file": "043_Sneha_Reddy_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.1252999999996973,
+      "textMs": 1.6792000000004919,
+      "ocrMs": 0,
+      "extractMs": 0.3945000000003347,
+      "ocrUsed": false,
+      "got": {
+        "name": "Sneha Reddy",
+        "phone": "+916000348436",
+        "role": "Machine Learning Engineer"
+      },
+      "want": {
+        "name": "Sneha Reddy",
+        "phone": "+916000348436",
+        "role": "Machine Learning Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.894
+      },
+      "needsReview": false
+    },
+    {
+      "file": "044_Arjun_Patel_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3420999999998457,
+      "textMs": 1.6484000000000378,
+      "ocrMs": 0,
+      "extractMs": 0.6449999999986176,
+      "ocrUsed": false,
+      "got": {
+        "name": "Arjun Patel",
+        "phone": "+917000356355",
+        "role": "Java Developer"
+      },
+      "want": {
+        "name": "Arjun Patel",
+        "phone": "+917000356355",
+        "role": "Java Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "045_Rohan_Mehta_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.293499999999767,
+      "textMs": 1.8235999999997148,
+      "ocrMs": 0,
+      "extractMs": 0.40790000000015425,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rohan Mehta",
+        "phone": "+918000364274",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Rohan Mehta",
+        "phone": "+918000364274",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "046_Neha_Gupta.png",
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:png"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1234.550799999999,
+      "textMs": 0.003899999999703141,
+      "ocrMs": 1233.8331999999991,
+      "extractMs": 0.5920999999998457,
+      "ocrUsed": true,
+      "got": {
+        "name": "Neha Gupta",
+        "phone": "+919000372193",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Neha Gupta",
+        "phone": "+919000372193",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "047_Vikram_Singh_scanned.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:pdf",
+        "scanned",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1369.3901999999998,
+      "textMs": 0.8800999999984924,
+      "ocrMs": 1367.1540999999997,
+      "extractMs": 1.1277000000009139,
+      "ocrUsed": true,
+      "got": {
+        "name": "Vikram Singh",
+        "phone": "+916000380112",
+        "role": "Data Analyst"
+      },
+      "want": {
+        "name": "Vikram Singh",
+        "phone": "+916000380112",
+        "role": "Data Analyst"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "048_Anjali_Nair_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "has_references",
+        "cv_heading",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.2741000000005442,
+      "textMs": 2.427400000000489,
+      "ocrMs": 0,
+      "extractMs": 0.7683999999990192,
+      "ocrUsed": false,
+      "got": {
+        "name": "Anjali Nair",
+        "phone": "+917000388031",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Anjali Nair",
+        "phone": "+917000388031",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "049_Karan_Malhotra_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.6533999999992375,
+      "textMs": 2.149600000000646,
+      "ocrMs": 0,
+      "extractMs": 0.4511000000002241,
+      "ocrUsed": false,
+      "got": {
+        "name": "Karan Malhotra",
+        "phone": "+918000395950",
+        "role": "HR Executive"
+      },
+      "want": {
+        "name": "Karan Malhotra",
+        "phone": "+918000395950",
+        "role": "HR Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "050_Deepak_Joshi_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:position_label",
+        "format:pdf",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.2531999999991967,
+      "textMs": 1.819100000000617,
+      "ocrMs": 0,
+      "extractMs": 0.38510000000133005,
+      "ocrUsed": false,
+      "got": {
+        "name": "Deepak Joshi",
+        "phone": "+919000403869",
+        "role": "Accountant"
+      },
+      "want": {
+        "name": "Deepak Joshi",
+        "phone": "+919000403869",
+        "role": "Accountant"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "051_Meera_Iyer_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.6163000000015018,
+      "textMs": 2.2879999999986467,
+      "ocrMs": 0,
+      "extractMs": 1.2566999999999098,
+      "ocrUsed": false,
+      "got": {
+        "name": "Meera Iyer",
+        "phone": "+916000411788",
+        "role": "Digital Marketing Executive"
+      },
+      "want": {
+        "name": "Meera Iyer",
+        "phone": "+916000411788",
+        "role": "Digital Marketing Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.82
+      },
+      "needsReview": false
+    },
+    {
+      "file": "052_Sanjay_Rao_Resume.docx",
+      "traits": [
+        "layout:two_column",
+        "role_style:headline",
+        "format:docx",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.3100000000013097,
+      "textMs": 2.644399999999223,
+      "ocrMs": 0,
+      "extractMs": 0.6017999999985477,
+      "ocrUsed": false,
+      "got": {
+        "name": "Sanjay Rao",
+        "phone": "+917000419707",
+        "role": "Mechanical Engineer"
+      },
+      "want": {
+        "name": "Sanjay Rao",
+        "phone": "+917000419707",
+        "role": "Mechanical Engineer"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "053_Pooja_Desai_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:header_title",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.2537000000011176,
+      "textMs": 1.8150000000005093,
+      "ocrMs": 0,
+      "extractMs": 0.37960000000020955,
+      "ocrUsed": false,
+      "got": {
+        "name": "Pooja Desai",
+        "phone": "+918000427626",
+        "role": "Civil Engineer"
+      },
+      "want": {
+        "name": "Pooja Desai",
+        "phone": "+918000427626",
+        "role": "Civil Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "054_Aditya_Chauhan_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:current_only",
+        "format:pdf",
+        "has_references",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3492999999998574,
+      "textMs": 1.870999999999185,
+      "ocrMs": 0,
+      "extractMs": 0.41640000000006694,
+      "ocrUsed": false,
+      "got": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000435545",
+        "role": "Content Writer"
+      },
+      "want": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000435545",
+        "role": "Content Writer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "055_Kavya_Krishnan_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:absent",
+        "format:pdf",
+        "alternate_phone",
+        "decoy_numbers",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.9261999999998807,
+      "textMs": 2.2105999999985215,
+      "ocrMs": 0,
+      "extractMs": 0.6471999999994296,
+      "ocrUsed": false,
+      "got": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000443464",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000443464",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "056_Rajesh_Pillai_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:applied_label",
+        "format:pdf",
+        "cv_heading",
+        "no_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.057200000001103,
+      "textMs": 1.7188000000005559,
+      "ocrMs": 0,
+      "extractMs": 0.2863999999990483,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rajesh Pillai",
+        "phone": "Not Found",
+        "role": "Full Stack Developer"
+      },
+      "want": {
+        "name": "Rajesh Pillai",
+        "phone": null,
+        "role": "Full Stack Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0.84
+      },
+      "needsReview": true
+    },
+    {
+      "file": "057_Divya_Menon_Resume.docx",
+      "traits": [
+        "layout:table",
+        "role_style:position_label",
+        "format:docx",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3941000000013446,
+      "textMs": 2.0249000000003434,
+      "ocrMs": 0,
+      "extractMs": 0.3058000000000902,
+      "ocrUsed": false,
+      "got": {
+        "name": "Divya Menon",
+        "phone": "+918000459302",
+        "role": "Customer Support Executive"
+      },
+      "want": {
+        "name": "Divya Menon",
+        "phone": "+918000459302",
+        "role": "Customer Support Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "058_Suresh_Babu_scanned.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "scanned",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1610.0539999999983,
+      "textMs": 0.7471000000005006,
+      "ocrMs": 1606.8479000000007,
+      "extractMs": 2.1974000000009255,
+      "ocrUsed": true,
+      "got": {
+        "name": "Suresh Babu",
+        "phone": "+919000467221",
+        "role": "QA Engineer"
+      },
+      "want": {
+        "name": "Suresh Babu",
+        "phone": "+919000467221",
+        "role": "QA Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.822
+      },
+      "needsReview": false
+    },
+    {
+      "file": "059_Ritu_Agarwal.png",
+      "traits": [
+        "layout:table",
+        "role_style:headline",
+        "format:png"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1425.5255000000034,
+      "textMs": 0.005300000000715954,
+      "ocrMs": 1424.2461000000003,
+      "extractMs": 1.1168000000034226,
+      "ocrUsed": true,
+      "got": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000475140",
+        "role": "Operations Executive"
+      },
+      "want": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000475140",
+        "role": "Operations Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "060_Harshit_Bansal_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.5851000000002387,
+      "textMs": 3.1546999999991385,
+      "ocrMs": 0,
+      "extractMs": 0.3525999999983469,
+      "ocrUsed": false,
+      "got": {
+        "name": "Harshit Bansal",
+        "phone": "+917000483059",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Harshit Bansal",
+        "phone": "+917000483059",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.414
+      },
+      "needsReview": true
+    },
+    {
+      "file": "061_Tanvi_Kulkarni_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:current_only",
+        "format:pdf",
+        "alternate_phone",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.059799999999086,
+      "textMs": 1.7570999999988999,
+      "ocrMs": 0,
+      "extractMs": 0.24759999999878346,
+      "ocrUsed": false,
+      "got": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000490978",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000490978",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.414
+      },
+      "needsReview": true
+    },
+    {
+      "file": "062_Manish_Tiwari_Resume.docx",
+      "traits": [
+        "layout:table",
+        "role_style:absent",
+        "format:docx",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.4601999999977124,
+      "textMs": 2.7019000000000233,
+      "ocrMs": 0,
+      "extractMs": 0.6991999999991094,
+      "ocrUsed": false,
+      "got": {
+        "name": "Manish Tiwari",
+        "phone": "+919000498897",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Manish Tiwari",
+        "phone": "+919000498897",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "063_Shreya_Ghosh_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.1441000000013446,
+      "textMs": 1.704200000000128,
+      "ocrMs": 0,
+      "extractMs": 0.3878000000004249,
+      "ocrUsed": false,
+      "got": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000506816",
+        "role": "HR Recruiter"
+      },
+      "want": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000506816",
+        "role": "HR Recruiter"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.894
+      },
+      "needsReview": false
+    },
+    {
+      "file": "064_Nikhil_Jain_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:position_label",
+        "format:pdf",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.7789000000011583,
+      "textMs": 1.401000000001659,
+      "ocrMs": 0,
+      "extractMs": 0.3328000000001339,
+      "ocrUsed": false,
+      "got": {
+        "name": "Nikhil Jain",
+        "phone": "+917000514735",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Nikhil Jain",
+        "phone": "+917000514735",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.894
+      },
+      "needsReview": false
+    },
+    {
+      "file": "065_Ananya_Chatterjee_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "decoy_numbers",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.4050999999999476,
+      "textMs": 1.6867999999994936,
+      "ocrMs": 0,
+      "extractMs": 0.6702000000004773,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000522654",
+        "role": "Machine Learning Engineer"
+      },
+      "want": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000522654",
+        "role": "Machine Learning Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.834
+      },
+      "needsReview": false
+    },
+    {
+      "file": "066_Vivek_Saxena_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:headline",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.9891999999999825,
+      "textMs": 1.5855999999985215,
+      "ocrMs": 0,
+      "extractMs": 0.3470000000015716,
+      "ocrUsed": false,
+      "got": {
+        "name": "Vivek Saxena",
+        "phone": "+919000530573",
+        "role": "Java Developer"
+      },
+      "want": {
+        "name": "Vivek Saxena",
+        "phone": "+919000530573",
+        "role": "Java Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "067_Ishita_Bose_Resume.docx",
+      "traits": [
+        "layout:minimal",
+        "role_style:header_title",
+        "format:docx",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.8260000000009313,
+      "textMs": 1.4585000000006403,
+      "ocrMs": 0,
+      "extractMs": 0.31529999999838765,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ishita Bose",
+        "phone": "+916000538492",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Ishita Bose",
+        "phone": "+916000538492",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "068_Gaurav_Khanna_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:current_only",
+        "format:pdf",
+        "cv_heading",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.6621000000013737,
+      "textMs": 1.3909000000021479,
+      "ocrMs": 0,
+      "extractMs": 0.22789999999804422,
+      "ocrUsed": false,
+      "got": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000546411",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000546411",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "069_Lakshmi_Subramanian_scanned.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:absent",
+        "format:pdf",
+        "scanned",
+        "has_references",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1594.3912999999993,
+      "textMs": 0.4767000000028929,
+      "ocrMs": 1592.5280999999995,
+      "extractMs": 1.2655000000013388,
+      "ocrUsed": true,
+      "got": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000554330",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000554330",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "070_Abhirup_Chakraborty_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.902200000000448,
+      "textMs": 2.476300000002084,
+      "ocrMs": 0,
+      "extractMs": 0.3724000000001979,
+      "ocrUsed": false,
+      "got": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000562249",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000562249",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "071_Farhan_Sheikh_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.7149000000026717,
+      "textMs": 1.383800000003248,
+      "ocrMs": 0,
+      "extractMs": 0.2890000000006694,
+      "ocrUsed": false,
+      "got": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000570168",
+        "role": "HR Executive"
+      },
+      "want": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000570168",
+        "role": "HR Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "072_Nandini_Prasad.png",
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:png",
+        "has_references",
+        "honorific",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1553.7223000000013,
+      "textMs": 0.002099999997881241,
+      "ocrMs": 1552.2726000000002,
+      "extractMs": 1.3430000000007567,
+      "ocrUsed": true,
+      "got": {
+        "name": "Nandini Prasad",
+        "phone": "+917000578087",
+        "role": "Accountant"
+      },
+      "want": {
+        "name": "Nandini Prasad",
+        "phone": "+917000578087",
+        "role": "Accountant"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.82
+      },
+      "needsReview": false
+    },
+    {
+      "file": "073_Yogesh_Pawar_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf",
+        "alternate_phone",
+        "no_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.321800000001531,
+      "textMs": 1.9108000000014727,
+      "ocrMs": 0,
+      "extractMs": 0.3529000000016822,
+      "ocrUsed": false,
+      "got": {
+        "name": "Yogesh Pawar",
+        "phone": "Not Found",
+        "role": "Digital Marketing Executive"
+      },
+      "want": {
+        "name": "Yogesh Pawar",
+        "phone": null,
+        "role": "Digital Marketing Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "074_Swati_Bhat_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.958200000000943,
+      "textMs": 1.559900000000198,
+      "ocrMs": 0,
+      "extractMs": 0.3459000000002561,
+      "ocrUsed": false,
+      "got": {
+        "name": "Swati Bhat",
+        "phone": "+919000593925",
+        "role": "Mechanical Engineer"
+      },
+      "want": {
+        "name": "Swati Bhat",
+        "phone": "+919000593925",
+        "role": "Mechanical Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "075_Imran_Qureshi_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.1515999999974156,
+      "textMs": 1.8044999999983702,
+      "ocrMs": 0,
+      "extractMs": 0.2952000000004773,
+      "ocrUsed": false,
+      "got": {
+        "name": "Imran Qureshi",
+        "phone": "+916000601844",
+        "role": "Civil Engineer"
+      },
+      "want": {
+        "name": "Imran Qureshi",
+        "phone": "+916000601844",
+        "role": "Civil Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "076_Ritika_Sood_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:pdf",
+        "cv_heading",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.0684000000001106,
+      "textMs": 1.4673000000002503,
+      "ocrMs": 0,
+      "extractMs": 0.5494999999973516,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ritika Sood",
+        "phone": "+917000609763",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Ritika Sood",
+        "phone": "+917000609763",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "077_Prakash_Nayak_Resume.docx",
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:docx"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.4183000000011816,
+      "textMs": 2.9085999999988417,
+      "ocrMs": 0,
+      "extractMs": 0.44329999999899883,
+      "ocrUsed": false,
+      "got": {
+        "name": "Prakash Nayak",
+        "phone": "+918000617682",
+        "role": "Sales Executive"
+      },
+      "want": {
+        "name": "Prakash Nayak",
+        "phone": "+918000617682",
+        "role": "Sales Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "078_Bhavya_Shetty_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3800000000010186,
+      "textMs": 1.9922999999980675,
+      "ocrMs": 0,
+      "extractMs": 0.3385999999991327,
+      "ocrUsed": false,
+      "got": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000625601",
+        "role": "Full Stack Developer"
+      },
+      "want": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000625601",
+        "role": "Full Stack Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "079_Zoya_Ansari_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "alternate_phone",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.239900000000489,
+      "textMs": 1.643000000000029,
+      "ocrMs": 0,
+      "extractMs": 0.5498000000006869,
+      "ocrUsed": false,
+      "got": {
+        "name": "Zoya Ansari",
+        "phone": "+916000633520",
+        "role": "Customer Support Executive"
+      },
+      "want": {
+        "name": "Zoya Ansari",
+        "phone": "+916000633520",
+        "role": "Customer Support Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "080_Rahul_Sharma_scanned.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "scanned",
+        "decoy_numbers",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1551.8859000000011,
+      "textMs": 0.5357000000003609,
+      "ocrMs": 1548.8755999999994,
+      "extractMs": 2.1647999999986496,
+      "ocrUsed": true,
+      "got": {
+        "name": "Rahul Sharma",
+        "phone": "+917000641439",
+        "role": "QA Engineer"
+      },
+      "want": {
+        "name": "Rahul Sharma",
+        "phone": "+917000641439",
+        "role": "QA Engineer"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "081_Priya_Verma_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.9917999999997846,
+      "textMs": 2.544099999999162,
+      "ocrMs": 0,
+      "extractMs": 0.38000000000101863,
+      "ocrUsed": false,
+      "got": {
+        "name": "Priya Verma",
+        "phone": "+918000649358",
+        "role": "Operations Executive"
+      },
+      "want": {
+        "name": "Priya Verma",
+        "phone": "+918000649358",
+        "role": "Operations Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "082_Amit_Kumar_Resume.docx",
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:docx",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.216200000002573,
+      "textMs": 2.798399999999674,
+      "ocrMs": 0,
+      "extractMs": 0.35020000000076834,
+      "ocrUsed": false,
+      "got": {
+        "name": "Amit Kumar",
+        "phone": "+919000657277",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Amit Kumar",
+        "phone": "+919000657277",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.414
+      },
+      "needsReview": true
+    },
+    {
+      "file": "083_Sneha_Reddy_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.681400000001304,
+      "textMs": 1.8347000000030675,
+      "ocrMs": 0,
+      "extractMs": 0.7805999999982305,
+      "ocrUsed": false,
+      "got": {
+        "name": "Sneha Reddy",
+        "phone": "+916000665196",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Sneha Reddy",
+        "phone": "+916000665196",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "084_Arjun_Patel_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.667300000000978,
+      "textMs": 2.038700000000972,
+      "ocrMs": 0,
+      "extractMs": 0.5606000000007043,
+      "ocrUsed": false,
+      "got": {
+        "name": "Arjun Patel",
+        "phone": "+917000673115",
+        "role": "Software Engineer"
+      },
+      "want": {
+        "name": "Arjun Patel",
+        "phone": "+917000673115",
+        "role": "Software Engineer"
+      },
+      "confidence": {
+        "name": 0.74,
+        "phone": 0.75,
+        "role": 0.894
+      },
+      "needsReview": true
+    },
+    {
+      "file": "085_Rohan_Mehta.png",
+      "traits": [
+        "layout:two_column",
+        "role_style:position_label",
+        "format:png",
+        "alternate_phone",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1348.3970000000008,
+      "textMs": 0.0036000000000058208,
+      "ocrMs": 1347.7681999999986,
+      "extractMs": 0.5371999999988475,
+      "ocrUsed": true,
+      "got": {
+        "name": "Rohan Mehta",
+        "phone": "+918000681034",
+        "role": "HR Recruiter"
+      },
+      "want": {
+        "name": "Rohan Mehta",
+        "phone": "+918000681034",
+        "role": "HR Recruiter"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.894
+      },
+      "needsReview": false
+    },
+    {
+      "file": "086_Neha_Gupta_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.870600000002014,
+      "textMs": 2.0349999999998545,
+      "ocrMs": 0,
+      "extractMs": 0.7867000000005646,
+      "ocrUsed": false,
+      "got": {
+        "name": "Neha Gupta",
+        "phone": "+919000688953",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Neha Gupta",
+        "phone": "+919000688953",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.834
+      },
+      "needsReview": false
+    },
+    {
+      "file": "087_Vikram_Singh_Resume.docx",
+      "traits": [
+        "layout:two_column",
+        "role_style:headline",
+        "format:docx",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.7327000000004773,
+      "textMs": 1.9461000000010245,
+      "ocrMs": 0,
+      "extractMs": 0.7298999999984517,
+      "ocrUsed": false,
+      "got": {
+        "name": "Vikram Singh",
+        "phone": "+916000696872",
+        "role": "Machine Learning Engineer"
+      },
+      "want": {
+        "name": "Vikram Singh",
+        "phone": "+916000696872",
+        "role": "Machine Learning Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.614
+      },
+      "needsReview": true
+    },
+    {
+      "file": "088_Anjali_Nair_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:header_title",
+        "format:pdf",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.408400000000256,
+      "textMs": 1.9717000000018743,
+      "ocrMs": 0,
+      "extractMs": 0.37999999999738066,
+      "ocrUsed": false,
+      "got": {
+        "name": "Anjali Nair",
+        "phone": "+917000704791",
+        "role": "Java Developer"
+      },
+      "want": {
+        "name": "Anjali Nair",
+        "phone": "+917000704791",
+        "role": "Java Developer"
+      },
+      "confidence": {
+        "name": 0.74,
+        "phone": 0.75,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "089_Karan_Malhotra_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:current_only",
+        "format:pdf",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.9413999999997031,
+      "textMs": 1.5046000000002095,
+      "ocrMs": 0,
+      "extractMs": 0.3911000000007334,
+      "ocrUsed": false,
+      "got": {
+        "name": "Karan Malhotra",
+        "phone": "+918000712710",
+        "role": "Backend Developer"
+      },
+      "want": {
+        "name": "Karan Malhotra",
+        "phone": "+918000712710",
+        "role": "Backend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "090_Deepak_Joshi_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:absent",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers",
+        "no_phone",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.8718000000008033,
+      "textMs": 2.13300000000163,
+      "ocrMs": 0,
+      "extractMs": 0.7060999999994237,
+      "ocrUsed": false,
+      "got": {
+        "name": "Deepak Joshi",
+        "phone": "Not Found",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Deepak Joshi",
+        "phone": null,
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "091_Meera_Iyer_scanned.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:applied_label",
+        "format:pdf",
+        "scanned",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1635.7870000000003,
+      "textMs": 0.5839999999989232,
+      "ocrMs": 1632.979199999998,
+      "extractMs": 1.9097000000001572,
+      "ocrUsed": true,
+      "got": {
+        "name": "Meera Iyer",
+        "phone": "+916000728548",
+        "role": "Data Analyst"
+      },
+      "want": {
+        "name": "Meera Iyer",
+        "phone": "+916000728548",
+        "role": "Data Analyst"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "092_Sanjay_Rao_Resume.docx",
+      "traits": [
+        "layout:table",
+        "role_style:position_label",
+        "format:docx",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.9376999999985856,
+      "textMs": 3.207699999999022,
+      "ocrMs": 0,
+      "extractMs": 0.6588000000010652,
+      "ocrUsed": false,
+      "got": {
+        "name": "Sanjay Rao",
+        "phone": "+917000736467",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Sanjay Rao",
+        "phone": "+917000736467",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "093_Pooja_Desai_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.864399999998568,
+      "textMs": 2.9230999999999767,
+      "ocrMs": 0,
+      "extractMs": 0.8764999999984866,
+      "ocrUsed": false,
+      "got": {
+        "name": "Pooja Desai",
+        "phone": "+918000744386",
+        "role": "HR Executive"
+      },
+      "want": {
+        "name": "Pooja Desai",
+        "phone": "+918000744386",
+        "role": "HR Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "094_Aditya_Chauhan_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:headline",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.8378999999986263,
+      "textMs": 2.324800000002142,
+      "ocrMs": 0,
+      "extractMs": 0.43879999999990105,
+      "ocrUsed": false,
+      "got": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000752305",
+        "role": "Accountant"
+      },
+      "want": {
+        "name": "Aditya Chauhan",
+        "phone": "+919000752305",
+        "role": "Accountant"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "095_Kavya_Krishnan_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:header_title",
+        "format:pdf",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.735899999999674,
+      "textMs": 2.35819999999876,
+      "ocrMs": 0,
+      "extractMs": 0.30900000000110595,
+      "ocrUsed": false,
+      "got": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000760224",
+        "role": "Digital Marketing Executive"
+      },
+      "want": {
+        "name": "Kavya Krishnan",
+        "phone": "+916000760224",
+        "role": "Digital Marketing Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.99,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "096_Rajesh_Pillai_Resume.pdf",
+      "traits": [
+        "layout:table",
+        "role_style:current_only",
+        "format:pdf",
+        "has_references",
+        "cv_heading",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.7520999999978812,
+      "textMs": 2.344199999999546,
+      "ocrMs": 0,
+      "extractMs": 0.3392999999996391,
+      "ocrUsed": false,
+      "got": {
+        "name": "Rajesh Pillai",
+        "phone": "+917000768143",
+        "role": "Mechanical Engineer"
+      },
+      "want": {
+        "name": "Rajesh Pillai",
+        "phone": "+917000768143",
+        "role": "Mechanical Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "097_Divya_Menon_Resume.docx",
+      "traits": [
+        "layout:table",
+        "role_style:absent",
+        "format:docx",
+        "alternate_phone",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.0472999999983585,
+      "textMs": 2.1556999999993423,
+      "ocrMs": 0,
+      "extractMs": 0.8248999999996158,
+      "ocrUsed": false,
+      "got": {
+        "name": "Divya Menon",
+        "phone": "+918000776062",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Divya Menon",
+        "phone": "+918000776062",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.9,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "098_Suresh_Babu.png",
+      "traits": [
+        "layout:minimal",
+        "role_style:applied_label",
+        "format:png"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1236.502700000001,
+      "textMs": 0.002599999999802094,
+      "ocrMs": 1235.755799999999,
+      "extractMs": 0.6352999999980966,
+      "ocrUsed": true,
+      "got": {
+        "name": "Suresh Babu",
+        "phone": "+919000783981",
+        "role": "Content Writer"
+      },
+      "want": {
+        "name": "Suresh Babu",
+        "phone": "+919000783981",
+        "role": "Content Writer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "099_Ritu_Agarwal_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:position_label",
+        "format:pdf",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.6947000000000116,
+      "textMs": 2.22439999999915,
+      "ocrMs": 0,
+      "extractMs": 0.4070999999967171,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000791900",
+        "role": "Sales Executive"
+      },
+      "want": {
+        "name": "Ritu Agarwal",
+        "phone": "+916000791900",
+        "role": "Sales Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "100_Harshit_Bansal_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "decoy_numbers",
+        "honorific",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.733299999999872,
+      "textMs": 2.0702999999994063,
+      "ocrMs": 0,
+      "extractMs": 0.6080000000001746,
+      "ocrUsed": false,
+      "got": {
+        "name": "Harshit Bansal",
+        "phone": "+917000799819",
+        "role": "Full Stack Developer"
+      },
+      "want": {
+        "name": "Harshit Bansal",
+        "phone": "+917000799819",
+        "role": "Full Stack Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "101_Tanvi_Kulkarni_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:headline",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1.9809999999997672,
+      "textMs": 1.5769000000000233,
+      "ocrMs": 0,
+      "extractMs": 0.3482000000003609,
+      "ocrUsed": false,
+      "got": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000807738",
+        "role": "Customer Support Executive"
+      },
+      "want": {
+        "name": "Tanvi Kulkarni",
+        "phone": "+918000807738",
+        "role": "Customer Support Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "102_Manish_Tiwari_scanned.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:header_title",
+        "format:pdf",
+        "scanned",
+        "has_references"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1663.5234000000019,
+      "textMs": 0.6492999999973108,
+      "ocrMs": 1660.8860999999997,
+      "extractMs": 1.7122999999992317,
+      "ocrUsed": true,
+      "got": {
+        "name": "Manish Tiwari",
+        "phone": "+919000815657",
+        "role": "QA Engineer"
+      },
+      "want": {
+        "name": "Manish Tiwari",
+        "phone": "+919000815657",
+        "role": "QA Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "103_Shreya_Ghosh_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:current_only",
+        "format:pdf",
+        "alternate_phone",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.736000000000786,
+      "textMs": 3.25170000000071,
+      "ocrMs": 0,
+      "extractMs": 0.4121000000013737,
+      "ocrUsed": false,
+      "got": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000823576",
+        "role": "Operations Executive"
+      },
+      "want": {
+        "name": "Shreya Ghosh",
+        "phone": "+916000823576",
+        "role": "Operations Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "104_Nikhil_Jain_Resume.pdf",
+      "traits": [
+        "layout:minimal",
+        "role_style:absent",
+        "format:pdf",
+        "cv_heading",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.106599999999162,
+      "textMs": 2.281599999998434,
+      "ocrMs": 0,
+      "extractMs": 0.7495000000017171,
+      "ocrUsed": false,
+      "got": {
+        "name": "Nikhil Jain",
+        "phone": "+917000831495",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Nikhil Jain",
+        "phone": "+917000831495",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "105_Ananya_Chatterjee_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:applied_label",
+        "format:pdf",
+        "has_references",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.8993999999984226,
+      "textMs": 2.356500000001688,
+      "ocrMs": 0,
+      "extractMs": 0.46789999999964493,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000839414",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Ananya Chatterjee",
+        "phone": "+918000839414",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.834
+      },
+      "needsReview": false
+    },
+    {
+      "file": "106_Vivek_Saxena_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:position_label",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3941999999988184,
+      "textMs": 1.8936000000030617,
+      "ocrMs": 0,
+      "extractMs": 0.43249999999898137,
+      "ocrUsed": false,
+      "got": {
+        "name": "Vivek Saxena",
+        "phone": "+919000847333",
+        "role": "Software Engineer"
+      },
+      "want": {
+        "name": "Vivek Saxena",
+        "phone": "+919000847333",
+        "role": "Software Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.894
+      },
+      "needsReview": false
+    },
+    {
+      "file": "107_Ishita_Bose_Resume.docx",
+      "traits": [
+        "layout:traditional",
+        "role_style:objective_phrase",
+        "format:docx",
+        "honorific",
+        "no_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.907599999998638,
+      "textMs": 2.8322000000007392,
+      "ocrMs": 0,
+      "extractMs": 1.0159999999996217,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ishita Bose",
+        "phone": "Not Found",
+        "role": "HR Recruiter"
+      },
+      "want": {
+        "name": "Ishita Bose",
+        "phone": null,
+        "role": "HR Recruiter"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0,
+        "role": 0.834
+      },
+      "needsReview": true
+    },
+    {
+      "file": "108_Gaurav_Khanna_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:headline",
+        "format:pdf",
+        "has_references",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.152799999999843,
+      "textMs": 2.304200000002311,
+      "ocrMs": 0,
+      "extractMs": 0.7432000000007974,
+      "ocrUsed": false,
+      "got": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000863171",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Gaurav Khanna",
+        "phone": "+917000863171",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.614
+      },
+      "needsReview": true
+    },
+    {
+      "file": "109_Lakshmi_Subramanian_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:header_title",
+        "format:pdf",
+        "alternate_phone"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.459999999999127,
+      "textMs": 1.9790000000029977,
+      "ocrMs": 0,
+      "extractMs": 0.407999999999447,
+      "ocrUsed": false,
+      "got": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000871090",
+        "role": "Machine Learning Engineer"
+      },
+      "want": {
+        "name": "Lakshmi Subramanian",
+        "phone": "+918000871090",
+        "role": "Machine Learning Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.574
+      },
+      "needsReview": true
+    },
+    {
+      "file": "110_Abhirup_Chakraborty_Resume.pdf",
+      "traits": [
+        "layout:traditional",
+        "role_style:current_only",
+        "format:pdf",
+        "decoy_numbers",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.230599999998958,
+      "textMs": 1.8654999999998836,
+      "ocrMs": 0,
+      "extractMs": 0.3101999999998952,
+      "ocrUsed": false,
+      "got": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000879009",
+        "role": "Java Developer"
+      },
+      "want": {
+        "name": "Abhirup Chakraborty",
+        "phone": "+919000879009",
+        "role": "Java Developer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "111_Farhan_Sheikh.png",
+      "traits": [
+        "layout:traditional",
+        "role_style:absent",
+        "format:png",
+        "has_references",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1470.4434,
+      "textMs": 0.0024999999986903276,
+      "ocrMs": 1469.3648999999969,
+      "extractMs": 0.9811999999983527,
+      "ocrUsed": true,
+      "got": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000886928",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Farhan Sheikh",
+        "phone": "+916000886928",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "112_Nandini_Prasad_Resume.docx",
+      "traits": [
+        "layout:modern",
+        "role_style:applied_label",
+        "format:docx",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.3906999999999243,
+      "textMs": 1.96389999999883,
+      "ocrMs": 0,
+      "extractMs": 0.37409999999727006,
+      "ocrUsed": false,
+      "got": {
+        "name": "Nandini Prasad",
+        "phone": "+917000894847",
+        "role": "Frontend Developer"
+      },
+      "want": {
+        "name": "Nandini Prasad",
+        "phone": "+917000894847",
+        "role": "Frontend Developer"
+      },
+      "confidence": {
+        "name": 0.94,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "113_Yogesh_Pawar_scanned.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:position_label",
+        "format:pdf",
+        "scanned"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 1344.3423999999977,
+      "textMs": 0.7966999999989639,
+      "ocrMs": 1341.9400999999998,
+      "extractMs": 1.369699999999284,
+      "ocrUsed": true,
+      "got": {
+        "name": "Yogesh Pawar",
+        "phone": "+918000902766",
+        "role": "Data Analyst"
+      },
+      "want": {
+        "name": "Yogesh Pawar",
+        "phone": "+918000902766",
+        "role": "Data Analyst"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.9
+      },
+      "needsReview": false
+    },
+    {
+      "file": "114_Swati_Bhat_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:objective_phrase",
+        "format:pdf",
+        "has_references",
+        "honorific"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.5715000000018335,
+      "textMs": 2.8317000000024564,
+      "ocrMs": 0,
+      "extractMs": 0.6650000000008731,
+      "ocrUsed": false,
+      "got": {
+        "name": "Swati Bhat",
+        "phone": "+919000910685",
+        "role": "Business Development Executive"
+      },
+      "want": {
+        "name": "Swati Bhat",
+        "phone": "+919000910685",
+        "role": "Business Development Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.84
+      },
+      "needsReview": false
+    },
+    {
+      "file": "115_Imran_Qureshi_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:headline",
+        "format:pdf",
+        "alternate_phone",
+        "decoy_numbers"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.7458000000005995,
+      "textMs": 2.128499999998894,
+      "ocrMs": 0,
+      "extractMs": 0.5468000000000757,
+      "ocrUsed": false,
+      "got": {
+        "name": "Imran Qureshi",
+        "phone": "+916000918604",
+        "role": "HR Executive"
+      },
+      "want": {
+        "name": "Imran Qureshi",
+        "phone": "+916000918604",
+        "role": "HR Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.62
+      },
+      "needsReview": true
+    },
+    {
+      "file": "116_Ritika_Sood_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:header_title",
+        "format:pdf",
+        "cv_heading"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.0398999999997613,
+      "textMs": 1.6517999999996391,
+      "ocrMs": 0,
+      "extractMs": 0.3334999999970023,
+      "ocrUsed": false,
+      "got": {
+        "name": "Ritika Sood",
+        "phone": "+917000926523",
+        "role": "Accountant"
+      },
+      "want": {
+        "name": "Ritika Sood",
+        "phone": "+917000926523",
+        "role": "Accountant"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.58
+      },
+      "needsReview": true
+    },
+    {
+      "file": "117_Prakash_Nayak_Resume.docx",
+      "traits": [
+        "layout:modern",
+        "role_style:current_only",
+        "format:docx",
+        "has_references",
+        "current_role_only"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.4085999999988417,
+      "textMs": 2.9588000000003376,
+      "ocrMs": 0,
+      "extractMs": 0.37370000000009895,
+      "ocrUsed": false,
+      "got": {
+        "name": "Prakash Nayak",
+        "phone": "+918000934442",
+        "role": "Digital Marketing Executive"
+      },
+      "want": {
+        "name": "Prakash Nayak",
+        "phone": "+918000934442",
+        "role": "Digital Marketing Executive"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0.42
+      },
+      "needsReview": true
+    },
+    {
+      "file": "118_Bhavya_Shetty_Resume.pdf",
+      "traits": [
+        "layout:modern",
+        "role_style:absent",
+        "format:pdf",
+        "no_role"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 2.51140000000305,
+      "textMs": 1.8806000000004133,
+      "ocrMs": 0,
+      "extractMs": 0.576600000000326,
+      "ocrUsed": false,
+      "got": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000942361",
+        "role": "Not Found"
+      },
+      "want": {
+        "name": "Bhavya Shetty",
+        "phone": "+919000942361",
+        "role": null
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.87,
+        "role": 0
+      },
+      "needsReview": true
+    },
+    {
+      "file": "119_Zoya_Ansari_Resume.pdf",
+      "traits": [
+        "layout:two_column",
+        "role_style:applied_label",
+        "format:pdf"
+      ],
+      "ok": {
+        "name": true,
+        "phone": true,
+        "role": true
+      },
+      "totalMs": 3.0672000000013213,
+      "textMs": 2.4699000000000524,
+      "ocrMs": 0,
+      "extractMs": 0.529500000000553,
+      "ocrUsed": false,
+      "got": {
+        "name": "Zoya Ansari",
+        "phone": "+916000950280",
+        "role": "Civil Engineer"
+      },
+      "want": {
+        "name": "Zoya Ansari",
+        "phone": "+916000950280",
+        "role": "Civil Engineer"
+      },
+      "confidence": {
+        "name": 0.99,
+        "phone": 0.75,
+        "role": 0.9
+      },
+      "needsReview": false
+    }
+  ]
+}

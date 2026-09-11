@@ -5,6 +5,7 @@ import { redisHealthy, createRedisConnection } from "@/lib/redis";
 import { sha256Hex } from "@/lib/crypto";
 import { getStorage, buildObjectKey } from "@/services/storage";
 import { setLLMProvider } from "@/services/llm";
+import { resetEnvCache } from "@/lib/config";
 import { setOCRProvider } from "@/services/ocr";
 import { TesseractOCRProvider } from "@/services/ocr/tesseract-provider";
 import { enqueueCVFile, reprocessCVFile, retryFailed } from "@/services/processing/enqueue";
@@ -48,6 +49,27 @@ async function uploadLike(file: string, name = file) {
   });
   const job = await enqueueCVFile(cvFile, { batchId });
   return { duplicate: false, cvFile, job };
+}
+
+/**
+ * Temporarily run the pipeline on a different engine.
+ *
+ * Most of this suite exercises the production default (local). Two cases assert
+ * on LLM-specific failure classification — a rejected key, a rate limit — so they
+ * need the legacy path to produce those errors at all. The behaviour under test
+ * (retry, backoff, terminal states) is engine-independent infrastructure.
+ */
+async function withEngine<T>(engine: "local" | "legacy", fn: () => Promise<T>): Promise<T> {
+  const previous = process.env.EXTRACTION_ENGINE;
+  process.env.EXTRACTION_ENGINE = engine;
+  resetEnvCache();
+  try {
+    return await fn();
+  } finally {
+    if (previous === undefined) delete process.env.EXTRACTION_ENGINE;
+    else process.env.EXTRACTION_ENGINE = previous;
+    resetEnvCache();
+  }
 }
 
 async function waitFor(pred: () => Promise<boolean>, ms = 120_000) {
@@ -143,6 +165,7 @@ d("end-to-end processing flow", () => {
   });
 
   it("marks permanent failures FAILED, and retry-failed re-queues them", async () => {
+   await withEngine("legacy", async () => {
     // Permanent LLM failure (e.g. bad API key) → FAILED without endless retries.
     const { ProcessingError } = await import("@/lib/errors");
     setLLMProvider(new ScriptedLLM([new ProcessingError("LLM API key rejected", "LLM_AUTH", false)]));
@@ -165,9 +188,11 @@ d("end-to-end processing flow", () => {
     expect(c.candidateName).toBe("Priya Verma");
     expect(c.phoneNumber).toBe("+919123456780");
     expect(await prisma.processingJob.count({ where: { cvFileId: cvId } })).toBe(2);
+   });
   });
 
   it("retries transient failures automatically with backoff", async () => {
+   await withEngine("legacy", async () => {
     const { ProcessingError } = await import("@/lib/errors");
     setLLMProvider(new ScriptedLLM([new ProcessingError("rate limit", "LLM_TRANSIENT", true), { candidate_name: "Sneha Reddy", phone_number: "09876501234", job_role_applied_for: "HR Executive", confidence: { candidate_name: 0.95, phone_number: 0.95, job_role_applied_for: 0.95 } }]));
     const up = await uploadLike("table.pdf");
@@ -179,5 +204,24 @@ d("end-to-end processing flow", () => {
     const c = await prisma.candidate.findUniqueOrThrow({ where: { cvFileId: cvId } });
     expect(c.phoneNumber).toBe("+919876501234");
     setLLMProvider(new HeuristicLLM());
+   });
+  });
+
+  it("processes a CV with no LLM provider available at all", async () => {
+    // The migration guarantee: production extraction reaches the database
+    // without any model call. The provider below throws if anything tries.
+    setLLMProvider({ name: "openai", extract: async () => { throw new Error("no LLM must be called"); } });
+    const up = await uploadLike("two-column.pdf", "Amit_Kumar_NoLlm.pdf");
+    expect(up.duplicate).toBe(false);
+    const cvId = up.cvFile.id;
+    await waitFor(async () => ["PROCESSED", "NEEDS_REVIEW"].includes((await prisma.cVFile.findUniqueOrThrow({ where: { id: cvId } })).status));
+    const c = await prisma.candidate.findUniqueOrThrow({ where: { cvFileId: cvId } });
+    expect(c.candidateName).toBe("Amit Kumar");
+    expect(c.phoneNumber).toBe("+919988776655");
+    expect(c.jobRoleAppliedFor).toBe("Frontend Developer");
+    expect(c.extractionEngine).toBe("local");
+    expect(c.extractionVersion).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(c.llmModel).toBe("local-engine");
+    setLLMProvider(null);
   });
 });

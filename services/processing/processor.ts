@@ -5,6 +5,7 @@ import { logger } from "@/lib/logger";
 import { sha256Hex } from "@/lib/crypto";
 import { errorMessage, isTransientError, AppError } from "@/lib/errors";
 import { getSettings } from "@/lib/settings";
+import { env } from "@/lib/config";
 import { getStorage } from "@/services/storage";
 import { parseCV, type PipelineStage } from "@/services/cv-parser/pipeline";
 import { getLLMProvider } from "@/services/llm";
@@ -42,8 +43,9 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
 
   try {
     const settings = await getSettings();
-    // Fail fast (before downloading / OCR) when the LLM is not configured.
-    getLLMProvider();
+    // Fail fast (before downloading / OCR) only when an LLM will actually be
+    // called. The local engine needs no credentials.
+    if (env().EXTRACTION_ENGINE !== "local") getLLMProvider();
 
     // 1. Load bytes
     let buffer: Buffer;
@@ -88,6 +90,7 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       llmTemperature: settings.llmTemperature,
       llmTimeoutMs: settings.llmTimeoutMs,
       promptVersion: settings.llmPromptVersion,
+      fileName: cvFile.fileName,
       onStage: setStage,
     });
 
@@ -110,6 +113,12 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       extractionMethod: result.extractionMethod,
       llmModel: result.llmModel,
       promptVersion: result.promptVersion,
+      extractionEngine: result.engine,
+      extractionVersion: result.engineVersion,
+      fieldMethods: result.fieldMethods ?? undefined,
+      extractionMs: Math.round(result.extractionMs),
+      ocrUsed: result.ocrConfidence !== undefined,
+      reviewRequired: result.needsReview,
       processedAt: new Date(),
     };
     // Manually corrected fields are trusted; drop review reasons that only concern them.
@@ -127,6 +136,9 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       candidateData.overallConfidence = Number((na * 0.4 + pa * 0.35 + ra * 0.25).toFixed(3));
     }
     const finalStatus = (candidateData.reviewReasons as string[]).length > 0 ? "NEEDS_REVIEW" : "PROCESSED";
+    // Keep the denormalised flag consistent with the reasons after manual
+    // corrections have been subtracted, not with the raw engine output.
+    candidateData.reviewRequired = finalStatus === "NEEDS_REVIEW";
 
     await prisma.$transaction([
       prisma.candidate.upsert({

@@ -9,6 +9,11 @@ import { env } from "./config";
  */
 export const settingsSchema = z.object({
   confidenceThreshold: z.number().min(0).max(1),
+  /** Bands shown in the dashboard. Anything below reviewThreshold needs a human. */
+  highConfidenceThreshold: z.number().min(0).max(1),
+  reviewThreshold: z.number().min(0).max(1),
+  /** Which extraction engine the pipeline uses. Env provides the default. */
+  extractionEngine: z.enum(["local", "shadow", "legacy"]),
   maxFileSizeMb: z.number().int().min(1).max(200),
   maxFilesPerRequest: z.number().int().min(1).max(200),
   maxRetries: z.number().int().min(0).max(10),
@@ -34,6 +39,9 @@ export function defaultSettings(): AppSettings {
   const e = env();
   return {
     confidenceThreshold: e.CONFIDENCE_THRESHOLD,
+    highConfidenceThreshold: 0.9,
+    reviewThreshold: e.CONFIDENCE_THRESHOLD,
+    extractionEngine: e.EXTRACTION_ENGINE,
     maxFileSizeMb: e.MAX_FILE_SIZE_MB,
     maxFilesPerRequest: e.MAX_FILES_PER_REQUEST,
     maxRetries: e.MAX_RETRIES,

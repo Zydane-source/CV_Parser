@@ -4,6 +4,9 @@ import { logger } from "@/lib/logger";
 import { extractDocumentText, isImageMime, PDF_MIME, countMeaningfulChars } from "@/services/text-extraction";
 import { getOCRProvider, type OCRProvider } from "@/services/ocr";
 import { extractWithLLM, type LLMProvider } from "@/services/llm";
+import type { LLMExtraction } from "@/services/llm/types";
+import { extractLocally } from "@/services/cv-engine";
+import { env } from "@/lib/config";
 import { normalizeText } from "./normalize";
 import { validateExtraction, type ValidatedExtraction } from "./validate";
 
@@ -30,11 +33,15 @@ export interface PipelineOptions {
   /** Dependency injection for tests. Production uses configured providers. */
   llmProvider?: LLMProvider;
   ocrProvider?: OCRProvider;
+  /** Original file name; its tokens corroborate the candidate name. */
+  fileName?: string;
+  /** Override the configured engine (tests, benchmark). */
+  engine?: "local" | "shadow" | "legacy";
   /** Stage callback for live status updates. */
   onStage?: (stage: PipelineStage) => Promise<void> | void;
 }
 
-export type PipelineStage = "TEXT_EXTRACTION" | "OCR" | "NORMALIZATION" | "LLM_EXTRACTION" | "VALIDATION";
+export type PipelineStage = "TEXT_EXTRACTION" | "OCR" | "NORMALIZATION" | "EXTRACTION" | "VALIDATION";
 
 export interface PipelineResult extends ValidatedExtraction {
   extractionMethod: ExtractionMethod;
@@ -44,6 +51,14 @@ export interface PipelineResult extends ValidatedExtraction {
   textChars: number;
   ocrConfidence?: number;
   usage?: { inputTokens?: number; outputTokens?: number };
+  /** Which engine produced the fields. */
+  engine: "local" | "llm";
+  engineVersion: string;
+  /** Per-field provenance, local engine only. */
+  fieldMethods?: Record<string, string>;
+  /** Milliseconds spent in step 4 alone. */
+  extractionMs: number;
+  shadow?: ShadowComparison;
 }
 
 export async function parseCV(buffer: Buffer, mimeType: string, opts: PipelineOptions): Promise<PipelineResult> {
@@ -88,20 +103,24 @@ export async function parseCV(buffer: Buffer, mimeType: string, opts: PipelineOp
     );
   }
 
-  // 4. LLM extraction
-  await stage("LLM_EXTRACTION");
-  const llm = await extractWithLLM({
-    cvText: normalized,
-    model: opts.llmModel,
-    temperature: opts.llmTemperature,
-    timeoutMs: opts.llmTimeoutMs,
-    promptVersion: opts.promptVersion,
-    provider: opts.llmProvider,
+  // 4. Field extraction — local engine by default, LLM only behind the flag.
+  await stage("EXTRACTION");
+  const engineMode = opts.engine ?? env().EXTRACTION_ENGINE;
+  const extraction = await runExtraction(engineMode, normalized, {
+    fileName: opts.fileName,
+    ocrConfidence,
+    llm: {
+      model: opts.llmModel,
+      temperature: opts.llmTemperature,
+      timeoutMs: opts.llmTimeoutMs,
+      promptVersion: opts.promptVersion,
+      provider: opts.llmProvider,
+    },
   });
 
-  // 5. Validation + confidence scoring
+  // 5. Validation + confidence scoring (unchanged; both engines feed the same shape)
   await stage("VALIDATION");
-  const validated = validateExtraction(llm.extraction, { threshold: opts.confidenceThreshold, cvText: normalized });
+  const validated = validateExtraction(extraction.result, { threshold: opts.confidenceThreshold, cvText: normalized });
   if (ocrConfidence !== undefined && ocrConfidence < 0.6) {
     validated.reviewReasons.push(`Low OCR confidence (${ocrConfidence.toFixed(2)})`);
     validated.needsReview = true;
@@ -110,11 +129,113 @@ export async function parseCV(buffer: Buffer, mimeType: string, opts: PipelineOp
   return {
     ...validated,
     extractionMethod: method,
-    llmModel: llm.model,
-    promptVersion: llm.promptVersion,
+    llmModel: extraction.modelLabel,
+    promptVersion: extraction.versionLabel,
     pageCount: extracted.pageCount,
     textChars: normalized.length,
     ocrConfidence,
-    usage: llm.usage,
+    usage: extraction.usage,
+    engine: extraction.engine,
+    engineVersion: extraction.versionLabel,
+    fieldMethods: extraction.fieldMethods,
+    extractionMs: extraction.durationMs,
+    shadow: extraction.shadow,
   };
+}
+
+/** Result of step 4, normalised across both engines. */
+interface ExtractionOutcome {
+  result: LLMExtraction;
+  engine: "local" | "llm";
+  /** Stored in Candidate.llmModel — the model name, or the local engine id. */
+  modelLabel: string;
+  /** Stored in Candidate.promptVersion — prompt version, or engine version. */
+  versionLabel: string;
+  fieldMethods?: Record<string, string>;
+  durationMs: number;
+  usage?: { inputTokens?: number; outputTokens?: number };
+  shadow?: ShadowComparison;
+}
+
+async function runExtraction(
+  mode: "local" | "shadow" | "legacy",
+  text: string,
+  ctx: {
+    fileName?: string;
+    ocrConfidence?: number;
+    llm: { model: string; temperature: number; timeoutMs: number; promptVersion: string; provider?: LLMProvider };
+  },
+): Promise<ExtractionOutcome> {
+  if (mode === "legacy") {
+    const started = Date.now();
+    const llm = await extractWithLLM({
+      cvText: text,
+      model: ctx.llm.model,
+      temperature: ctx.llm.temperature,
+      timeoutMs: ctx.llm.timeoutMs,
+      promptVersion: ctx.llm.promptVersion,
+      provider: ctx.llm.provider,
+    });
+    return {
+      result: llm.extraction,
+      engine: "llm",
+      modelLabel: llm.model,
+      versionLabel: llm.promptVersion,
+      durationMs: Date.now() - started,
+      usage: llm.usage,
+    };
+  }
+
+  const local = extractLocally(text, { fileName: ctx.fileName, ocrConfidence: ctx.ocrConfidence });
+  const outcome: ExtractionOutcome = {
+    result: {
+      candidate_name: local.candidate_name,
+      phone_number: local.phone_number,
+      job_role_applied_for: local.job_role_applied_for,
+      confidence: local.confidence,
+    },
+    engine: "local",
+    modelLabel: `local-engine`,
+    versionLabel: local.engineVersion,
+    fieldMethods: local.methods as unknown as Record<string, string>,
+    durationMs: local.durationMs,
+  };
+
+  // Shadow mode: run the LLM too, compare, log. Its output is never stored as
+  // production data — `outcome.result` remains the local engine's.
+  if (mode === "shadow") {
+    try {
+      const llm = await extractWithLLM({
+        cvText: text,
+        model: ctx.llm.model,
+        temperature: ctx.llm.temperature,
+        timeoutMs: ctx.llm.timeoutMs,
+        promptVersion: ctx.llm.promptVersion,
+        provider: ctx.llm.provider,
+      });
+      outcome.shadow = compareExtractions(local, llm.extraction);
+      logger.info({ shadow: outcome.shadow, model: llm.model }, "shadow comparison");
+    } catch (err) {
+      // The shadow comparison must never fail a production extraction.
+      logger.warn({ err: err instanceof Error ? err.message : String(err) }, "shadow LLM call failed; local result kept");
+    }
+  }
+
+  return outcome;
+}
+
+export interface ShadowComparison {
+  nameAgrees: boolean;
+  phoneAgrees: boolean;
+  roleAgrees: boolean;
+  agreementCount: number;
+}
+
+/** Field-by-field agreement, normalised so casing and spacing do not count as disagreement. */
+function compareExtractions(local: { candidate_name: string; phone_number: string; job_role_applied_for: string }, llm: LLMExtraction): ShadowComparison {
+  const norm = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const nameAgrees = norm(local.candidate_name) === norm(llm.candidate_name);
+  const phoneAgrees = local.phone_number.replace(/\D/g, "") === String(llm.phone_number).replace(/\D/g, "");
+  const roleAgrees = norm(local.job_role_applied_for) === norm(llm.job_role_applied_for);
+  return { nameAgrees, phoneAgrees, roleAgrees, agreementCount: [nameAgrees, phoneAgrees, roleAgrees].filter(Boolean).length };
 }

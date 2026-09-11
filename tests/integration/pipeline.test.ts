@@ -5,9 +5,12 @@ import { ensureFixtures, fixture, mimeFor, FIXTURES } from "../helpers/fixtures"
 import { HeuristicLLM, ScriptedLLM } from "../helpers/fake-llm";
 
 /**
- * Unified pipeline over every CV variation: real text extraction + real OCR,
- * with a deterministic test LLM so results are reproducible offline.
- * (The real LLM providers are exercised in llm-provider.test.ts when a key is set.)
+ * Unified pipeline over every CV variation: real text extraction + real OCR.
+ *
+ * These cases pin `engine: "legacy"` because they assert on LLM-specific
+ * behaviour — that exactly one provider call happens per CV, and that provider
+ * errors propagate for the queue to classify. The local engine, which is the
+ * production default, is covered by tests/integration/local-pipeline.test.ts.
  */
 const ocr = new TesseractOCRProvider(process.env.OCR_CACHE_PATH || "./.tesseract-cache");
 const base = (llm: PipelineOptions["llmProvider"]): PipelineOptions => ({
@@ -21,6 +24,7 @@ const base = (llm: PipelineOptions["llmProvider"]): PipelineOptions => ({
   llmTimeoutMs: 10000,
   promptVersion: "v1",
   llmProvider: llm,
+  engine: "legacy",
   ocrProvider: ocr,
 });
 
@@ -36,7 +40,7 @@ describe("parseCV across real-world CV variations", () => {
 
       expect(llm.calls).toBe(1); // exactly one LLM call per CV
       expect(stages).toContain("TEXT_EXTRACTION");
-      expect(stages).toContain("LLM_EXTRACTION");
+      expect(stages).toContain("EXTRACTION");
       expect(stages).toContain("VALIDATION");
 
       // Never hallucinate: missing fields must come back as "Not Found".
