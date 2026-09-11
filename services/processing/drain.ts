@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/config";
+import { effectiveProcessingMode } from "@/lib/processing-mode";
 import { logger } from "@/lib/logger";
 import { errorMessage, isTransientError } from "@/lib/errors";
 import { getSettings } from "@/lib/settings";
@@ -92,5 +93,5 @@ export async function drainPendingJobs(opts: DrainOptions = {}): Promise<DrainRe
 
 /** True when this deployment has no dedicated worker and relies on draining. */
 export function isInlineMode(): boolean {
-  return env().PROCESSING_MODE === "inline";
+  return effectiveProcessingMode() === "inline";
 }

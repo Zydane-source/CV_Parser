@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveWebhookConnection } from "@/services/google-drive/watch";
-import { getDriveSyncQueue } from "@/services/processing/queue";
+import { addDriveSyncJob } from "@/services/processing/queue";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (state === "sync") return new NextResponse(null, { status: 200 }); // initial handshake
 
   try {
-    await getDriveSyncQueue().add(
+    await addDriveSyncJob(
       "webhook",
       { connectionId: conn.id, reason: "webhook" },
       { jobId: `webhook-${conn.id}-${Math.floor(Date.now() / 5000)}`, delay: 2000 },

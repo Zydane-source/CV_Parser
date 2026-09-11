@@ -360,6 +360,8 @@ First step for anything unexpected: `npm run diagnose`. The UI also tells you di
 
 | Problem | Fix |
 |---|---|
+| Sign-in button stuck on **"Signing in…"** | `REDIS_URL` points somewhere unreachable. `/api/auth/login` rate-limits first, and a Redis command that is written to a socket nobody answers has no timeout of its own. Fixed in code (every request-path Redis call is now bounded), but the underlying config is still wrong: on Vercel set `PROCESSING_MODE=inline` and remove `REDIS_URL`. Check `/api/health` — `modeDowngraded: true` means the app detected this and fell back. Reproduce the mechanism with `npm run demo:redis-hang`. |
+| `/api/health` reports `"modeDowngraded": true` | `PROCESSING_MODE=queue` is set but no reachable Redis exists here, so the app is draining inline instead. Working as intended, but set `PROCESSING_MODE=inline` explicitly so the configuration says what it does. |
 | CVs stay **Pending** | No worker is consuming the queue. Run `npm run worker` (or `npm run dev:all`) from the project root; queued CVs are picked up automatically within seconds. If it is running, check `REDIS_URL` and `/api/health`. |
 | CVs **Pending** and the worker *is* running | The worker cannot reach Redis, or it was started from a different folder than the web server so `LOCAL_STORAGE_PATH` resolves elsewhere. The worker logs its resolved storage path at startup. |
 | Wrong **job role** extracted | Check `fieldMethods` on the candidate (API response, or the Extraction row on the detail page) — it names the signal that fired. If the role is one you hire for but is not recognised, add it to `services/cv-engine/taxonomy/role-taxonomy.json` and restart. |

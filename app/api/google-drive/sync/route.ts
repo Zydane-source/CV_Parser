@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { randomToken } from "@/lib/crypto";
 import { getUserConnection } from "@/services/google-drive/oauth";
-import { getDriveSyncQueue } from "@/services/processing/queue";
+import { addDriveSyncJob } from "@/services/processing/queue";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +14,6 @@ export const POST = handler(async () => {
   if (!conn) throw new AppError("Google Drive is not connected", { status: 400, code: "GOOGLE_NOT_CONNECTED" });
   if (!conn.folderId) throw new AppError("Select a Drive folder first", { status: 400, code: "NO_FOLDER" });
   const batchId = `drive_${randomToken(9)}`;
-  const job = await getDriveSyncQueue().add("manual", { connectionId: conn.id, reason: "manual", batchId }, { jobId: `manual-${conn.id}-${Date.now()}` });
-  return ok({ queued: true, queueJobId: job.id, batchId });
+  const queueJobId = await addDriveSyncJob("manual", { connectionId: conn.id, reason: "manual", batchId }, { jobId: `manual-${conn.id}-${Date.now()}` });
+  return ok({ queued: true, queueJobId, batchId });
 });

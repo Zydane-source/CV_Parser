@@ -140,6 +140,7 @@ export function publicConfigSummary() {
   return {
     appUrl: e.APP_URL,
     extractionEngine: e.EXTRACTION_ENGINE,
+    processingMode: e.PROCESSING_MODE,
     llm: {
       /** Only consulted when EXTRACTION_ENGINE is "shadow" or "legacy". */
       required: e.EXTRACTION_ENGINE !== "local",

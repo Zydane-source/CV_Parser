@@ -1,7 +1,9 @@
 import type { CVFile, ProcessingJob } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getSettings } from "@/lib/settings";
-import { env } from "@/lib/config";
+import { effectiveProcessingMode } from "@/lib/processing-mode";
+import { isRedisConfigured } from "@/lib/redis";
+import { withTimeout } from "@/lib/timeout";
 import { getCVQueue, cvJobOptions } from "./queue";
 
 /**
@@ -23,14 +25,23 @@ export async function enqueueCVFile(cvFile: Pick<CVFile, "id">, opts: { batchId?
 
   // Inline mode has no worker and no Redis: the DB row *is* the queue, and
   // /api/jobs/drain picks it up. Returning here keeps uploads fast.
-  if (env().PROCESSING_MODE === "inline") return job;
+  if (effectiveProcessingMode() === "inline") return job;
 
   try {
+    if (!isRedisConfigured()) {
+      throw new Error(`PROCESSING_MODE=queue but REDIS_URL is not usable here. Set a reachable REDIS_URL, or use PROCESSING_MODE=inline.`);
+    }
     // BullMQ custom ids must not contain ":" – use "cv-<jobId>".
-    const queued = await getCVQueue().add(
-      "parse",
-      { cvFileId: cvFile.id, processingJobId: job.id, reprocess: opts.reprocess ?? false },
-      { ...cvJobOptions(settings.maxRetries, settings.retryBackoffMs), jobId: `cv-${job.id}` },
+    // Bounded: BullMQ's connection waits forever for an unreachable Redis, so
+    // without this the upload request hangs instead of failing the job below.
+    const queued = await withTimeout(
+      getCVQueue().add(
+        "parse",
+        { cvFileId: cvFile.id, processingJobId: job.id, reprocess: opts.reprocess ?? false },
+        { ...cvJobOptions(settings.maxRetries, settings.retryBackoffMs), jobId: `cv-${job.id}` },
+      ),
+      5000,
+      "enqueue timed out – Redis is not responding",
     );
     return await prisma.processingJob.update({ where: { id: job.id }, data: { queueJobId: String(queued.id) } });
   } catch (err) {

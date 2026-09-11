@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { errorMessage } from "@/lib/errors";
 import { getStorage } from "@/services/storage";
+import { isRedisConfigured } from "@/lib/redis";
+import { withTimeout } from "@/lib/timeout";
 import { getCVQueue } from "@/services/processing/queue";
 
 /**
@@ -58,12 +60,16 @@ export async function deleteCVs(req: DeleteRequest): Promise<DeleteResult> {
   if (rows.length === 0) return result;
 
   // 1. Cancel queued/in-flight work so a worker does not resurrect a deleted row.
+  //    Skipped entirely when there is no queue: in inline mode there is nothing
+  //    to cancel, and against an unreachable Redis every call here would park
+  //    forever rather than throw, hanging the delete request.
   try {
+    if (!isRedisConfigured()) throw new Error("no queue configured");
     const queue = getCVQueue();
     for (const row of rows) {
       for (const job of row.jobs) {
         if (job.status !== "PENDING" && job.status !== "PROCESSING") continue;
-        const queued = await queue.getJob(`cv-${job.id}`);
+        const queued = await withTimeout(queue.getJob(`cv-${job.id}`), 2000);
         await queued?.remove().catch(() => undefined);
       }
     }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { redisHealthy } from "@/lib/redis";
-import { env } from "@/lib/config";
+import { effectiveProcessingMode, processingModeWasDowngraded } from "@/lib/processing-mode";
 import { getWorkerHealth } from "@/lib/worker-health";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function GET() {
   } catch {
     db = false;
   }
-  const mode = env().PROCESSING_MODE;
+  const mode = effectiveProcessingMode();
   // Redis is only a dependency when a BullMQ worker is doing the processing.
   const redis = mode === "inline" ? true : await redisHealthy();
   const worker =
@@ -34,6 +34,11 @@ export async function GET() {
       ok,
       db,
       redis,
+      mode,
+      // True when PROCESSING_MODE=queue was configured but cannot be honoured
+      // here, so the app is draining inline instead. Reported because the
+      // alternative is CVs sitting at Pending with no visible reason.
+      modeDowngraded: processingModeWasDowngraded(),
       worker: { online: worker.online, count: worker.count, degraded: Boolean(worker.configError) },
       time: new Date().toISOString(),
     },

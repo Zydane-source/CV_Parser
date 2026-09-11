@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { getUserConnection } from "@/services/google-drive/oauth";
 import { getFolderPath } from "@/services/google-drive/files";
-import { getDriveSyncQueue } from "@/services/processing/queue";
+import { addDriveSyncJob } from "@/services/processing/queue";
 import { stopWatch } from "@/services/google-drive/watch";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +25,6 @@ export const PUT = handler(async (req: Request) => {
     where: { id: conn.id },
     data: { folderId, folderName: info.name, folderPath: info.path, startPageToken: null, lastSyncError: null },
   });
-  await getDriveSyncQueue().add("folder-changed", { connectionId: conn.id, reason: "folder-changed" }, { jobId: `folder-${conn.id}-${Date.now()}` });
+  await addDriveSyncJob("folder-changed", { connectionId: conn.id, reason: "folder-changed" }, { jobId: `folder-${conn.id}-${Date.now()}` });
   return ok({ folderId: updated.folderId, folderName: updated.folderName, folderPath: updated.folderPath });
 });

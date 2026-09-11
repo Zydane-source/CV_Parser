@@ -1,5 +1,6 @@
 import { Queue, type JobsOptions } from "bullmq";
-import { getRedis } from "@/lib/redis";
+import { getRedis, isRedisConfigured } from "@/lib/redis";
+import { withTimeout } from "@/lib/timeout";
 
 /**
  * BullMQ queues.
@@ -60,6 +61,18 @@ export function getDriveSyncQueue(): Queue<DriveSyncJobData> {
   return globalForQueues.driveSyncQueue;
 }
 
+/**
+ * Add a Drive-sync job, bounded so a request path cannot hang on an unreachable
+ * Redis. Throws when there is no usable queue, which the callers already report.
+ */
+export async function addDriveSyncJob(name: string, data: DriveSyncJobData, opts: JobsOptions): Promise<string | undefined> {
+  if (!isRedisConfigured()) {
+    throw new Error("No queue is configured (PROCESSING_MODE=inline, or REDIS_URL is not reachable from here)");
+  }
+  const job = await withTimeout(getDriveSyncQueue().add(name, data, opts), 5000, "Drive sync enqueue timed out – Redis is not responding");
+  return job.id;
+}
+
 /** Retry policy for CV jobs: exponential backoff, capped attempts (configurable). */
 export function cvJobOptions(maxAttempts: number, backoffMs: number): JobsOptions {
   return {
@@ -68,9 +81,28 @@ export function cvJobOptions(maxAttempts: number, backoffMs: number): JobsOption
   };
 }
 
-/** Queue-level counts for the monitoring UI. */
+/**
+ * Queue-level counts for the monitoring UI. Returns null when there is no queue
+ * to count.
+ *
+ * BullMQ's connection waits forever for an unreachable Redis by design, so this
+ * has to be bounded explicitly — a `.catch()` at the call site cannot rescue a
+ * promise that never settles, and this runs on a request path.
+ */
 export async function getQueueCounts() {
+  if (!isRedisConfigured()) return null;
   const q = getCVQueue();
-  const counts = await q.getJobCounts("waiting", "active", "delayed", "failed", "completed", "paused");
-  return counts;
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    return await Promise.race([
+      q.getJobCounts("waiting", "active", "delayed", "failed", "completed", "paused"),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("queue counts timed out")), 2000);
+      }),
+    ]);
+  } catch {
+    return null;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }

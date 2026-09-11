@@ -1,4 +1,4 @@
-import { getRedis } from "./redis";
+import { getRedis, withRedis } from "./redis";
 
 /**
  * Worker liveness via Redis heartbeats.
@@ -45,10 +45,18 @@ export async function clearHeartbeat(id: string): Promise<void> {
   }
 }
 
-/** Called by the web process (health endpoint, jobs API, SSE stream). */
+const NO_WORKERS: WorkerHealth = { online: false, count: 0, workers: [], configError: null };
+
+/**
+ * Called by the web process (health endpoint, jobs API, SSE stream).
+ *
+ * Goes through `withRedis` rather than awaiting the BullMQ connection directly:
+ * on a deployment with no Redis, the raw call parks forever and takes four API
+ * routes down with it. "We cannot prove a worker is alive" is the right answer
+ * and it must arrive promptly.
+ */
 export async function getWorkerHealth(): Promise<WorkerHealth> {
-  try {
-    const redis = getRedis();
+  const result = await withRedis(async (redis) => {
     const keys: string[] = [];
     let cursor = "0";
     do {
@@ -57,7 +65,7 @@ export async function getWorkerHealth(): Promise<WorkerHealth> {
       keys.push(...batch);
     } while (cursor !== "0");
 
-    if (keys.length === 0) return { online: false, count: 0, workers: [], configError: null };
+    if (keys.length === 0) return NO_WORKERS;
 
     const values = await redis.mget(...keys);
     const workers: WorkerHeartbeat[] = [];
@@ -71,8 +79,6 @@ export async function getWorkerHealth(): Promise<WorkerHealth> {
     }
     const configError = workers.find((w) => w.llm.lastError)?.llm.lastError ?? null;
     return { online: workers.length > 0, count: workers.length, workers, configError };
-  } catch {
-    // Redis unreachable: we cannot prove a worker is alive.
-    return { online: false, count: 0, workers: [], configError: null };
-  }
+  });
+  return result ?? NO_WORKERS;
 }
