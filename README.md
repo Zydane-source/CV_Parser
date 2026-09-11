@@ -30,7 +30,7 @@ Sheets**. Both apply whatever search and filters are active on the Candidates pa
 - [Production deployment](#production-deployment)
 - [Troubleshooting](#troubleshooting)
 
-Deeper documentation: [architecture](docs/ARCHITECTURE.md) ·
+Deeper documentation: [migration report](docs/migration-report.md) · [architecture](docs/ARCHITECTURE.md) ·
 [extraction engine](docs/local-extraction-engine.md) · [benchmark](docs/benchmark.md) ·
 [migrating from the LLM](docs/migration-from-llm.md) · [security](docs/SECURITY.md) ·
 [deployment](docs/DEPLOYMENT.md) · [Vercel](docs/VERCEL.md)
