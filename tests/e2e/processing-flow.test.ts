@@ -221,7 +221,9 @@ d("end-to-end processing flow", () => {
     expect(c.jobRoleAppliedFor).toBe("Frontend Developer");
     expect(c.extractionEngine).toBe("local");
     expect(c.extractionVersion).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(c.llmModel).toBe("local-engine");
+    // The local engine is not a model, so the legacy LLM columns stay empty.
+    expect(c.llmModel).toBeNull();
+    expect(c.extractionEngine).toBe("local");
     setLLMProvider(null);
   });
 });

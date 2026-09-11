@@ -81,6 +81,8 @@ export const candidateSelect = {
       correctedFields: true,
       reviewReasons: true,
       extractionMethod: true,
+      extractionEngine: true,
+      extractionVersion: true,
       llmModel: true,
       promptVersion: true,
       processedAt: true,

@@ -39,6 +39,8 @@ interface Detail {
     correctedFields: string[];
     reviewReasons: string[];
     extractionMethod: string;
+    extractionEngine: string | null;
+    extractionVersion: string | null;
     llmModel: string | null;
     promptVersion: string | null;
     processedAt: string | null;
@@ -232,7 +234,22 @@ export function CandidateDetail({ id, threshold, startEditing }: { id: string; t
               <Row k="Processing Status" v={<StatusBadge status={data.status} />} />
               <Row k="Created At" v={formatDate(data.createdAt)} />
               <Row k="Processed At" v={formatDate(c?.processedAt ?? null)} />
-              {c && <Row k="Extraction" v={`${METHOD_LABEL[c.extractionMethod] ?? c.extractionMethod}${c.llmModel ? ` · ${c.llmModel}` : ""}${c.promptVersion ? ` · prompt ${c.promptVersion}` : ""}`} />}
+              {c && (
+                <Row
+                  k="Extraction"
+                  v={[
+                    METHOD_LABEL[c.extractionMethod] ?? c.extractionMethod,
+                    // The local engine sets neither a model nor a prompt; it
+                    // identifies itself by engine name and version instead.
+                    c.extractionEngine === "local"
+                      ? `local engine${c.extractionVersion ? ` v${c.extractionVersion}` : ""}`
+                      : c.llmModel,
+                    c.promptVersion ? `prompt ${c.promptVersion}` : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                />
+              )}
             </dl>
           </div>
 

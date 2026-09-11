@@ -136,7 +136,7 @@ export async function parseCV(buffer: Buffer, mimeType: string, opts: PipelineOp
     ocrConfidence,
     usage: extraction.usage,
     engine: extraction.engine,
-    engineVersion: extraction.versionLabel,
+    engineVersion: extraction.engineVersion,
     fieldMethods: extraction.fieldMethods,
     extractionMs: extraction.durationMs,
     shadow: extraction.shadow,
@@ -147,10 +147,12 @@ export async function parseCV(buffer: Buffer, mimeType: string, opts: PipelineOp
 interface ExtractionOutcome {
   result: LLMExtraction;
   engine: "local" | "llm";
-  /** Stored in Candidate.llmModel — the model name, or the local engine id. */
+  /** Stored in Candidate.llmModel — the model name; empty for the local engine. */
   modelLabel: string;
-  /** Stored in Candidate.promptVersion — prompt version, or engine version. */
+  /** Stored in Candidate.promptVersion — prompt version; empty for the local engine. */
   versionLabel: string;
+  /** Stored in Candidate.extractionVersion — always set, for either engine. */
+  engineVersion: string;
   fieldMethods?: Record<string, string>;
   durationMs: number;
   usage?: { inputTokens?: number; outputTokens?: number };
@@ -181,6 +183,7 @@ async function runExtraction(
       engine: "llm",
       modelLabel: llm.model,
       versionLabel: llm.promptVersion,
+      engineVersion: llm.promptVersion,
       durationMs: Date.now() - started,
       usage: llm.usage,
     };
@@ -195,8 +198,14 @@ async function runExtraction(
       confidence: local.confidence,
     },
     engine: "local",
-    modelLabel: `local-engine`,
-    versionLabel: local.engineVersion,
+    // No model and no prompt were involved, so both legacy provenance columns
+    // stay empty rather than carrying a stand-in value. A row's engine and
+    // version live in `extractionEngine` / `extractionVersion`; writing
+    // "local-engine" into a column named `llmModel` would quietly break anyone
+    // filtering on it to find LLM-processed records.
+    modelLabel: "",
+    versionLabel: "",
+    engineVersion: local.engineVersion,
     fieldMethods: local.methods as unknown as Record<string, string>,
     durationMs: local.durationMs,
   };
