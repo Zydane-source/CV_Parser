@@ -1,17 +1,63 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Two layers, deliberately. The palette below is raw material; the semantic
+   tokens underneath name a *role* ("surface", "border-strong", "danger"). Screens
+   reference roles only, so changing the brand hue or the neutral temperature is
+   one edit here rather than a find-and-replace across the app.
+
+   The brand hue is unchanged from the original product — this is a visual
+   refinement of an existing identity, not a rebrand.
+--------------------------------------------------------------------------- */
 @theme {
-  --color-brand-50: #eef4ff;
-  --color-brand-100: #d9e5ff;
+  /* Brand — a restrained indigo. Trust over excitement. */
+  --color-brand-50: #eef3ff;
+  --color-brand-100: #dbe5ff;
+  --color-brand-200: #bfd0ff;
+  --color-brand-300: #94aeff;
+  --color-brand-400: #6584fb;
   --color-brand-500: #2f5bea;
-  --color-brand-600: #244ccc;
+  --color-brand-600: #2449d4;
   --color-brand-700: #1c3ca3;
+  --color-brand-800: #1a3583;
+  --color-brand-900: #1a3069;
+
+  /* Neutrals — slightly cool, so the brand reads as deliberate against them. */
+  --color-ink-50: #f8fafc;
+  --color-ink-100: #f1f4f9;
+  --color-ink-200: #e4e8ef;
+  --color-ink-300: #cdd4df;
+  --color-ink-400: #98a2b3;
+  --color-ink-500: #667085;
+  --color-ink-600: #4a5567;
+  --color-ink-700: #344054;
+  --color-ink-800: #1d2839;
+  --color-ink-900: #101828;
+
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Shadows: two steps only. More than that and "elevated" stops meaning anything. */
+  --shadow-card: 0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.06);
+  --shadow-raised: 0 4px 8px -2px rgb(16 24 40 / 0.08), 0 2px 4px -2px rgb(16 24 40 / 0.04);
+  --shadow-overlay: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 12px -4px rgb(16 24 40 / 0.08);
 }
 
 :root {
-  --background: #f6f7fb;
-  --foreground: #111827;
+  --background: #f7f8fb;
+  --foreground: #101828;
+  /* Semantic roles. */
+  --surface: #ffffff;
+  --surface-sunken: #f7f8fb;
+  --border: #e4e8ef;
+  --border-strong: #cdd4df;
+  --text: #101828;
+  --text-muted: #667085;
+  --text-subtle: #98a2b3;
+  /* Layout constants, so the shell agrees with itself in every file. */
+  --sidebar-w: 15rem;
+  --header-h: 3.5rem;
 }
 
 html,
@@ -24,51 +70,190 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Tailwind v4: custom classes that other classes @apply must be declared as utilities. */
+/* A single visible focus treatment everywhere, including keyboard users on
+   custom controls. Removing outlines without replacing them is the most common
+   way an otherwise-good interface becomes unusable without a mouse. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 0.375rem;
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-brand-900);
+}
+
+/* Tabular figures in data contexts: columns of numbers that do not jitter. */
+@utility numeric {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ---------------------------------------------------------------------------
+   Typography scale. Named by role so a page never picks a size at random.
+--------------------------------------------------------------------------- */
+@utility text-page-title {
+  @apply text-[1.375rem] font-semibold tracking-[-0.015em] text-ink-900;
+}
+@utility text-section-title {
+  @apply text-sm font-semibold text-ink-900;
+}
+@utility text-body {
+  @apply text-sm text-ink-700;
+}
+@utility text-meta {
+  @apply text-xs text-ink-500;
+}
+@utility text-metric {
+  @apply text-[1.75rem] font-semibold tracking-[-0.02em] text-ink-900 numeric;
+}
+
+/* ---------------------------------------------------------------------------
+   Surfaces
+--------------------------------------------------------------------------- */
 @utility card {
-  @apply rounded-xl border border-gray-200 bg-white shadow-sm;
+  @apply rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[var(--shadow-card)];
 }
 
+@utility card-interactive {
+  @apply card transition-shadow duration-150 hover:shadow-[var(--shadow-raised)];
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons — four levels of emphasis, and no more. If everything is primary,
+   nothing is.
+--------------------------------------------------------------------------- */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-3.5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3.5 py-2 text-sm font-medium
+         transition-[background-color,border-color,color,box-shadow] duration-150
+         disabled:pointer-events-none disabled:opacity-45;
 }
 
 @utility btn-primary {
-  @apply btn bg-brand-600 text-white hover:bg-brand-700;
+  @apply btn bg-brand-600 text-white shadow-[var(--shadow-card)] hover:bg-brand-700 active:bg-brand-800;
 }
 
 @utility btn-secondary {
-  @apply btn border border-gray-300 bg-white text-gray-800 hover:bg-gray-50;
+  @apply btn border border-[var(--border-strong)] bg-white text-ink-700 shadow-[var(--shadow-card)] hover:bg-ink-50 hover:text-ink-900 active:bg-ink-100;
+}
+
+@utility btn-tertiary {
+  @apply btn text-ink-600 hover:bg-ink-100 hover:text-ink-900;
 }
 
 @utility btn-danger {
-  @apply btn border border-red-200 bg-white text-red-700 hover:bg-red-50;
+  @apply btn border border-red-200 bg-white text-red-700 shadow-[var(--shadow-card)] hover:border-red-300 hover:bg-red-50;
 }
 
 @utility btn-sm {
-  @apply px-2.5 py-1.5 text-xs;
+  @apply gap-1 px-2.5 py-1.5 text-xs;
+}
+
+@utility btn-lg {
+  @apply px-4 py-2.5 text-sm;
+}
+
+/* ---------------------------------------------------------------------------
+   Form controls. Native selects and date inputs render differently in every
+   browser; these give them one appearance without losing native behaviour.
+--------------------------------------------------------------------------- */
+@utility field {
+  @apply w-full rounded-lg border border-[var(--border-strong)] bg-white px-3 py-2 text-sm text-ink-900 shadow-[var(--shadow-card)]
+         transition-[border-color,box-shadow] duration-150
+         placeholder:text-ink-400
+         focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/10
+         disabled:cursor-not-allowed disabled:bg-ink-50 disabled:text-ink-400;
 }
 
 @utility input {
-  @apply w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100;
+  @apply field;
+}
+
+@utility select {
+  @apply field cursor-pointer appearance-none bg-no-repeat pr-9;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%23667085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+  background-position: right 0.625rem center;
+  background-size: 1.15rem;
 }
 
 @utility label {
-  @apply mb-1 block text-xs font-medium uppercase tracking-wide text-gray-500;
+  @apply mb-1.5 block text-xs font-medium text-ink-700;
 }
 
+@utility hint {
+  @apply mt-1.5 text-xs text-ink-500;
+}
+
+@utility field-error {
+  @apply mt-1.5 flex items-center gap-1 text-xs font-medium text-red-600;
+}
+
+/* ---------------------------------------------------------------------------
+   Table. Horizontal rules only — a full grid turns a list into a spreadsheet
+   and slows scanning.
+--------------------------------------------------------------------------- */
 @utility table {
   @apply w-full text-left text-sm;
 }
 
 .table th {
-  @apply border-b border-gray-200 bg-gray-50 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500;
+  @apply sticky top-0 z-10 whitespace-nowrap border-b border-[var(--border)] bg-ink-50/95 px-4 py-2.5
+         text-[0.6875rem] font-semibold uppercase tracking-[0.04em] text-ink-500 backdrop-blur;
 }
 .table td {
-  @apply border-b border-gray-100 px-3 py-2.5 align-middle text-gray-800;
+  @apply border-b border-[var(--border)] px-4 py-3 align-middle text-ink-700;
 }
-.table tr:hover td {
-  @apply bg-gray-50/60;
+.table tbody tr {
+  @apply transition-colors duration-100;
+}
+.table tbody tr:hover td {
+  @apply bg-brand-50/40;
+}
+.table tbody tr:last-child td {
+  @apply border-b-0;
+}
+
+/* ---------------------------------------------------------------------------
+   Skeletons — layout-preserving loading, so content does not jump in.
+--------------------------------------------------------------------------- */
+@utility skeleton {
+  @apply relative overflow-hidden rounded-md bg-ink-100;
+}
+
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.65), transparent);
+  animation: shimmer 1.6s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Respect a stated preference for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Screen-reader-only text, for labels that must exist but not be seen. */
+@utility sr-only-focusable {
+  @apply absolute h-px w-px overflow-hidden whitespace-nowrap
+         focus:static focus:h-auto focus:w-auto focus:overflow-visible;
 }
