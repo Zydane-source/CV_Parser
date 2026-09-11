@@ -3,6 +3,7 @@ import path from "node:path";
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, HeadObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { env } from "@/lib/config";
+import { ConfigError } from "@/lib/errors";
 import { randomToken } from "@/lib/crypto";
 
 /**
@@ -69,7 +70,7 @@ class S3StorageProvider implements StorageProvider {
   constructor() {
     const e = env();
     if (!e.STORAGE_BUCKET || !e.STORAGE_ACCESS_KEY || !e.STORAGE_SECRET_KEY) {
-      throw new Error("STORAGE_DRIVER=s3 requires STORAGE_BUCKET, STORAGE_ACCESS_KEY and STORAGE_SECRET_KEY");
+      throw new ConfigError("STORAGE_DRIVER=s3 requires STORAGE_BUCKET, STORAGE_ACCESS_KEY and STORAGE_SECRET_KEY");
     }
     this.bucket = e.STORAGE_BUCKET;
     this.client = new S3Client({
@@ -124,7 +125,7 @@ class VercelBlobStorageProvider implements StorageProvider {
   private urlCache = new Map<string, string>();
 
   constructor(token: string) {
-    if (!token) throw new Error('STORAGE_DRIVER=vercel-blob requires BLOB_READ_WRITE_TOKEN (Vercel sets it when you attach a Blob store)');
+    if (!token) throw new ConfigError("STORAGE_DRIVER=vercel-blob requires BLOB_READ_WRITE_TOKEN (Vercel sets it when you attach a Blob store)");
     this.token = token;
   }
 
@@ -209,12 +210,70 @@ class VercelBlobStorageProvider implements StorageProvider {
 
 let instance: StorageProvider | null = null;
 
+/** True on a platform whose filesystem is read-only and whose instances are disposable. */
+const isServerless = () => Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+
+/**
+ * Which storage driver is actually in force.
+ *
+ * `STORAGE_DRIVER` is honoured when it is set, but attaching a Vercel Blob store
+ * injects `BLOB_READ_WRITE_TOKEN` on its own and does *not* set the driver, so a
+ * deployment that did everything right in the dashboard would still fall through
+ * to "local" and try to write to a read-only filesystem. When a Blob token is
+ * present and no driver was chosen, the blob store is what the operator meant.
+ */
+let warnedAboutLocal = false;
+
+export function effectiveStorageDriver(): "local" | "s3" | "vercel-blob" {
+  const e = env();
+  const configured = process.env.STORAGE_DRIVER ? e.STORAGE_DRIVER : e.BLOB_READ_WRITE_TOKEN ? "vercel-blob" : e.STORAGE_DRIVER;
+
+  // "local" is not a thing a serverless platform can do. If a Blob store is
+  // attached, that is unambiguously where the operator meant uploads to go, so
+  // use it rather than failing on a setting that cannot be honoured anyway.
+  // This is the same footgun as PROCESSING_MODE: Vercel pre-fills its import
+  // form from `.env.example`, which carries STORAGE_DRIVER=local.
+  if (configured === "local" && isServerless() && e.BLOB_READ_WRITE_TOKEN) {
+    if (!warnedAboutLocal) {
+      warnedAboutLocal = true;
+      console.warn(
+        "[storage] STORAGE_DRIVER=local cannot work on a serverless deployment (read-only, per-instance filesystem). " +
+          "A Blob store is attached, so uploads are going there instead. Set STORAGE_DRIVER=vercel-blob to make this explicit.",
+      );
+    }
+    return "vercel-blob";
+  }
+  return configured;
+}
+
 export function getStorage(): StorageProvider {
   if (instance) return instance;
   const e = env();
-  if (e.STORAGE_DRIVER === "s3") instance = new S3StorageProvider();
-  else if (e.STORAGE_DRIVER === "vercel-blob") instance = new VercelBlobStorageProvider(e.BLOB_READ_WRITE_TOKEN);
-  else instance = new LocalStorageProvider(e.LOCAL_STORAGE_PATH);
+  const driver = effectiveStorageDriver();
+
+  if (driver === "s3") {
+    instance = new S3StorageProvider();
+  } else if (driver === "vercel-blob") {
+    if (!e.BLOB_READ_WRITE_TOKEN) {
+      throw new ConfigError(
+        "STORAGE_DRIVER=vercel-blob but BLOB_READ_WRITE_TOKEN is not set. Attach a Blob store to this project " +
+          "(Vercel injects the token automatically), or switch STORAGE_DRIVER to s3 and supply bucket credentials.",
+      );
+    }
+    instance = new VercelBlobStorageProvider(e.BLOB_READ_WRITE_TOKEN);
+  } else {
+    // "local" is a development driver. A serverless filesystem is read-only
+    // where it is not simply discarded between requests, so an upload written
+    // there is lost even when the write appears to succeed.
+    if (isServerless()) {
+      throw new ConfigError(
+        "STORAGE_DRIVER=local cannot be used on a serverless deployment: the filesystem is read-only and " +
+          "per-instance, so uploaded CVs would be lost. Attach a Vercel Blob store, or set STORAGE_DRIVER=s3 " +
+          "with STORAGE_BUCKET, STORAGE_ACCESS_KEY and STORAGE_SECRET_KEY.",
+      );
+    }
+    instance = new LocalStorageProvider(e.LOCAL_STORAGE_PATH);
+  }
   return instance;
 }
 

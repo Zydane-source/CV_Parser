@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { ZodError, type ZodTypeAny, type z } from "zod";
 import { AppError, ValidationError } from "./errors";
@@ -22,8 +23,13 @@ export function errorResponse(err: unknown) {
       { status: 400 },
     );
   }
-  logger.error({ err: err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : err }, "Unhandled API error");
-  return NextResponse.json({ error: "Internal server error", code: "INTERNAL_ERROR" }, { status: 500 });
+  // An anonymous 500 is safe but undiagnosable, which costs more than it saves
+  // when the logs live on someone else's platform. The message still says
+  // nothing; the reference ties it to the logged stack trace so a user can quote
+  // it and the operator can find it.
+  const ref = randomUUID().slice(0, 8);
+  logger.error({ ref, err: err instanceof Error ? { name: err.name, message: err.message, stack: err.stack } : err }, "Unhandled API error");
+  return NextResponse.json({ error: `Internal server error (ref ${ref})`, code: "INTERNAL_ERROR", ref }, { status: 500 });
 }
 
 /** Wrap a route handler so thrown errors become JSON responses. */

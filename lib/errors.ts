@@ -18,6 +18,20 @@ export class AppError extends Error {
   }
 }
 
+/**
+ * The deployment is misconfigured: a required credential or setting is missing,
+ * or is impossible on this platform. Distinct from a bug, and worth telling the
+ * operator plainly — an anonymous 500 for a missing environment variable costs
+ * far more to diagnose than the message costs to expose. The messages name
+ * variables and drivers, never their values.
+ */
+export class ConfigError extends AppError {
+  constructor(message: string, details?: unknown) {
+    super(message, { status: 503, code: "CONFIG_ERROR", details });
+    this.name = "ConfigError";
+  }
+}
+
 export class ValidationError extends AppError {
   constructor(message: string, details?: unknown) {
     super(message, { status: 400, code: "VALIDATION_ERROR", details });
