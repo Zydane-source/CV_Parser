@@ -63,23 +63,36 @@ try {
   );
 }
 
-// ── 3. Apply migrations, retrying only the unreachable case ─────────────────
+// ── 3. Apply migrations, retrying the two transient failures ────────────────
 //
-// Serverless Postgres suspends when idle. Neon's first connection after a quiet
-// period can fail outright — "Can't reach database server", or DNS not resolving
-// the endpoint at all — and succeed seconds later once the compute has woken.
+// A build container gets one attempt at this, so anything momentary becomes a
+// failed deploy. Two things are momentary, and both were observed failing real
+// deployments of this project:
 //
-// A build container gets one shot at this, so a single attempt turns a cold
-// database into a failed deploy. Retrying wakes it instead.
+//   unreachable — serverless Postgres suspends when idle. Neon's first
+//                 connection after a quiet period can fail outright ("Can't
+//                 reach database server", or DNS not resolving the endpoint at
+//                 all) and succeed seconds later once the compute has woken.
 //
-// Only connection-class failures are retried. A migration that conflicts, or
-// credentials that are wrong, will fail identically every time: retrying those
-// would just take longer to report the same thing.
-const UNREACHABLE = /P1001|P1017|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Can't reach database server|Server has closed the connection/i;
+//   locked      — P1002. Prisma Migrate takes a session-level advisory lock
+//                 before applying anything and waits only 10s for it. When more
+//                 than one build runs at once — a preview and a production
+//                 deploy of the same commit, or several connected projects —
+//                 they contend for that lock, one wins and the rest fail. The
+//                 loser's migrations are already being applied by the winner,
+//                 so waiting and re-checking is exactly the right response.
+//
+// Nothing else is retried. A conflicting migration or a wrong credential fails
+// identically every time; retrying those would only delay the same report.
+const RETRYABLE =
+  /P1001|P1002|P1017|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Can't reach database server|Server has closed the connection|advisory lock/i;
+const LOCKED = /P1002|advisory lock/i;
 const ATTEMPTS = 6;
 
 let last = null;
+let used = 0;
 for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+  used = attempt;
   // Captured rather than inherited so the failure can be classified; the output
   // is echoed either way, so the build log still shows Prisma's own words.
   const res = spawnSync(process.execPath, [cliEntry, "migrate", "deploy"], {
@@ -100,20 +113,28 @@ for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
   }
 
   last = { status: res.status, output };
-  if (!UNREACHABLE.test(output) || attempt === ATTEMPTS) break;
+  if (!RETRYABLE.test(output) || attempt === ATTEMPTS) break;
 
-  const waitMs = Math.min(2000 * attempt, 8000);
+  const locked = LOCKED.test(output);
+  // A contended lock needs longer than a sleeping database: the build holding it
+  // has to finish applying before this one can proceed.
+  const waitMs = locked ? Math.min(5000 * attempt, 20000) : Math.min(2000 * attempt, 8000);
   console.log(
-    `migrate: ${host} did not answer (attempt ${attempt}/${ATTEMPTS}). ` +
-      `Serverless Postgres suspends when idle; waiting ${waitMs}ms for it to wake.`,
+    locked
+      ? `migrate: another migration is holding the advisory lock (attempt ${attempt}/${ATTEMPTS}). ` +
+          `A concurrent build is probably applying the same migrations; waiting ${waitMs}ms.`
+      : `migrate: ${host} did not answer (attempt ${attempt}/${ATTEMPTS}). ` +
+          `Serverless Postgres suspends when idle; waiting ${waitMs}ms for it to wake.`,
   );
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, waitMs);
 }
 
 process.stdout.write(last.output);
 fail(
-  `prisma migrate deploy exited with code ${last.status} after ${ATTEMPTS} attempt(s). The Prisma output above explains why.`,
-  UNREACHABLE.test(last.output)
-    ? `${host} stayed unreachable. Check that the database is not deleted or suspended beyond waking, and that this network may reach it.`
-    : "Common causes: a conflicting migration, wrong credentials, or Prisma's engine binaries missing because the installer skipped package scripts.",
+  `prisma migrate deploy exited with code ${last.status} after ${used} attempt(s). The Prisma output above explains why.`,
+  LOCKED.test(last.output)
+    ? "Another migration held the advisory lock throughout. That usually means several builds ran at once; if none are running, a killed migration may have left the lock behind — see https://pris.ly/d/migrate-advisory-locking"
+    : RETRYABLE.test(last.output)
+      ? `${host} stayed unreachable. Check that the database is not deleted or suspended beyond waking, and that this network may reach it.`
+      : "Common causes: a conflicting migration, wrong credentials, or Prisma's engine binaries missing because the installer skipped package scripts.",
 );
