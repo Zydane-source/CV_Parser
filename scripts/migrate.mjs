@@ -63,23 +63,57 @@ try {
   );
 }
 
-// ── 3. Apply migrations ─────────────────────────────────────────────────────
-const res = spawnSync(process.execPath, [cliEntry, "migrate", "deploy"], {
-  stdio: "inherit",
-  env: { ...process.env, DATABASE_URL: url },
-});
+// ── 3. Apply migrations, retrying only the unreachable case ─────────────────
+//
+// Serverless Postgres suspends when idle. Neon's first connection after a quiet
+// period can fail outright — "Can't reach database server", or DNS not resolving
+// the endpoint at all — and succeed seconds later once the compute has woken.
+//
+// A build container gets one shot at this, so a single attempt turns a cold
+// database into a failed deploy. Retrying wakes it instead.
+//
+// Only connection-class failures are retried. A migration that conflicts, or
+// credentials that are wrong, will fail identically every time: retrying those
+// would just take longer to report the same thing.
+const UNREACHABLE = /P1001|P1017|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|ECONNRESET|ECONNREFUSED|Can't reach database server|Server has closed the connection/i;
+const ATTEMPTS = 6;
 
-if (res.error) {
-  fail(`could not start the Prisma CLI: ${res.error.message}`);
-}
-if (res.signal) {
-  fail(`the Prisma CLI was terminated by signal ${res.signal}.`, "The build container may have run out of memory.");
-}
-if (res.status !== 0) {
-  fail(
-    `prisma migrate deploy exited with code ${res.status}. The Prisma output above explains why.`,
-    "Common causes: the database is unreachable from this network, the credentials are wrong, or Prisma's engine binaries are missing because the installer skipped package scripts.",
+let last = null;
+for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+  // Captured rather than inherited so the failure can be classified; the output
+  // is echoed either way, so the build log still shows Prisma's own words.
+  const res = spawnSync(process.execPath, [cliEntry, "migrate", "deploy"], {
+    encoding: "utf8",
+    env: { ...process.env, DATABASE_URL: url },
+  });
+
+  if (res.error) fail(`could not start the Prisma CLI: ${res.error.message}`);
+  if (res.signal) {
+    fail(`the Prisma CLI was terminated by signal ${res.signal}.`, "The build container may have run out of memory.");
+  }
+
+  const output = `${res.stdout ?? ""}${res.stderr ?? ""}`;
+  if (res.status === 0) {
+    process.stdout.write(output);
+    console.log("migrate: schema is up to date.");
+    process.exit(0);
+  }
+
+  last = { status: res.status, output };
+  if (!UNREACHABLE.test(output) || attempt === ATTEMPTS) break;
+
+  const waitMs = Math.min(2000 * attempt, 8000);
+  console.log(
+    `migrate: ${host} did not answer (attempt ${attempt}/${ATTEMPTS}). ` +
+      `Serverless Postgres suspends when idle; waiting ${waitMs}ms for it to wake.`,
   );
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, waitMs);
 }
 
-console.log("migrate: schema is up to date.");
+process.stdout.write(last.output);
+fail(
+  `prisma migrate deploy exited with code ${last.status} after ${ATTEMPTS} attempt(s). The Prisma output above explains why.`,
+  UNREACHABLE.test(last.output)
+    ? `${host} stayed unreachable. Check that the database is not deleted or suspended beyond waking, and that this network may reach it.`
+    : "Common causes: a conflicting migration, wrong credentials, or Prisma's engine binaries missing because the installer skipped package scripts.",
+);
