@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
-import { Search, RefreshCw, ExternalLink, Pencil, Eye, ChevronLeft, ChevronRight, Trash2, Plus } from "lucide-react";
+import { Search, RefreshCw, ExternalLink, Pencil, Eye, ChevronLeft, ChevronRight, Trash2, Plus, X, Users } from "lucide-react";
+import { EmptyState, Skeleton, TableSkeleton } from "@/components/ui";
 import { api, fetcher } from "@/lib/client/api";
 import { formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { StatusBadge } from "./StatusBadge";
@@ -41,9 +42,12 @@ interface ListResponse {
 
 const STATUSES = ["PENDING", "PROCESSING", "PROCESSED", "NEEDS_REVIEW", "FAILED", "SKIPPED"];
 
-export function CandidatesTable({ threshold, initialStatus }: { threshold: number; initialStatus?: string }) {
-  const [q, setQ] = useState("");
-  const [debouncedQ, setDebouncedQ] = useState("");
+export function CandidatesTable({ threshold, initialStatus, initialQ }: { threshold: number; initialStatus?: string; initialQ?: string }) {
+  // Seeded from the URL so the header search actually lands on filtered results.
+  // Routing to this page and then ignoring the term would be search that only
+  // looks like it works.
+  const [q, setQ] = useState(initialQ ?? "");
+  const [debouncedQ, setDebouncedQ] = useState(initialQ ?? "");
   const [source, setSource] = useState("");
   const [status, setStatus] = useState(initialStatus ?? "");
   const [role, setRole] = useState("");
@@ -53,6 +57,19 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
   const [busy, setBusy] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+
+  // Derived rather than stored: one source of truth for "is a filter on?", so the
+  // banner and the clear button can never disagree with the controls.
+  const activeFilterCount = [q, source, status, role, from, to].filter(Boolean).length;
+  const clearFilters = () => {
+    setQ("");
+    setSource("");
+    setStatus("");
+    setRole("");
+    setFrom("");
+    setTo("");
+    setPage(1);
+  };
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
@@ -125,37 +142,80 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
         }}
       />
       <div className="card p-4">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-6">
-          <div className="relative md:col-span-2">
-            <Search size={15} className="pointer-events-none absolute left-3 top-2.5 text-gray-400" />
-            <input className="input pl-9" placeholder="Search name, phone, job role or file name…" value={q} onChange={(e) => setQ(e.target.value)} />
+        <div className="grid grid-cols-1 gap-x-3 gap-y-3.5 sm:grid-cols-2 lg:grid-cols-12">
+          <div className="lg:col-span-3">
+            <label htmlFor="cand-q" className="label">
+              Search
+            </label>
+            <div className="relative">
+              <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400" aria-hidden />
+              <input
+                id="cand-q"
+                type="search"
+                className="field pl-9"
+                placeholder="Name, phone, role or file name…"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+              />
+            </div>
           </div>
-          <select className="input" value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="">All sources</option>
-            <option value="MANUAL">Manual Upload</option>
-            <option value="GOOGLE_DRIVE">Google Drive</option>
-          </select>
-          <select className="input" value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">All statuses</option>
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s.replace("_", " ")}
-              </option>
-            ))}
-          </select>
-          <select className="input" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="">All job roles</option>
-            {(roles?.roles ?? []).map((r) => (
-              <option key={r.role} value={r.role}>
-                {r.role} ({r.count})
-              </option>
-            ))}
-          </select>
-          <div className="flex gap-2">
-            <input type="date" className="input" value={from} onChange={(e) => setFrom(e.target.value)} title="From date" />
-            <input type="date" className="input" value={to} onChange={(e) => setTo(e.target.value)} title="To date" />
+          <div className="lg:col-span-2">
+            <label htmlFor="cand-source" className="label">
+              Source
+            </label>
+            <select id="cand-source" className="select" value={source} onChange={(e) => setSource(e.target.value)}>
+              <option value="">All sources</option>
+              <option value="MANUAL">Manual upload</option>
+              <option value="GOOGLE_DRIVE">Google Drive</option>
+            </select>
+          </div>
+          <div className="lg:col-span-2">
+            <label htmlFor="cand-status" className="label">
+              Status
+            </label>
+            <select id="cand-status" className="select" value={status} onChange={(e) => setStatus(e.target.value)}>
+              <option value="">All statuses</option>
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {s.replace("_", " ").toLowerCase().replace(/^./, (c) => c.toUpperCase())}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="lg:col-span-2">
+            <label htmlFor="cand-role" className="label">
+              Job role
+            </label>
+            <select id="cand-role" className="select" value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="">All job roles</option>
+              {(roles?.roles ?? []).map((r) => (
+                <option key={r.role} value={r.role}>
+                  {r.role} ({r.count})
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="sm:col-span-2 lg:col-span-3">
+            <span className="label">Added between</span>
+            <div className="flex items-center gap-1.5">
+              <input type="date" className="field px-2 text-[0.8125rem]" value={from} onChange={(e) => setFrom(e.target.value)} aria-label="Added from" />
+              <span className="text-xs text-ink-400" aria-hidden>
+                –
+              </span>
+              <input type="date" className="field px-2 text-[0.8125rem]" value={to} onChange={(e) => setTo(e.target.value)} aria-label="Added to" />
+            </div>
           </div>
         </div>
+        {activeFilterCount > 0 && (
+          <div className="mt-3 flex items-center gap-2 border-t border-[var(--border)] pt-3">
+            <span className="text-xs text-ink-500">
+              {activeFilterCount} filter{activeFilterCount === 1 ? "" : "s"} applied
+            </span>
+            <button type="button" className="btn-tertiary btn-sm" onClick={clearFilters}>
+              <X size={12} /> Clear all
+            </button>
+          </div>
+        )}
       </div>
 
       {notice && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">{notice}</div>}
@@ -175,7 +235,7 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
                 <span className="font-semibold text-gray-900">{data.total.toLocaleString("en-IN")}</span> candidate{data.total === 1 ? "" : "s"}
               </>
             ) : (
-              "Loading…"
+              <Skeleton className="h-4 w-24" />
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -289,8 +349,31 @@ export function CandidatesTable({ threshold, initialStatus }: { threshold: numbe
               ))}
               {data && data.items.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-sm text-gray-500">
-                    No candidates match these filters.
+                  <td colSpan={9} className="p-0">
+                    {isLoading ? (
+                      <TableSkeleton rows={6} cols={6} />
+                    ) : (
+                      <EmptyState
+                        icon={<Users size={20} />}
+                        title={activeFilterCount > 0 ? "No candidates match these filters" : "No candidates yet"}
+                        description={
+                          activeFilterCount > 0
+                            ? "Try widening the date range, or clearing a filter."
+                            : "Upload your first CV to start building the candidate database."
+                        }
+                        action={
+                          activeFilterCount > 0 ? (
+                            <button type="button" className="btn-secondary" onClick={clearFilters}>
+                              <X size={14} /> Clear filters
+                            </button>
+                          ) : (
+                            <Link href="/upload" className="btn-primary">
+                              <Plus size={14} /> Upload CVs
+                            </Link>
+                          )
+                        }
+                      />
+                    )}
                   </td>
                 </tr>
               )}
