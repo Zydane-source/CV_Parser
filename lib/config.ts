@@ -57,6 +57,18 @@ const envSchema = z.object({
    */
   EXTRACTION_ENGINE: z.enum(["local", "shadow", "legacy"]).optional().default("local"),
 
+  /**
+   * Hard guarantee that no CV content can reach a generative model.
+   *
+   * `EXTRACTION_ENGINE=local` already means no model is called, but it is a
+   * default someone can change later by setting one environment variable.
+   * `LOCAL_ONLY=true` makes that change impossible instead of merely unlikely:
+   * `shadow` and `legacy` are refused at startup, and the LLM client throws if
+   * anything reaches it. It is the setting to use when "no AI API" is a
+   * commitment to a client rather than a preference.
+   */
+  LOCAL_ONLY: bool,
+
   LLM_PROVIDER: z.enum(["openai", "anthropic"]).optional().default("openai"),
   LLM_API_KEY: str(""),
   LLM_MODEL: str("gpt-4o-mini"),
@@ -122,9 +134,25 @@ export function env(): Env {
   if (!parsed.success) {
     throw new Error(`Invalid environment configuration: ${parsed.error.message}`);
   }
+  // LOCAL_ONLY is a promise about where CV content can go, so a contradicting
+  // engine is a configuration error rather than something to quietly override.
+  // Failing here means the contradiction is found at startup, not on the first
+  // CV that would have been sent to a model.
+  if (parsed.data.LOCAL_ONLY && parsed.data.EXTRACTION_ENGINE !== "local") {
+    throw new Error(
+      `Invalid environment configuration: LOCAL_ONLY=true forbids sending CV content to a model, but ` +
+        `EXTRACTION_ENGINE=${parsed.data.EXTRACTION_ENGINE} would do exactly that. Set EXTRACTION_ENGINE=local, or unset LOCAL_ONLY.`,
+    );
+  }
   cached = parsed.data;
   return cached;
 }
+
+/**
+ * True when this deployment has committed to processing CV content locally.
+ * Read it rather than `env().LOCAL_ONLY` so the meaning stays in one place.
+ */
+export const isLocalOnly = () => env().LOCAL_ONLY;
 
 /** Reset the cache (tests). */
 export function resetEnvCache() {

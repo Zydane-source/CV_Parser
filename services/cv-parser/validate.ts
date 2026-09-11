@@ -19,6 +19,8 @@ export interface ValidatedExtraction {
   overallConfidence: number;
   needsReview: boolean;
   reviewReasons: string[];
+  /** Machine-readable companions to reviewReasons. */
+  reviewCodes: ReviewCode[];
 }
 
 const NAME_BLACKLIST = [
@@ -95,14 +97,28 @@ export interface ValidateOptions {
   cvText?: string;
 }
 
+/**
+ * Machine-readable companions to the human-readable review reasons. The UI shows
+ * the prose; dashboards, alerting and the API filter on these, which prose
+ * cannot support without string matching that breaks on the next reword.
+ */
+export type ReviewCode =
+  | "NO_NAME_FOUND"
+  | "NO_PHONE_FOUND"
+  | "NO_ROLE_FOUND"
+  | "PHONE_NOT_IN_TEXT"
+  | "LOW_CONFIDENCE";
+
 export function validateExtraction(llm: LLMExtraction, opts: ValidateOptions): ValidatedExtraction {
   const reasons: string[] = [];
+  const codes: ReviewCode[] = [];
 
   const name = validateName(llm.candidate_name);
   let nameConf = clamp01(llm.confidence?.candidate_name);
   if (!name.ok) {
     nameConf = 0;
     reasons.push(name.reason ?? "Candidate name invalid");
+    codes.push("NO_NAME_FOUND");
   }
 
   const phone = validatePhone(llm.phone_number, opts.cvText);
@@ -110,9 +126,11 @@ export function validateExtraction(llm: LLMExtraction, opts: ValidateOptions): V
   if (!phone.ok) {
     phoneConf = 0;
     reasons.push(phone.reason ?? "Phone number invalid");
+    codes.push("NO_PHONE_FOUND");
   } else if (!phone.inText) {
     phoneConf = Math.min(phoneConf, 0.4);
     reasons.push("Phone number could not be verified against CV text");
+    codes.push("PHONE_NOT_IN_TEXT");
   } else if (opts.cvText) {
     const candidates = findPhoneCandidates(opts.cvText);
     if (candidates.length > 1) phoneConf = Math.min(phoneConf, 0.9);
@@ -123,6 +141,7 @@ export function validateExtraction(llm: LLMExtraction, opts: ValidateOptions): V
   if (!role.ok) {
     roleConf = 0;
     reasons.push(role.reason ?? "Job role invalid");
+    codes.push("NO_ROLE_FOUND");
   }
 
   // Overall: weighted mean, name and phone matter most for recruiters.
@@ -132,7 +151,10 @@ export function validateExtraction(llm: LLMExtraction, opts: ValidateOptions): V
   if (name.ok && nameConf < opts.threshold) below.push(`name confidence ${nameConf.toFixed(2)}`);
   if (phone.ok && phoneConf < opts.threshold) below.push(`phone confidence ${phoneConf.toFixed(2)}`);
   if (role.ok && roleConf < opts.threshold) below.push(`job role confidence ${roleConf.toFixed(2)}`);
-  if (below.length) reasons.push(`Below confidence threshold ${opts.threshold}: ${below.join(", ")}`);
+  if (below.length) {
+    reasons.push(`Below confidence threshold ${opts.threshold}: ${below.join(", ")}`);
+    codes.push("LOW_CONFIDENCE");
+  }
 
   return {
     candidateName: name.value,
@@ -143,6 +165,7 @@ export function validateExtraction(llm: LLMExtraction, opts: ValidateOptions): V
     roleConfidence: Number(roleConf.toFixed(3)),
     overallConfidence: overall,
     needsReview: reasons.length > 0,
+    reviewCodes: codes,
     reviewReasons: reasons,
   };
 }

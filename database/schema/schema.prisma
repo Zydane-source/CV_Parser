@@ -117,7 +117,9 @@ model Candidate {
   /// Field names that were manually corrected; these are never overwritten by reprocessing.
   correctedFields     String[]         @default([])
   /// Reasons the record was flagged for review (validation failures, low confidence).
-  reviewReasons       String[]         @default([])
+  reviewReasons       String[]
+  /// Machine-readable companions to reviewReasons (NO_NAME_FOUND, LOW_CONFIDENCE, ...).
+  reviewCodes         String[]         @default([])
   /// How the *text* was obtained (PDF layer, DOCX, OCR). Unchanged by the migration.
   extractionMethod    ExtractionMethod @default(NONE)
   /// Retained for history. Holds the LLM model name for rows parsed before the

@@ -110,6 +110,7 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       isManuallyCorrected: corrected.size > 0,
       correctedFields: [...corrected],
       reviewReasons: result.reviewReasons,
+      reviewCodes: result.reviewCodes,
       extractionMethod: result.extractionMethod,
       llmModel: result.llmModel || null,
       promptVersion: result.promptVersion || null,
@@ -123,11 +124,26 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
     };
     // Manually corrected fields are trusted; drop review reasons that only concern them.
     if (corrected.size > 0) {
+      const concernsCorrected = (field: "name" | "phone" | "role") =>
+        (field === "name" && corrected.has("candidateName")) ||
+        (field === "phone" && corrected.has("phoneNumber")) ||
+        (field === "role" && corrected.has("jobRoleAppliedFor"));
+
       candidateData.reviewReasons = result.reviewReasons.filter((r) => {
         const lower = r.toLowerCase();
-        if (corrected.has("candidateName") && lower.includes("name")) return false;
-        if (corrected.has("phoneNumber") && lower.includes("phone")) return false;
-        if (corrected.has("jobRoleAppliedFor") && lower.includes("role")) return false;
+        if (lower.includes("name") && concernsCorrected("name")) return false;
+        if (lower.includes("phone") && concernsCorrected("phone")) return false;
+        if (lower.includes("role") && concernsCorrected("role")) return false;
+        return true;
+      });
+      // Codes are filtered by the same rule. Letting them drift from the reasons
+      // would leave a row flagged NO_NAME_FOUND after a human supplied the name.
+      candidateData.reviewCodes = result.reviewCodes.filter((c) => {
+        if (c === "NO_NAME_FOUND") return !concernsCorrected("name");
+        if (c === "NO_PHONE_FOUND" || c === "PHONE_NOT_IN_TEXT") return !concernsCorrected("phone");
+        if (c === "NO_ROLE_FOUND") return !concernsCorrected("role");
+        // LOW_CONFIDENCE covers whichever fields were below threshold; it only
+        // survives if some uncorrected reason still stands.
         return true;
       });
       const na = candidateData.nameConfidence as number;
@@ -136,6 +152,8 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       candidateData.overallConfidence = Number((na * 0.4 + pa * 0.35 + ra * 0.25).toFixed(3));
     }
     const finalStatus = (candidateData.reviewReasons as string[]).length > 0 ? "NEEDS_REVIEW" : "PROCESSED";
+    // No surviving reason means no surviving code.
+    if (finalStatus === "PROCESSED") candidateData.reviewCodes = [];
     // Keep the denormalised flag consistent with the reasons after manual
     // corrections have been subtracted, not with the raw engine output.
     candidateData.reviewRequired = finalStatus === "NEEDS_REVIEW";

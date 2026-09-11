@@ -2,8 +2,8 @@
  * Role taxonomy loader and matcher.
  *
  * The taxonomy is data, not code: `taxonomy/role-taxonomy.json` ships as the
- * default and an admin can override it through the `roleTaxonomy` setting, so a
- * new job title never requires a deploy.
+ * default and an admin can override it through the `roleTaxonomy` setting (see
+ * `taxonomy-store.ts`), so a new job title never requires a deploy.
  *
  * Matching is lexical and deterministic. It normalises separators and casing,
  * strips seniority prefixes so "Sr. Backend Engineer" reaches "Backend
@@ -63,12 +63,15 @@ function tokens(s: string): string[] {
 
 export class RoleTaxonomy {
   readonly version: string;
+  /** The source data, kept so callers can report or re-serialise what is in force. */
+  readonly data: Taxonomy;
   private byKey = new Map<string, { entry: RoleEntry; family: string; kind: "canonical" | "alias" }>();
   private entries: Array<{ entry: RoleEntry; family: string; tokenSet: Set<string> }> = [];
   private seniority: string[];
   private generics: Set<string>;
 
   constructor(data: Taxonomy = DEFAULT_TAXONOMY) {
+    this.data = data;
     this.version = data.version;
     this.seniority = [...(data.seniorityPrefixes ?? [])].sort((a, b) => b.length - a.length);
     this.generics = new Set((data.genericRejects ?? []).map(canonicalKey));

@@ -6,6 +6,7 @@ import { getOCRProvider, type OCRProvider } from "@/services/ocr";
 import { extractWithLLM, type LLMProvider } from "@/services/llm";
 import type { LLMExtraction } from "@/services/llm/types";
 import { extractLocally } from "@/services/cv-engine";
+import { getActiveTaxonomy } from "@/services/cv-engine/taxonomy-store";
 import { env } from "@/lib/config";
 import { normalizeText } from "./normalize";
 import { validateExtraction, type ValidatedExtraction } from "./validate";
@@ -189,7 +190,11 @@ async function runExtraction(
     };
   }
 
-  const local = extractLocally(text, { fileName: ctx.fileName, ocrConfidence: ctx.ocrConfidence });
+  // The taxonomy in force may be an admin override rather than the bundled
+  // default, so it is resolved per extraction (cached for 30s) instead of
+  // being baked in at module load.
+  const taxonomy = await getActiveTaxonomy();
+  const local = extractLocally(text, { fileName: ctx.fileName, ocrConfidence: ctx.ocrConfidence, taxonomy });
   const outcome: ExtractionOutcome = {
     result: {
       candidate_name: local.candidate_name,

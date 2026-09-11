@@ -1,5 +1,5 @@
-import { env } from "@/lib/config";
-import { ProcessingError } from "@/lib/errors";
+import { env, isLocalOnly } from "@/lib/config";
+import { ProcessingError, AppError } from "@/lib/errors";
 import { OpenAICompatibleProvider } from "./openai-provider";
 import { AnthropicProvider } from "./anthropic-provider";
 import { getPrompt, renderPrompt } from "./prompts";
@@ -95,6 +95,16 @@ export interface ExtractParams {
 
 /** Render the versioned prompt and call the provider. */
 export async function extractWithLLM(params: ExtractParams): Promise<LLMResponse & { promptVersion: string }> {
+  // The last line of defence for LOCAL_ONLY. Config already refuses a
+  // contradicting EXTRACTION_ENGINE at startup, but this is the single point
+  // every model call passes through — including an injected test provider — so
+  // a future code path that reaches for a model cannot slip past the promise.
+  if (isLocalOnly()) {
+    throw new AppError(
+      "LOCAL_ONLY=true: CV content must not be sent to a generative model. This call was refused.",
+      { status: 500, code: "LOCAL_ONLY_VIOLATION" },
+    );
+  }
   const provider = params.provider ?? getLLMProvider();
   const def = getPrompt(params.promptVersion);
   const prompt = renderPrompt(def, params.cvText);
