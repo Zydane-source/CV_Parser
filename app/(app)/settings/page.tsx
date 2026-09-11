@@ -1,4 +1,5 @@
 import { getSession } from "@/lib/auth";
+import { PageHeader } from "@/components/ui";
 import { SettingsForm } from "@/components/SettingsForm";
 
 export const dynamic = "force-dynamic";
@@ -9,8 +10,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Settings</h1>
-        <p className="text-sm text-gray-500">Extraction, Google Drive, Google Sheets, processing, file limits, retries and confidence threshold.</p>
+        <PageHeader title="Settings" description="Extraction, Google Drive, Google Sheets, processing, file limits, retries and confidence threshold." />
       </div>
       <SettingsForm isAdmin={user?.role === "ADMIN"} />
     </div>

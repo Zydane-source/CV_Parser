@@ -128,19 +128,52 @@ export function UploadDropzone({ maxFileSizeMb, maxFilesPerRequest }: { maxFileS
           setDragging(false);
           addFiles(e.dataTransfer.files);
         }}
+        role="button"
+        tabIndex={0}
+        aria-label="Drop CV files here, or activate to browse"
+        onClick={() => inputRef.current?.click()}
+        onKeyDown={(e) => {
+          // The whole zone is the target for a mouse; it has to be reachable
+          // without one too.
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            inputRef.current?.click();
+          }
+        }}
         className={clsx(
-          "card flex flex-col items-center justify-center border-2 border-dashed px-6 py-12 text-center transition-colors",
-          dragging ? "border-brand-500 bg-brand-50" : "border-gray-300",
+          "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-14 text-center",
+          "transition-colors duration-150",
+          dragging
+            ? "border-brand-500 bg-brand-50"
+            : "border-[var(--border-strong)] bg-white hover:border-brand-300 hover:bg-brand-50/30",
         )}
       >
-        <UploadCloud size={36} className="text-brand-600" />
-        <h2 className="mt-3 text-lg font-semibold text-gray-900">Drag &amp; Drop CVs Here</h2>
-        <div className="my-2 text-xs uppercase tracking-widest text-gray-400">or</div>
-        <button type="button" className="btn-primary" onClick={() => inputRef.current?.click()}>
-          Browse Files
-        </button>
-        <input ref={inputRef} type="file" multiple accept={ACCEPT} className="hidden" onChange={(e) => e.target.files && addFiles(e.target.files)} />
-        <p className="mt-4 text-xs text-gray-500">PDF • DOC • DOCX • Images (JPG, PNG, WEBP) · max {maxFileSizeMb} MB each · bulk upload supported</p>
+        <span
+          className={clsx(
+            "flex h-12 w-12 items-center justify-center rounded-xl transition-colors duration-150",
+            dragging ? "bg-brand-600 text-white" : "bg-brand-50 text-brand-600",
+          )}
+          aria-hidden
+        >
+          <UploadCloud size={24} />
+        </span>
+        <h2 className="mt-4 text-base font-semibold text-ink-900">{dragging ? "Drop to upload" : "Drop CVs here"}</h2>
+        <p className="mt-1 text-sm text-ink-500">
+          or{" "}
+          <span className="font-medium text-brand-600 underline underline-offset-2">browse your files</span>
+        </p>
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept={ACCEPT}
+          className="sr-only"
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => e.target.files && addFiles(e.target.files)}
+        />
+        <p className="mt-5 text-xs text-ink-400">
+          PDF · DOC · DOCX · JPG · PNG · WEBP — up to {maxFileSizeMb} MB each, {maxFilesPerRequest} per batch
+        </p>
       </div>
 
       {files.length > 0 && (
