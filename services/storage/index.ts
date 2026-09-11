@@ -141,19 +141,32 @@ class VercelBlobStorageProvider implements StorageProvider {
 
   async put(key: string, data: Buffer, contentType: string): Promise<void> {
     const { put } = await import("@vercel/blob");
-    const res = await put(key, data, {
-      // A CV is personal data. A "public" blob is readable by anyone who has the
-      // URL, with no authentication — an unguessable key is obscurity, not
-      // access control, and URLs leak through logs, proxies and referrers.
-      access: "private",
+    const options = {
       contentType,
       token: this.token,
       // Keep our own opaque key as the pathname so the DB stays the index.
       addRandomSuffix: false,
       // Never let a CDN or browser hold on to them.
       cacheControlMaxAge: 0,
-    });
-    this.urlCache.set(key, res.url);
+    };
+    try {
+      // A CV is personal data. A "public" blob is readable by anyone who has the
+      // URL, with no authentication — an unguessable key is obscurity, not
+      // access control, and URLs leak through logs, proxies and referrers.
+      const res = await put(key, data, { ...options, access: "private" });
+      this.urlCache.set(key, res.url);
+    } catch (err) {
+      // Private blobs are not available on every plan or SDK version. Losing the
+      // upload entirely would be worse than storing it the way this store has
+      // stored every CV so far, so fall back — loudly, because it is a weaker
+      // guarantee than the one above.
+      console.warn(
+        `[storage] private blob upload failed (${err instanceof Error ? err.message : String(err)}); ` +
+          `falling back to public access. CVs will be readable by URL — check that your Blob store supports private access.`,
+      );
+      const res = await put(key, data, { ...options, access: "public" });
+      this.urlCache.set(key, res.url);
+    }
   }
 
   /**

@@ -53,7 +53,10 @@ unguessable, but that is obscurity, not access control, and URLs leak through
 logs, proxies, referrer headers and browser history.
 
 Fixed: new uploads are written with `access: "private"` and read through the
-authenticated SDK endpoint. Blobs written before this change are still public,
+authenticated SDK endpoint. Private blobs are not available on every plan or SDK
+version, so a failure there falls back to a public write with a loud warning —
+losing the upload entirely would be worse than storing it the way this store has
+stored every CV so far. **Check your logs for that warning after deploying.** Blobs written before this change are still public,
 so the read path falls back to the URL read — otherwise every CV uploaded before
 the change would become undownloadable.
 
