@@ -12,7 +12,7 @@ interface SettingsResponse {
     llm: { provider: string; model: string; baseUrl: string; apiKeyConfigured: boolean; promptVersion: string; timeoutMs: number };
     google: { clientConfigured: boolean; redirectUri: string; defaultFolderId: string | null; defaultSpreadsheetId: string | null; webhooksEnabled: boolean };
     ocr: { provider: string; languages: string };
-    storage: { driver: string; bucket: string | null; configured: boolean };
+    storage: { driver: string; effectiveDriver: string; bucket: string | null; blobTokenConfigured: boolean };
     queue: { redisConfigured: boolean; workerConcurrency: number };
   };
   promptVersions: string[];
@@ -127,7 +127,24 @@ export function SettingsForm({ isAdmin }: { isAdmin: boolean }) {
         <div className="mt-3 grid grid-cols-1 gap-3 text-sm md:grid-cols-2">
           <Env k="LLM" v={`${e.llm.provider} · ${e.llm.model} · ${e.llm.baseUrl}`} chip={<Chip ok={e.llm.apiKeyConfigured} label={e.llm.apiKeyConfigured ? "API key set" : "LLM_API_KEY missing"} />} />
           <Env k="Google OAuth" v={e.google.redirectUri} chip={<Chip ok={e.google.clientConfigured} label={e.google.clientConfigured ? "Client configured" : "GOOGLE_CLIENT_ID/SECRET missing"} />} />
-          <Env k="Storage" v={`${e.storage.driver}${e.storage.bucket ? ` · ${e.storage.bucket}` : ""}`} chip={<Chip ok={e.storage.configured} label={e.storage.configured ? "Ready" : "Incomplete"} />} />
+          {/* Configured and in-force can differ when a driver cannot be honoured
+              here, and "where do uploads actually go" is the question worth
+              answering on this page. */}
+          <Env
+            k="Storage"
+            v={
+              e.storage.effectiveDriver === e.storage.driver
+                ? `${e.storage.driver}${e.storage.bucket ? ` · ${e.storage.bucket}` : ""}`
+                : `${e.storage.effectiveDriver} (configured: ${e.storage.driver})`
+            }
+            chip={
+              e.storage.effectiveDriver === e.storage.driver ? (
+                <Chip ok label="Ready" />
+              ) : (
+                <Chip ok={false} label="Substituted" />
+              )
+            }
+          />
           <Env k="Queue" v={`Redis · concurrency ${e.queue.workerConcurrency}`} chip={<Chip ok={e.queue.redisConfigured} label={e.queue.redisConfigured ? "REDIS_URL set" : "REDIS_URL missing"} />} />
           <Env k="OCR" v={`${e.ocr.provider} · ${e.ocr.languages}`} chip={<Chip ok label="Local" />} />
           <Env k="Drive webhooks" v={e.appUrl} chip={<Chip ok={e.google.webhooksEnabled} label={e.google.webhooksEnabled ? "Enabled (HTTPS)" : "Polling only (HTTP)"} />} />

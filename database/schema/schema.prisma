@@ -127,23 +127,23 @@ model Candidate {
   promptVersion       String?
 
   /// Which engine produced the fields: "local" or "llm". Null for pre-migration rows.
-  extractionEngine    String?
+  extractionEngine  String?
   /// Semantic version of the extraction algorithms, so a result can be traced to
   /// the code that produced it and reprocessed when that code improves.
-  extractionVersion   String?
+  extractionVersion String?
   /// Per-field provenance from the local engine, e.g.
   /// { "candidate_name": "explicit_label", "phone_number": "contact_section" }.
-  fieldMethods        Json?
+  fieldMethods      Json?
   /// Milliseconds spent in field extraction alone (excludes text extraction/OCR).
-  extractionMs        Int?
+  extractionMs      Int?
   /// True when OCR supplied the text, which lowers confidence in every field.
-  ocrUsed             Boolean          @default(false)
+  ocrUsed           Boolean @default(false)
   /// Denormalised review flag. `reviewReasons` holds the why; this is for indexing.
-  reviewRequired      Boolean          @default(false)
+  reviewRequired    Boolean @default(false)
 
-  processedAt         DateTime?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  processedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   cvFile CVFile @relation(fields: [cvFileId], references: [id], onDelete: Cascade)
 
@@ -229,6 +229,29 @@ model SheetsExport {
   createdAt      DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+}
+
+/// Uploaded CV bytes, when no object store is configured.
+///
+/// Object storage is the better home for files and stays the recommended
+/// production setup. But a deployment with no bucket and no blob token has
+/// nowhere at all to put an upload — on a serverless host the filesystem is
+/// read-only — and that is a configuration cliff rather than a design choice.
+/// CVs are small (a few hundred KB; the platform caps request bodies at ~4 MB),
+/// so the database holds them perfectly well at recruitment volumes.
+///
+/// Rows are private by construction: there is no URL, and reads go through the
+/// authenticated download route like every other storage driver.
+model StoredFile {
+  /// The same opaque object key the other drivers use, so CVFile.storagePath
+  /// means the same thing whichever driver wrote it.
+  key       String   @id
+  mimeType  String
+  size      Int
+  data      Bytes
+  createdAt DateTime @default(now())
 
   @@index([createdAt])
 }

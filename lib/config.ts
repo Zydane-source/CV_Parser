@@ -95,7 +95,7 @@ const envSchema = z.object({
   DRAIN_TIME_BUDGET_MS: num(45000),
   BLOB_READ_WRITE_TOKEN: str(""),
 
-  STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob"]).optional().default("local"),
+  STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob", "database"]).optional().default("local"),
   LOCAL_STORAGE_PATH: str("./uploads"),
   STORAGE_BUCKET: str(""),
   STORAGE_REGION: str(""),
@@ -173,9 +173,10 @@ export function publicConfigSummary() {
       languages: e.OCR_LANGUAGES,
     },
     storage: {
+      /** What was configured. The driver actually in force may differ - see `effectiveDriver` on the settings API. */
       driver: e.STORAGE_DRIVER,
       bucket: e.STORAGE_DRIVER === "s3" ? e.STORAGE_BUCKET : null,
-      configured: e.STORAGE_DRIVER === "local" || Boolean(e.STORAGE_BUCKET && e.STORAGE_ACCESS_KEY && e.STORAGE_SECRET_KEY),
+      blobTokenConfigured: Boolean(e.BLOB_READ_WRITE_TOKEN),
     },
     queue: {
       redisConfigured: Boolean(e.REDIS_URL),

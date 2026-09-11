@@ -61,6 +61,10 @@ stored every CV so far. **Check your logs for that warning after deploying.** Bl
 so the read path falls back to the URL read — otherwise every CV uploaded before
 the change would become undownloadable.
 
+When no object store is configured, uploads go to a `StoredFile` row instead.
+That is *more* private than a public blob, not less: the bytes have no URL at
+all, and reads go through the same authenticated download route.
+
 **Action required by the operator:** existing blobs are not retroactively made
 private. Either re-upload them, or accept that CVs stored before this deploy
 remain publicly readable by URL.
@@ -113,7 +117,7 @@ The remaining moderate items are development-only tooling.
 ## Data flow, after the migration
 
 ```
-browser ──upload──▶ /api/uploads ──▶ Vercel Blob (private)
+browser ──upload──▶ /api/uploads ──▶ Vercel Blob (private)  or  Postgres (no URL)
                          │
                          ▼
                     Postgres (Neon, TLS)

@@ -360,6 +360,8 @@ First step for anything unexpected: `npm run diagnose`. The UI also tells you di
 
 | Problem | Fix |
 |---|---|
+| Uploads work but `/api/health` shows `storage.driver: "database"` | No object store is usable, so CVs are stored as rows in Postgres. Fine at recruitment volumes and private by construction, but object storage is the better home for files: attach a Vercel Blob store, or set `STORAGE_DRIVER=s3` with bucket credentials. |
+| Blob store attached, yet **"BLOB_READ_WRITE_TOKEN is not set"** | A project environment variable of that name overrides the one the Blob integration injects, and importing `.env.example` into Vercel creates it blank. In Project → Settings → Environment Variables, delete the `BLOB_READ_WRITE_TOKEN` entry and redeploy. Uploads keep working meanwhile — they fall back to the database. |
 | Upload fails with **"Internal server error"** | Storage is misconfigured, and the failure happened before the per-file loop that reports individual errors. It now returns the actual reason instead. Check `/api/health` — `storage.ok: false` confirms it, and `storage.driver` says which driver was chosen. On Vercel, attach a Blob store (the token is injected automatically) or set `STORAGE_DRIVER=s3` with bucket credentials. |
 | `/api/health` shows `storage.driver: "vercel-blob"` but you set `local` | Deliberate. `local` cannot work on a serverless host — the filesystem is read-only and per-instance — so when a Blob store is attached the app uses it and logs a warning. Set `STORAGE_DRIVER=vercel-blob` to make it explicit. |
 | An error ends with **`(ref 1a2b3c4d)`** | An unexpected server error. The reference appears in the server logs next to the stack trace; quote it when reporting. |

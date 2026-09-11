@@ -1,22 +1,30 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { resetEnvCache } from "@/lib/config";
-import { AppError } from "@/lib/errors";
 
 /**
- * Regression: a misconfigured storage driver must fail *diagnosably*.
+ * Regression: uploading a CV must not be defeated by configuration.
  *
- * Uploading a CV returned a bare "Internal server error". The per-file loop in
- * `/api/uploads` already reports each file's own failure, so the 500 came from
- * `getStorage()` throwing a plain `Error` before the loop — and `errorResponse`
- * deliberately anonymises anything that is not an `AppError`. The cause was
- * therefore invisible outside the platform's own logs.
+ * Three separate outages came from one mechanism. Vercel pre-fills its
+ * environment-variable import form from `.env.example`, so importing that file
+ * defines every key in it — including ones the platform provides itself.
+ * `BLOB_READ_WRITE_TOKEN=` then exists as a *blank project variable overriding
+ * the value an attached Blob store injects*, and uploads fail with
+ * "BLOB_READ_WRITE_TOKEN is not set" while the dashboard shows a store
+ * correctly attached.
  *
- * Two things are pinned here: the errors are `AppError`s carrying an actionable
- * message, and attaching a Blob store is enough on its own — Vercel injects
- * BLOB_READ_WRITE_TOKEN but does not set STORAGE_DRIVER, so a deployment that
- * did everything right in the dashboard would otherwise fall through to "local".
+ * Resolution therefore substitutes a driver that works rather than failing, and
+ * warns each time it does. These tests pin the substitutions.
  */
 const SAVED = { ...process.env };
+const OWNED = [
+  "STORAGE_DRIVER",
+  "BLOB_READ_WRITE_TOKEN",
+  "VERCEL",
+  "AWS_LAMBDA_FUNCTION_NAME",
+  "STORAGE_BUCKET",
+  "STORAGE_ACCESS_KEY",
+  "STORAGE_SECRET_KEY",
+];
 
 async function freshStorage() {
   resetEnvCache();
@@ -26,9 +34,7 @@ async function freshStorage() {
 }
 
 beforeEach(() => {
-  for (const k of ["STORAGE_DRIVER", "BLOB_READ_WRITE_TOKEN", "VERCEL", "STORAGE_BUCKET", "STORAGE_ACCESS_KEY", "STORAGE_SECRET_KEY"]) {
-    delete process.env[k];
-  }
+  for (const k of OWNED) delete process.env[k];
   resetEnvCache();
 });
 
@@ -47,10 +53,11 @@ describe("storage driver selection", () => {
     expect(getStorage().name).toBe("vercel-blob");
   });
 
-  it("honours an explicit driver over the token heuristic", async () => {
+  it("honours an explicit driver this deployment can actually satisfy", async () => {
     process.env.BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_test_token";
     process.env.STORAGE_DRIVER = "local";
     const { effectiveStorageDriver } = await freshStorage();
+    // Off-platform, "local" is a perfectly good driver, so it wins over the token.
     expect(effectiveStorageDriver()).toBe("local");
   });
 
@@ -58,12 +65,19 @@ describe("storage driver selection", () => {
     const { getStorage } = await freshStorage();
     expect(getStorage().name).toBe("local");
   });
+
+  it("uses s3 when its credentials are complete", async () => {
+    process.env.STORAGE_DRIVER = "s3";
+    process.env.STORAGE_BUCKET = "cvs";
+    process.env.STORAGE_ACCESS_KEY = "key";
+    process.env.STORAGE_SECRET_KEY = "secret";
+    const { effectiveStorageDriver } = await freshStorage();
+    expect(effectiveStorageDriver()).toBe("s3");
+  });
 });
 
-describe("storage misconfiguration is reported, not swallowed", () => {
+describe("unusable configuration substitutes a driver that works", () => {
   it("prefers an attached Blob store over an impossible local driver on serverless", async () => {
-    // The exact production shape: STORAGE_DRIVER=local imported from
-    // .env.example, with a Blob store attached in the dashboard.
     process.env.VERCEL = "1";
     process.env.STORAGE_DRIVER = "local";
     process.env.BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_test_token";
@@ -72,40 +86,47 @@ describe("storage misconfiguration is reported, not swallowed", () => {
     expect(getStorage().name).toBe("vercel-blob");
   });
 
-  it("refuses local storage on a serverless platform", async () => {
+  it("falls back to the database when local is impossible and no store is attached", async () => {
     process.env.VERCEL = "1";
     process.env.STORAGE_DRIVER = "local";
-    const { getStorage } = await freshStorage();
+    const { effectiveStorageDriver, getStorage } = await freshStorage();
     // A read-only, per-instance filesystem loses the upload even when the write
-    // appears to succeed, so this must fail loudly at selection time.
-    expect(() => getStorage()).toThrow(AppError);
-    expect(() => getStorage()).toThrow(/serverless/i);
+    // appears to succeed.
+    expect(effectiveStorageDriver()).toBe("database");
+    expect(getStorage().name).toBe("database");
   });
 
-  it("names the missing variable when the blob driver has no token", async () => {
+  it("falls back to the database when the blob token is shadowed by a blank value", async () => {
+    // The actual production state this was written for.
+    process.env.VERCEL = "1";
     process.env.STORAGE_DRIVER = "vercel-blob";
-    const { getStorage } = await freshStorage();
-    expect(() => getStorage()).toThrow(/BLOB_READ_WRITE_TOKEN/);
+    process.env.BLOB_READ_WRITE_TOKEN = "";
+    const { effectiveStorageDriver, getStorage } = await freshStorage();
+    expect(effectiveStorageDriver()).toBe("database");
+    expect(getStorage().name).toBe("database");
   });
 
-  it("names the missing variables when s3 is incomplete", async () => {
+  it("falls back to the database when s3 credentials are incomplete", async () => {
     process.env.STORAGE_DRIVER = "s3";
-    const { getStorage } = await freshStorage();
-    expect(() => getStorage()).toThrow(/STORAGE_BUCKET/);
+    process.env.STORAGE_BUCKET = "cvs"; // no key or secret
+    const { effectiveStorageDriver } = await freshStorage();
+    expect(effectiveStorageDriver()).toBe("database");
   });
 
-  it("throws an AppError so the API reports the reason instead of a bare 500", async () => {
-    process.env.STORAGE_DRIVER = "vercel-blob";
-    const { getStorage } = await freshStorage();
-    try {
-      getStorage();
-      throw new Error("expected a throw");
-    } catch (err) {
-      // errorResponse() anonymises anything that is not an AppError. This is the
-      // property that turns "Internal server error" into a usable message.
-      expect(err).toBeInstanceOf(AppError);
-      expect((err as AppError).status).toBe(503);
-      expect((err as AppError).code).toBe("CONFIG_ERROR");
+  it("prefers an attached Blob store over the database when s3 is incomplete", async () => {
+    process.env.STORAGE_DRIVER = "s3";
+    process.env.BLOB_READ_WRITE_TOKEN = "vercel_blob_rw_test_token";
+    const { effectiveStorageDriver } = await freshStorage();
+    expect(effectiveStorageDriver()).toBe("vercel-blob");
+  });
+
+  it("never leaves a serverless deployment on the local driver", async () => {
+    for (const driver of ["local", "vercel-blob", "s3"]) {
+      for (const k of OWNED) delete process.env[k];
+      process.env.AWS_LAMBDA_FUNCTION_NAME = "cv-parser";
+      process.env.STORAGE_DRIVER = driver;
+      const { effectiveStorageDriver } = await freshStorage();
+      expect(effectiveStorageDriver()).not.toBe("local");
     }
   });
 });

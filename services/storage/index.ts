@@ -14,7 +14,7 @@ import { randomToken } from "@/lib/crypto";
  * Files are never served with an executable content type.
  */
 export interface StorageProvider {
-  readonly name: "local" | "s3" | "vercel-blob";
+  readonly name: "local" | "s3" | "vercel-blob" | "database";
   put(key: string, data: Buffer, contentType: string): Promise<void>;
   get(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
@@ -60,6 +60,49 @@ class LocalStorageProvider implements StorageProvider {
     } catch {
       return false;
     }
+  }
+}
+
+/**
+ * Postgres-backed storage, used when no object store is configured.
+ *
+ * Object storage remains the right home for files and the recommended
+ * production setup. But a deployment with neither a bucket nor a blob token has
+ * nowhere to put an upload at all — a serverless filesystem is read-only — and
+ * that is a configuration cliff, not a design decision. CVs are small, the
+ * database is already a hard dependency, and rows have no URL to leak.
+ */
+class DatabaseStorageProvider implements StorageProvider {
+  readonly name = "database" as const;
+
+  async put(key: string, data: Buffer, contentType: string): Promise<void> {
+    const { prisma } = await import("@/lib/db");
+    // Prisma's Bytes is Uint8Array<ArrayBuffer>; a Node Buffer may be backed by
+    // a SharedArrayBuffer, so copy into a plain one rather than casting.
+    const bytes = new Uint8Array(data);
+    await prisma.storedFile.upsert({
+      where: { key },
+      create: { key, mimeType: contentType, size: bytes.byteLength, data: bytes },
+      update: { mimeType: contentType, size: bytes.byteLength, data: bytes },
+    });
+  }
+
+  async get(key: string): Promise<Buffer> {
+    const { prisma } = await import("@/lib/db");
+    const row = await prisma.storedFile.findUnique({ where: { key }, select: { data: true } });
+    if (!row) throw new Error(`Stored file not found: ${key}`);
+    return Buffer.from(row.data);
+  }
+
+  async delete(key: string): Promise<void> {
+    const { prisma } = await import("@/lib/db");
+    await prisma.storedFile.deleteMany({ where: { key } });
+  }
+
+  async exists(key: string): Promise<boolean> {
+    const { prisma } = await import("@/lib/db");
+    // Count rather than select: the row holds the whole file.
+    return (await prisma.storedFile.count({ where: { key } })) > 0;
   }
 }
 
@@ -222,57 +265,86 @@ const isServerless = () => Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_
  * to "local" and try to write to a read-only filesystem. When a Blob token is
  * present and no driver was chosen, the blob store is what the operator meant.
  */
-let warnedAboutLocal = false;
+let warnedAboutFallback = false;
 
-export function effectiveStorageDriver(): "local" | "s3" | "vercel-blob" {
+function warnOnce(message: string) {
+  if (warnedAboutFallback) return;
+  warnedAboutFallback = true;
+  console.warn(`[storage] ${message}`);
+}
+
+export type StorageDriver = "local" | "s3" | "vercel-blob" | "database";
+
+/**
+ * Which storage driver is actually in force.
+ *
+ * `STORAGE_DRIVER` is honoured when it names something this deployment can do.
+ * Where it does not, uploads have to go somewhere: failing leaves the product
+ * unusable until someone reads an error message and edits a dashboard, and the
+ * settings that get it wrong are usually not the operator's fault. Vercel
+ * pre-fills its environment-variable form from `.env.example`, and attaching a
+ * Blob store injects `BLOB_READ_WRITE_TOKEN` without setting the driver.
+ *
+ * So the resolution order on a serverless host is: an explicitly configured and
+ * usable driver, then an attached blob store, then the database. Every fallback
+ * warns, because a silent one is just a different kind of surprise.
+ */
+export function effectiveStorageDriver(): StorageDriver {
   const e = env();
-  const configured = process.env.STORAGE_DRIVER ? e.STORAGE_DRIVER : e.BLOB_READ_WRITE_TOKEN ? "vercel-blob" : e.STORAGE_DRIVER;
+  const hasBlob = Boolean(e.BLOB_READ_WRITE_TOKEN);
+  const hasS3 = Boolean(e.STORAGE_BUCKET && e.STORAGE_ACCESS_KEY && e.STORAGE_SECRET_KEY);
+  const configured: StorageDriver = process.env.STORAGE_DRIVER ? e.STORAGE_DRIVER : hasBlob ? "vercel-blob" : e.STORAGE_DRIVER;
 
-  // "local" is not a thing a serverless platform can do. If a Blob store is
-  // attached, that is unambiguously where the operator meant uploads to go, so
-  // use it rather than failing on a setting that cannot be honoured anyway.
-  // This is the same footgun as PROCESSING_MODE: Vercel pre-fills its import
-  // form from `.env.example`, which carries STORAGE_DRIVER=local.
-  if (configured === "local" && isServerless() && e.BLOB_READ_WRITE_TOKEN) {
-    if (!warnedAboutLocal) {
-      warnedAboutLocal = true;
-      console.warn(
-        "[storage] STORAGE_DRIVER=local cannot work on a serverless deployment (read-only, per-instance filesystem). " +
-          "A Blob store is attached, so uploads are going there instead. Set STORAGE_DRIVER=vercel-blob to make this explicit.",
-      );
+  if (configured === "s3" && !hasS3) {
+    if (hasBlob) {
+      warnOnce("STORAGE_DRIVER=s3 but bucket credentials are missing; an attached Blob store is being used instead.");
+      return "vercel-blob";
     }
-    return "vercel-blob";
+    warnOnce("STORAGE_DRIVER=s3 but bucket credentials are missing; falling back to database storage. Set STORAGE_BUCKET, STORAGE_ACCESS_KEY and STORAGE_SECRET_KEY.");
+    return "database";
   }
+
+  if (configured === "vercel-blob" && !hasBlob) {
+    warnOnce(
+      "STORAGE_DRIVER=vercel-blob but BLOB_READ_WRITE_TOKEN is empty, so uploads are going to the database instead. " +
+        "Attaching a Blob store makes Vercel inject that variable, but one you define yourself overrides the injected " +
+        "value — delete any BLOB_READ_WRITE_TOKEN entry in Project → Settings → Environment Variables and redeploy.",
+    );
+    return "database";
+  }
+
+  // "local" is not something a serverless platform can do: the filesystem is
+  // read-only and per-instance, so the upload is lost even when the write
+  // appears to succeed.
+  if (configured === "local" && isServerless()) {
+    if (hasBlob) {
+      warnOnce("STORAGE_DRIVER=local cannot work on a serverless deployment; the attached Blob store is being used instead. Set STORAGE_DRIVER=vercel-blob to make this explicit.");
+      return "vercel-blob";
+    }
+    warnOnce("STORAGE_DRIVER=local cannot work on a serverless deployment (read-only, per-instance filesystem); falling back to database storage. Attach a Blob store for a production setup.");
+    return "database";
+  }
+
   return configured;
 }
 
 export function getStorage(): StorageProvider {
   if (instance) return instance;
   const e = env();
-  const driver = effectiveStorageDriver();
-
-  if (driver === "s3") {
-    instance = new S3StorageProvider();
-  } else if (driver === "vercel-blob") {
-    if (!e.BLOB_READ_WRITE_TOKEN) {
-      throw new ConfigError(
-        "STORAGE_DRIVER=vercel-blob but BLOB_READ_WRITE_TOKEN is not set. Attach a Blob store to this project " +
-          "(Vercel injects the token automatically), or switch STORAGE_DRIVER to s3 and supply bucket credentials.",
-      );
-    }
-    instance = new VercelBlobStorageProvider(e.BLOB_READ_WRITE_TOKEN);
-  } else {
-    // "local" is a development driver. A serverless filesystem is read-only
-    // where it is not simply discarded between requests, so an upload written
-    // there is lost even when the write appears to succeed.
-    if (isServerless()) {
-      throw new ConfigError(
-        "STORAGE_DRIVER=local cannot be used on a serverless deployment: the filesystem is read-only and " +
-          "per-instance, so uploaded CVs would be lost. Attach a Vercel Blob store, or set STORAGE_DRIVER=s3 " +
-          "with STORAGE_BUCKET, STORAGE_ACCESS_KEY and STORAGE_SECRET_KEY.",
-      );
-    }
-    instance = new LocalStorageProvider(e.LOCAL_STORAGE_PATH);
+  // Resolution already substituted anything unusable, so each branch here is
+  // reachable only when its requirements are actually met.
+  switch (effectiveStorageDriver()) {
+    case "s3":
+      instance = new S3StorageProvider();
+      break;
+    case "vercel-blob":
+      instance = new VercelBlobStorageProvider(e.BLOB_READ_WRITE_TOKEN);
+      break;
+    case "database":
+      instance = new DatabaseStorageProvider();
+      break;
+    default:
+      instance = new LocalStorageProvider(e.LOCAL_STORAGE_PATH);
   }
   return instance;
 }
