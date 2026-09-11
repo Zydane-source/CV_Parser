@@ -6,6 +6,11 @@
 # testing
 /coverage
 /tests/fixtures/generated/
+# Benchmark corpus: 120 generated CVs, reproducible with `npm run corpus`.
+# The labels and the scored results are tracked; the binaries are not.
+/tests/fixtures/benchmark/*
+!/tests/fixtures/benchmark/ground-truth.json
+!/tests/fixtures/benchmark/results-*.json
 
 # next.js
 /.next/
