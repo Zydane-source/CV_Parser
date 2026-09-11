@@ -40,6 +40,7 @@ path.
 | rate limiting | login, uploads, bulk delete, CSV export, Sheets export |
 | `/api/jobs/drain` | bearer `CRON_SECRET` |
 | benchmark corpus in git | binaries untracked; corpus is synthetic, no real candidate data |
+| `npm audit --omit=dev` | 5 moderate, **0 high, 0 critical** (was 1 critical + 6 high) |
 
 ---
 
@@ -64,34 +65,49 @@ the change would become undownloadable.
 private. Either re-upload them, or accept that CVs stored before this deploy
 remain publicly readable by URL.
 
-### 2. `sharp` has open high-severity libvips CVEs — not fixed, needs its own change
+### 2. `sharp` had open high-severity libvips CVEs — fixed
 
-`sharp@0.34.5` carries inherited libvips vulnerabilities (CVE-2026-33327,
-CVE-2026-33328 and others). This matters more here than the average advisory
+`sharp@0.34.5` carried inherited libvips vulnerabilities (CVE-2026-33327,
+CVE-2026-33328 and others). That mattered more here than the average advisory
 because `services/ocr/tesseract-provider.ts` runs sharp over **images uploaded by
-users** — precisely the attacker-controlled input the CVEs concern.
+users** — precisely the attacker-controlled input those CVEs concern.
 
-The fix is `sharp@0.35.4`. npm classifies it as semver-major against the declared
-`^0.34.0`, and sharp is a native module in the OCR path, so this is a change that
-needs its own testing rather than a quiet bump inside a migration branch. It is
-the highest-priority follow-up.
+Upgraded to `sharp@0.35.4`. npm classified it as semver-major against the
+declared `^0.34.0` range, so it was verified rather than assumed: the OCR
+integration tests exercise the real code path over PNG, JPEG, WEBP and scanned-
+PDF fixtures, and they pass.
 
-### 3. Remaining advisories need major upgrades
+### 3. A critical `tar` advisory arrived through an unused PDF dependency — fixed
 
-`npm audit fix` was run and **resolved nothing** — every remaining item needs a
-breaking upgrade:
+`tar@6.2.1` (arbitrary file create/overwrite via hardlink path traversal) came in
+through `unpdf@0.12.2` → `canvas@2.11.2` → `@mapbox/node-pre-gyp` → `tar`.
 
-| package | severity | route to a fix |
+The interesting part is that `canvas` was never used. PDF pages are rendered with
+`@napi-rs/canvas`; plain `canvas` was only ever a transitive dependency of an old
+unpdf. `unpdf@1.8.1` has **no dependencies at all**, so upgrading removed the
+entire chain and the critical advisory with it.
+
+It needed three small API changes in `services/ocr/pdf-render.ts` (`canvas` →
+`canvasImport`, `canvasFactory` → `CanvasFactory`, and tearing the worker down
+through `loadingTask` rather than a `destroy()` that no longer exists). It also
+deleted the casts that file used to need, because unpdf now types
+`@napi-rs/canvas` directly.
+
+### 4. Remaining advisories, pinned rather than upgraded
+
+Two were resolved with `overrides` in `package.json` instead of major upgrades of
+their parents:
+
+| package | advisory | resolution |
 |---|---|---|
-| `tar` (via `@mapbox/node-pre-gyp` ← `sharp`) | critical | resolved by the sharp upgrade |
-| `sharp` | high | `sharp@0.35.4` (finding 2) |
-| `postcss` (via `next`) | high | `next@16` — major framework upgrade |
-| `deepmerge-ts` (via `@prisma/config` ← `prisma`) | high | Prisma major |
+| `deepmerge-ts` | stack exhaustion on recursive object graphs (via `prisma` → `@prisma/config`) | pinned to `^8.0.2`; verified `prisma generate` and `prisma migrate status` still work, which is the exact path that loads `prisma.config.ts` |
+| `postcss` | XSS via unescaped `</style>`, path traversal in source-map resolution (via `next`) | pinned to `^8.5.28`; the alternative was `next@16`, a major framework upgrade. Verified the CSS build is intact and the rendered UI unchanged |
 
-None are in the extraction path, and none were introduced by this migration.
-They are recorded here so that "the audit passed" is not mistaken for "there is
-nothing outstanding".
+An override forces a version the parent did not pick, so each was tested against
+the thing it could plausibly break rather than trusted.
 
+**Result: 13 advisories (1 critical, 6 high) → 5 moderate, 0 high, 0 critical.**
+The remaining moderate items are development-only tooling.
 ---
 
 ## Data flow, after the migration

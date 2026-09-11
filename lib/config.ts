@@ -77,7 +77,17 @@ const envSchema = z.object({
    *            the browser while a batch is in flight and by a scheduled cron.
    *            This is what makes a serverless deployment (Vercel) work.
    */
-  PROCESSING_MODE: z.enum(["queue", "inline"]).optional().default("queue"),
+  /**
+   * Defaults to whatever the platform can actually run. A serverless function
+   * has nowhere to keep a long-lived queue consumer, so "queue" there means
+   * uploads record jobs that nothing ever picks up — CVs sitting at Pending with
+   * no explanation. The default follows the environment rather than forcing the
+   * operator to know this.
+   */
+  PROCESSING_MODE: z
+    .enum(["queue", "inline"])
+    .optional()
+    .default(() => (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? "inline" : "queue")),
   /** Shared secret for the scheduled drain endpoint (Vercel Cron sends it). */
   CRON_SECRET: str(""),
   /** Max CVs one drain invocation will process, and how long it may run. */

@@ -243,24 +243,26 @@ the environment is scrubbed again afterwards.
   `access: "public"` — readable by anyone holding the URL, with no
   authentication. New uploads are private; **blobs written before this deploy
   remain public** and are not retroactively fixed. Re-upload them or accept that.
-- **Not fixed, needs its own change:** `sharp@0.34.5` carries high-severity
-  inherited libvips CVEs and runs over **user-uploaded images** during OCR. The
-  fix (`sharp@0.35.4`) is semver-major on a native module in the OCR path.
-- `npm audit fix` was run and **resolved nothing** — the remaining advisories
-  (`tar` critical, `postcss` high via `next`, `deepmerge-ts` high via `prisma`)
-  all need major upgrades. None are in the extraction path; none were introduced
-  here.
+- **Fixed since:** `sharp` upgraded to 0.35.4, closing the high-severity libvips
+  CVEs that ran over user-uploaded images during OCR; `unpdf` upgraded to 1.8.1,
+  which removed the unused `canvas` dependency and with it the critical `tar`
+  advisory; `deepmerge-ts` and `postcss` pinned via `overrides`.
+- **Result: 1 critical + 6 high → 0 critical, 0 high.** Five moderate advisories
+  remain, all development-only tooling.
 
-**Unverified**
+**Production state, verified directly against Neon**
 
-- Whether the live Neon database has been seeded with the `admin` /
-  `Zydane@1111` credentials. The local database has the `admin` user; production
-  was not checked, and a password hash cannot be verified by inspection. Run
-  `npm run db:seed` against production if login fails.
+- The `admin` user exists with role ADMIN, and the configured password
+  authenticates against the stored bcrypt hash.
+- Migration `0002` is applied: all six new `Candidate` columns are present.
+- The database held 0 CV files and 0 candidates at the time of checking, so the
+  local engine has not yet processed anything in production.
 
 ## 13. Next improvements
 
-1. **Upgrade `sharp`** — highest priority, for the reason in §12.
+1. **Keep the dependency audit at zero high/critical.** It is there now; the
+   `overrides` on `deepmerge-ts` and `postcss` are pins, not fixes, and should be
+   dropped once `prisma` and `next` ship versions that resolve them upstream.
 2. **Shadow-mode a real corpus.** `EXTRACTION_ENGINE=shadow` runs a model
    alongside the local engine and logs field-by-field disagreement without
    storing model output. A few hundred real CVs would replace the synthetic

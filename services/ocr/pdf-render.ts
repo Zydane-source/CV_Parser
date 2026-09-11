@@ -1,13 +1,10 @@
 /**
  * Render PDF pages to PNG buffers (for OCR of scanned PDFs) using pdf.js + @napi-rs/canvas.
+ *
+ * unpdf types `canvasImport` as `@napi-rs/canvas` directly, so no casting is
+ * needed: the renderer and the document factory both take the same importer.
  */
-type RenderCanvasImport = NonNullable<Parameters<typeof import("unpdf").renderPageAsImage>[2]>["canvas"];
-type FactoryCanvasImport = Parameters<typeof import("unpdf").createIsomorphicCanvasFactory>[0];
-
-// unpdf's types reference the `canvas` package; @napi-rs/canvas is API-compatible for rendering.
 const canvasImport = () => import("@napi-rs/canvas");
-const napiCanvas = canvasImport as unknown as RenderCanvasImport;
-const napiCanvasForFactory = canvasImport as unknown as FactoryCanvasImport;
 
 export async function renderPdfPagesToImages(pdf: Buffer, maxPages: number, scale = 2): Promise<Buffer[]> {
   const { getDocumentProxy, renderPageAsImage, createIsomorphicCanvasFactory } = await import("unpdf");
@@ -15,17 +12,19 @@ export async function renderPdfPagesToImages(pdf: Buffer, maxPages: number, scal
   const data = new Uint8Array(pdf);
   // The document needs a canvas factory too: embedded images in scanned pages are
   // painted through the document's own factory, not the output canvas.
-  const canvasFactory = await createIsomorphicCanvasFactory(napiCanvasForFactory);
-  const doc = await getDocumentProxy(data, { canvasFactory });
+  const CanvasFactory = await createIsomorphicCanvasFactory(canvasImport);
+  const doc = await getDocumentProxy(data, { CanvasFactory });
   try {
     const pages = Math.min(doc.numPages, Math.max(1, maxPages));
     const out: Buffer[] = [];
     for (let i = 1; i <= pages; i++) {
-      const png = await renderPageAsImage(doc, i, { scale, canvas: napiCanvas });
+      const png = await renderPageAsImage(doc, i, { scale, canvasImport });
       out.push(Buffer.from(png));
     }
     return out;
   } finally {
-    await doc.destroy().catch(() => undefined);
+    // The proxy itself has no destroy(); the worker is torn down through the
+    // loading task that produced it.
+    await doc.loadingTask?.destroy().catch(() => undefined);
   }
 }
