@@ -10,6 +10,7 @@ import { formatBytes, formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { StatusBadge } from "./StatusBadge";
 import { ConfidenceBar } from "./Confidence";
 import { DeleteCvDialog, type DeleteTarget } from "./DeleteCvDialog";
+import { Skeleton } from "@/components/ui";
 
 interface Detail {
   id: string;
@@ -90,7 +91,15 @@ export function CandidateDetail({ id, threshold, startEditing }: { id: string; t
   }, [data, editing]);
 
   if (error) return <div className="card p-6 text-sm text-red-600">{(error as Error).message}</div>;
-  if (!data) return <div className="card p-6 text-sm text-gray-500">Loading…</div>;
+  if (!data)
+    return (
+      <div className="card space-y-3 p-6" aria-busy="true" aria-live="polite">
+        <span className="sr-only">Loading…</span>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-3 w-64" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
 
   const c = data.candidate;
   const openUrl = data.sourceType === "GOOGLE_DRIVE" && data.driveUrl ? data.driveUrl : `/api/cv-files/${data.id}/download?inline=1`;

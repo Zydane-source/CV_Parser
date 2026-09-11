@@ -6,6 +6,7 @@ import useSWR from "swr";
 import { Cloud, CheckCircle2, FolderOpen, RefreshCw, Unplug, ChevronRight, Search, AlertTriangle, Radio } from "lucide-react";
 import { api, fetcher } from "@/lib/client/api";
 import { formatDate } from "@/lib/client/format";
+import { Skeleton } from "@/components/ui";
 
 interface Status {
   configured: boolean;
@@ -83,7 +84,15 @@ export function DriveConnect({ flash }: { flash?: { connected?: boolean; error?:
     }
   };
 
-  if (!data) return <div className="card p-6 text-sm text-gray-500">Loading…</div>;
+  if (!data)
+    return (
+      <div className="card space-y-3 p-6" aria-busy="true" aria-live="polite">
+        <span className="sr-only">Loading…</span>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-3 w-64" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
 
   return (
     <div className="space-y-5">
@@ -241,7 +250,12 @@ function FolderPicker({ onPicked, onError }: { onPicked: () => void; onError: (m
       )}
       {error && <div className="mt-3 text-sm text-red-600">{(error as Error).message}</div>}
       <ul className="mt-3 divide-y divide-gray-100 rounded-lg border border-gray-200">
-        {isLoading && <li className="px-3 py-3 text-sm text-gray-500">Loading…</li>}
+        {isLoading && (
+          <li className="space-y-2 px-3 py-3">
+            <Skeleton className="h-3.5 w-1/2" />
+            <Skeleton className="h-3.5 w-1/3" />
+          </li>
+        )}
         {data?.folders.map((f) => (
           <li key={f.id} className="flex items-center justify-between px-3 py-2 text-sm">
             <button className="inline-flex items-center gap-2 text-gray-800 hover:text-brand-700" onClick={() => (q ? choose(f) : setStack([...stack, f]))}>

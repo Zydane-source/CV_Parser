@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { RefreshCw, Wifi, WifiOff, RotateCcw } from "lucide-react";
+import { RefreshCw, Wifi, WifiOff, RotateCcw, Activity, Upload } from "lucide-react";
 import { api } from "@/lib/client/api";
 import { formatRelative, SOURCE_LABEL } from "@/lib/client/format";
 import { useJobStream } from "@/lib/client/useJobStream";
 import { StatusBadge } from "./StatusBadge";
 import { WorkerPill } from "./SystemAlerts";
 import { WorkerBanner } from "./WorkerBanner";
+import { EmptyState } from "@/components/ui";
 
 const STATUSES = ["", "PENDING", "PROCESSING", "PROCESSED", "NEEDS_REVIEW", "FAILED", "SKIPPED"];
 
@@ -144,8 +145,17 @@ export function JobsMonitor({ initialBatchId }: { initialBatchId?: string }) {
             ))}
             {data && data.jobs.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-12 text-center text-sm text-gray-500">
-                  No processing jobs yet. Upload CVs or sync Google Drive to get started.
+                <td colSpan={7} className="p-0">
+                  <EmptyState
+                    icon={<Activity size={20} />}
+                    title="No processing jobs yet"
+                    description="Jobs appear here as soon as a CV is uploaded or a Drive folder is synced."
+                    action={
+                      <Link href="/upload" className="btn-primary">
+                        <Upload size={15} /> Upload CVs
+                      </Link>
+                    }
+                  />
                 </td>
               </tr>
             )}

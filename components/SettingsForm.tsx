@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { Save, CheckCircle2, XCircle } from "lucide-react";
 import { api, fetcher } from "@/lib/client/api";
+import { Skeleton } from "@/components/ui";
 
 interface SettingsResponse {
   settings: Record<string, string | number | null>;
@@ -93,7 +94,15 @@ export function SettingsForm({ isAdmin }: { isAdmin: boolean }) {
     if (data) setForm(Object.fromEntries(Object.entries(data.settings).map(([k, v]) => [k, v === null || v === undefined ? "" : String(v)])));
   }, [data]);
 
-  if (!data) return <div className="card p-6 text-sm text-gray-500">Loading…</div>;
+  if (!data)
+    return (
+      <div className="card space-y-3 p-6" aria-busy="true" aria-live="polite">
+        <span className="sr-only">Loading…</span>
+        <Skeleton className="h-4 w-40" />
+        <Skeleton className="h-3 w-64" />
+        <Skeleton className="h-24 w-full" />
+      </div>
+    );
 
   const save = async () => {
     setSaving(true);
