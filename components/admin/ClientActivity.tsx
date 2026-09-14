@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import { CalendarDays, ChevronDown, Cloud, FileText, Upload, X } from "lucide-react";
 import { fetcher } from "@/lib/client/api";
@@ -29,8 +30,10 @@ interface DayResponse {
     status: string;
     createdAt: string;
     uploadedBy: { name: string } | null;
+    workspace: { id: string; name: string };
     candidate: { candidateName: string } | null;
   }>;
+  clients: Array<{ workspaceId: string; name: string; count: number }>;
 }
 
 const RANGES = [
@@ -60,8 +63,12 @@ const fmtDateTime = (iso: string) =>
  *
  * Days are counted in the viewer's own time zone (sent to the server), so a CV
  * uploaded just after midnight lands on the date the reader expects.
+ *
+ * Without a workspaceId it covers every client, and each day opens into a
+ * per-client breakdown.
  */
-export function ClientActivity({ workspaceId }: { workspaceId: string }) {
+export function ClientActivity({ workspaceId }: { workspaceId?: string }) {
+  const base = workspaceId ? `/api/workspaces/${workspaceId}/activity` : "/api/activity";
   const tz = useMemo(() => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC", []);
   const today = ymd(new Date());
   const [preset, setPreset] = useState<string>("30");
@@ -72,14 +79,14 @@ export function ClientActivity({ workspaceId }: { workspaceId: string }) {
   const to = preset === "custom" ? custom.to : today;
 
   const { data, error, isLoading } = useSWR<ActivityResponse>(
-    `/api/workspaces/${workspaceId}/activity?from=${from}&to=${to}&tz=${encodeURIComponent(tz)}`,
+    `${base}?from=${from}&to=${to}&tz=${encodeURIComponent(tz)}`,
     fetcher,
   );
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile label="Total CVs fetched" value={data?.summary.allTime} note="All time" />
+        <Tile label={workspaceId ? "Total CVs fetched" : "Total CVs, all clients"} value={data?.summary.allTime} note="All time" />
         <Tile label="Last 7 days" value={data?.summary.last7Days} />
         <Tile label="Last 30 days" value={data?.summary.last30Days} />
         <Tile
@@ -89,7 +96,7 @@ export function ClientActivity({ workspaceId }: { workspaceId: string }) {
       </div>
 
       <Section
-        title="CVs fetched by date"
+        title={workspaceId ? "CVs fetched by date" : "CVs fetched by date — all clients"}
         description={data ? `${data.range.total} CV${data.range.total === 1 ? "" : "s"} between ${fmtDay(from, { day: "numeric", month: "short" })} and ${fmtDay(to, { day: "numeric", month: "short", year: "numeric" })} · times in ${tz}` : undefined}
         actions={
           <div className="flex flex-wrap items-center gap-1.5">
@@ -151,7 +158,7 @@ export function ClientActivity({ workspaceId }: { workspaceId: string }) {
                 </thead>
                 <tbody>
                   {data.days.map((d) => (
-                    <DayRow key={d.day} d={d} open={openDay === d.day} onToggle={() => setOpenDay(openDay === d.day ? null : d.day)} workspaceId={workspaceId} tz={tz} />
+                    <DayRow key={d.day} d={d} open={openDay === d.day} onToggle={() => setOpenDay(openDay === d.day ? null : d.day)} base={base} allClients={!workspaceId} tz={tz} />
                   ))}
                 </tbody>
               </table>
@@ -180,7 +187,7 @@ function Tile({ label, value, text, note }: { label: string; value?: number; tex
   );
 }
 
-function DayRow({ d, open, onToggle, workspaceId, tz }: { d: DayActivity; open: boolean; onToggle: () => void; workspaceId: string; tz: string }) {
+function DayRow({ d, open, onToggle, base, allClients, tz }: { d: DayActivity; open: boolean; onToggle: () => void; base: string; allClients: boolean; tz: string }) {
   return (
     <>
       <tr data-selected={open} className="cursor-pointer" onClick={onToggle}>
@@ -208,7 +215,7 @@ function DayRow({ d, open, onToggle, workspaceId, tz }: { d: DayActivity; open: 
       {open && (
         <tr>
           <td colSpan={7} className="h-auto bg-ink-50/70 p-0">
-            <DayDetail workspaceId={workspaceId} day={d.day} tz={tz} onClose={onToggle} />
+            <DayDetail base={base} allClients={allClients} day={d.day} tz={tz} onClose={onToggle} />
           </td>
         </tr>
       )}
@@ -216,9 +223,9 @@ function DayRow({ d, open, onToggle, workspaceId, tz }: { d: DayActivity; open: 
   );
 }
 
-function DayDetail({ workspaceId, day, tz, onClose }: { workspaceId: string; day: string; tz: string; onClose: () => void }) {
+function DayDetail({ base, allClients, day, tz, onClose }: { base: string; allClients: boolean; day: string; tz: string; onClose: () => void }) {
   const { data, isLoading, error } = useSWR<DayResponse>(
-    `/api/workspaces/${workspaceId}/activity/day?date=${day}&tz=${encodeURIComponent(tz)}`,
+    `${base}/day?date=${day}&tz=${encodeURIComponent(tz)}`,
     fetcher,
   );
   return (
@@ -234,11 +241,27 @@ function DayDetail({ workspaceId, day, tz, onClose }: { workspaceId: string; day
       ) : error ? (
         <p className="py-3 text-sm text-red-700">Could not load this day.</p>
       ) : (
+        <>
+        {allClients && data && data.clients.length > 0 && (
+          <div className="mb-2.5 flex flex-wrap gap-1.5">
+            {data.clients.map((c) => (
+              <Link
+                key={c.workspaceId}
+                href={`/clients/${c.workspaceId}`}
+                className="inline-flex items-center gap-1.5 rounded-md border border-[var(--border)] bg-white px-2 py-1 text-xs text-ink-700 hover:border-brand-600 hover:text-brand-700"
+              >
+                <span className="font-medium">{c.name}</span>
+                <span className="numeric font-semibold text-ink-900">{c.count}</span>
+              </Link>
+            ))}
+          </div>
+        )}
         <div className="max-h-96 overflow-auto rounded-lg border border-[var(--border)] bg-white">
           <table className="table">
             <thead>
               <tr>
                 <th>Time</th>
+                {allClients && <th>Client</th>}
                 <th>File</th>
                 <th>Candidate</th>
                 <th>Source</th>
@@ -249,6 +272,7 @@ function DayDetail({ workspaceId, day, tz, onClose }: { workspaceId: string; day
               {data?.files.map((f) => (
                 <tr key={f.id}>
                   <td className="numeric whitespace-nowrap text-ink-900">{fmtTime(f.createdAt)}</td>
+                  {allClients && <td className="whitespace-nowrap font-medium text-ink-900">{f.workspace.name}</td>}
                   <td className="max-w-[16rem] truncate" title={f.fileName}>{f.fileName}</td>
                   <td className="whitespace-nowrap">{f.candidate?.candidateName ?? <span className="text-ink-400">—</span>}</td>
                   <td className="whitespace-nowrap">
@@ -264,6 +288,7 @@ function DayDetail({ workspaceId, day, tz, onClose }: { workspaceId: string; day
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );

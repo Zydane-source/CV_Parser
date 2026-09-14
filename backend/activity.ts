@@ -50,13 +50,20 @@ export interface DayActivity {
   last: string;
 }
 
-export async function getWorkspaceActivity(workspaceId: string, q: z.infer<typeof activityQuerySchema>) {
-  const workspace = await prisma.workspace.findUnique({
-    where: { id: workspaceId },
-    select: { id: true, name: true, slug: true, isActive: true, createdAt: true, _count: { select: { users: true, cvFiles: true } } },
-  });
-  if (!workspace) throw new NotFoundError("Client not found");
+/**
+ * `workspaceId` null means every client together — the owner's platform-wide view.
+ */
+export async function getWorkspaceActivity(workspaceId: string | null, q: z.infer<typeof activityQuerySchema>) {
+  const workspace = workspaceId
+    ? await prisma.workspace.findUnique({
+        where: { id: workspaceId },
+        select: { id: true, name: true, slug: true, isActive: true, createdAt: true, _count: { select: { users: true, cvFiles: true } } },
+      })
+    : null;
+  if (workspaceId && !workspace) throw new NotFoundError("Client not found");
   const tz = validZone(q.tz);
+  const inWorkspace = workspaceId ? Prisma.sql`AND "workspaceId" = ${workspaceId}` : Prisma.empty;
+  const where = workspaceId ? { workspaceId } : {};
 
   // Bounds are converted from local midnight to UTC on the right-hand side, so
   // the (workspaceId, createdAt) index still serves the range scan.
@@ -68,17 +75,18 @@ export async function getWorkspaceActivity(workspaceId: string, q: z.infer<typeo
            min("createdAt") AS first,
            max("createdAt") AS last
       FROM "CVFile"
-     WHERE "workspaceId" = ${workspaceId}
-       AND "createdAt" >= ((${q.from}::date)::timestamp AT TIME ZONE ${tz}) AT TIME ZONE 'UTC'
+     WHERE "createdAt" >= ((${q.from}::date)::timestamp AT TIME ZONE ${tz}) AT TIME ZONE 'UTC'
        AND "createdAt" <  (((${q.to}::date + 1))::timestamp AT TIME ZONE ${tz}) AT TIME ZONE 'UTC'
+       ${inWorkspace}
      GROUP BY 1
      ORDER BY 1 DESC`);
 
   const now = Date.now();
-  const [last7, last30, latest] = await Promise.all([
-    prisma.cVFile.count({ where: { workspaceId, createdAt: { gte: new Date(now - 7 * 864e5) } } }),
-    prisma.cVFile.count({ where: { workspaceId, createdAt: { gte: new Date(now - 30 * 864e5) } } }),
-    prisma.cVFile.findFirst({ where: { workspaceId }, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
+  const [allTime, last7, last30, latest] = await Promise.all([
+    workspace ? Promise.resolve(workspace._count.cvFiles) : prisma.cVFile.count(),
+    prisma.cVFile.count({ where: { ...where, createdAt: { gte: new Date(now - 7 * 864e5) } } }),
+    prisma.cVFile.count({ where: { ...where, createdAt: { gte: new Date(now - 30 * 864e5) } } }),
+    prisma.cVFile.findFirst({ where, orderBy: { createdAt: "desc" }, select: { createdAt: true } }),
   ]);
 
   const days: DayActivity[] = rows.map((r) => ({
@@ -94,13 +102,13 @@ export async function getWorkspaceActivity(workspaceId: string, q: z.infer<typeo
     workspace,
     tz,
     range: { from: q.from, to: q.to, total: days.reduce((a, d) => a + d.total, 0) },
-    summary: { allTime: workspace._count.cvFiles, last7Days: last7, last30Days: last30, lastFetchedAt: latest?.createdAt ?? null },
+    summary: { allTime, last7Days: last7, last30Days: last30, lastFetchedAt: latest?.createdAt ?? null },
     days,
   };
 }
 
 /** Every CV a client fetched on one day, with the time it arrived. */
-export async function getWorkspaceDay(workspaceId: string, q: z.infer<typeof dayQuerySchema>) {
+export async function getWorkspaceDay(workspaceId: string | null, q: z.infer<typeof dayQuerySchema>) {
   const tz = validZone(q.tz);
   const bounds = await prisma.$queryRaw<Array<{ start: Date; end: Date }>>(Prisma.sql`
     SELECT ((${q.date}::date)::timestamp AT TIME ZONE ${tz}) AT TIME ZONE 'UTC' AS start,
@@ -108,7 +116,7 @@ export async function getWorkspaceDay(workspaceId: string, q: z.infer<typeof day
   const { start, end } = bounds[0];
 
   const files = await prisma.cVFile.findMany({
-    where: { workspaceId, createdAt: { gte: start, lt: end } },
+    where: { ...(workspaceId ? { workspaceId } : {}), createdAt: { gte: start, lt: end } },
     orderBy: { createdAt: "asc" },
     take: 1000,
     select: {
@@ -118,8 +126,17 @@ export async function getWorkspaceDay(workspaceId: string, q: z.infer<typeof day
       status: true,
       createdAt: true,
       uploadedBy: { select: { name: true } },
+      workspace: { select: { id: true, name: true } },
       candidate: { select: { candidateName: true } },
     },
   });
-  return { date: q.date, tz, files };
+  // Per-client counts for the day, so the all-clients view can say "12 from
+  // Acme, 3 from Northwind" before listing the files.
+  const byClient = new Map<string, { workspaceId: string; name: string; count: number }>();
+  for (const f of files) {
+    const entry = byClient.get(f.workspace.id) ?? { workspaceId: f.workspace.id, name: f.workspace.name, count: 0 };
+    entry.count++;
+    byClient.set(f.workspace.id, entry);
+  }
+  return { date: q.date, tz, files, clients: [...byClient.values()].sort((a, b) => b.count - a.count) };
 }

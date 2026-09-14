@@ -79,6 +79,7 @@ const workspaceSelect = {
   name: true,
   slug: true,
   isActive: true,
+  createdVia: true,
   createdAt: true,
   _count: { select: { users: true, cvFiles: true } },
 } satisfies Prisma.WorkspaceSelect;
@@ -96,7 +97,15 @@ const userSelect = {
 export async function listWorkspaces() {
   const since = new Date(Date.now() - 7 * 864e5);
   const [workspaces, recent, latest] = await Promise.all([
-    prisma.workspace.findMany({ select: workspaceSelect, orderBy: { name: "asc" } }),
+    prisma.workspace.findMany({
+      // Newest first: the question the owner is usually asking is "who joined?".
+      orderBy: { createdAt: "desc" },
+      select: {
+        ...workspaceSelect,
+        // The client's first administrator — for a sign-up, the person who created the account.
+        users: { where: { role: "ADMIN" }, orderBy: { createdAt: "asc" }, take: 1, select: { name: true, email: true } },
+      },
+    }),
     prisma.cVFile.groupBy({ by: ["workspaceId"], where: { createdAt: { gte: since } }, _count: { _all: true } }),
     prisma.cVFile.groupBy({ by: ["workspaceId"], _max: { createdAt: true } }),
   ]);
@@ -104,7 +113,12 @@ export async function listWorkspaces() {
   // page costs the same with fifty clients as with three.
   const recentBy = new Map(recent.map((r) => [r.workspaceId, r._count._all]));
   const latestBy = new Map(latest.map((r) => [r.workspaceId, r._max.createdAt]));
-  return workspaces.map((w) => ({ ...w, last7Days: recentBy.get(w.id) ?? 0, lastFetchedAt: latestBy.get(w.id) ?? null }));
+  return workspaces.map(({ users, ...w }) => ({
+    ...w,
+    contact: users[0] ?? null,
+    last7Days: recentBy.get(w.id) ?? 0,
+    lastFetchedAt: latestBy.get(w.id) ?? null,
+  }));
 }
 
 /**
@@ -151,6 +165,11 @@ export async function createWorkspace(input: z.infer<typeof createWorkspaceSchem
 export async function updateWorkspace(id: string, patch: z.infer<typeof updateWorkspaceSchema>) {
   const existing = await prisma.workspace.findUnique({ where: { id }, select: { id: true } });
   if (!existing) throw new NotFoundError("Client not found");
+  // Suspending stops everyone in the workspace signing in — including an owner
+  // who works from it, who would then have no way back in to restore it.
+  if (patch.isActive === false && (await prisma.user.count({ where: { workspaceId: id, role: "OWNER" } }))) {
+    throw new ValidationError("This is your own workspace. Suspending it would lock you out.");
+  }
   // Deactivating keeps every CV and every account; it only stops sign-in, so a
   // client can be suspended and restored without losing their history.
   return prisma.workspace.update({ where: { id }, data: patch, select: workspaceSelect });

@@ -7,14 +7,17 @@ import { prisma } from "@/lib/db";
  * the code that would have been emailed.
  */
 const sent: Array<{ to: string; subject: string; text: string }> = [];
+const mail = { fail: false };
 vi.mock("@/lib/mailer", () => ({
   isMailConfigured: () => true,
   sendMail: async (m: { to: string; subject: string; text: string }) => {
+    if (mail.fail) throw new Error("Email is not configured on this server");
     sent.push(m);
   },
 }));
 
-const { requestSignup, verifySignup, resendSignupCode, maskEmail } = await import("@/backend/signup");
+const { requestSignup, verifySignup, resendSignupCode, maskEmail, listPendingSignups, approveSignup, rejectSignup } = await import("@/backend/signup");
+const { workspaceScope } = await import("@/lib/tenant");
 const { getWorkspaceActivity, getWorkspaceDay } = await import("@/backend/activity");
 const { authenticate } = await import("@/lib/auth");
 
@@ -95,6 +98,42 @@ d("create account", () => {
     await expect(verifySignup({ requestId, code: right })).rejects.toThrow(/Too many/);
   });
 
+  it("the owner can see a waiting request and approve it without the code", async () => {
+    const e4 = `${TAG}-approve@example.com`;
+    const { requestId } = await requestSignup({ name: "A", companyName: `Approve ${TAG}`, email: e4, password: "a-long-password" });
+    expect((await listPendingSignups()).map((r) => r.id)).toContain(requestId);
+
+    const res = await approveSignup(requestId);
+    created.push(res.workspaceId!);
+    expect(await authenticate(e4, "a-long-password")).not.toBeNull();
+    expect((await prisma.workspace.findUniqueOrThrow({ where: { id: res.workspaceId! } })).createdVia).toBe("SIGNUP");
+    expect((await listPendingSignups()).map((r) => r.id)).not.toContain(requestId);
+    // Approved is final: the emailed code can no longer create a second client.
+    await expect(approveSignup(requestId)).rejects.toThrow(/no longer pending/);
+  });
+
+  it("keeps the request for approval when the email cannot be sent", async () => {
+    mail.fail = true;
+    try {
+      const e6 = `${TAG}-nomail@example.com`;
+      const res = await requestSignup({ name: "N", companyName: "No Mail Co", email: e6, password: "a-long-password" });
+      expect(res.emailed).toBe(false);
+      expect(res.sentTo).toBeNull();
+      expect((await listPendingSignups()).map((r) => r.id)).toContain(res.requestId);
+    } finally {
+      mail.fail = false;
+    }
+  });
+
+  it("rejecting removes the request, so its code stops working", async () => {
+    sent.length = 0;
+    const e5 = `${TAG}-reject@example.com`;
+    const { requestId } = await requestSignup({ name: "R", companyName: "Reject Co", email: e5, password: "a-long-password" });
+    await rejectSignup(requestId);
+    await expect(verifySignup({ requestId, code: codeFrom(sent[0].text) })).rejects.toThrow(/expired/);
+    expect(await prisma.user.count({ where: { email: e5 } })).toBe(0);
+  });
+
   it("resend is throttled, and a resent code replaces the old one", async () => {
     sent.length = 0;
     const e3 = `${TAG}-resend@example.com`;
@@ -156,6 +195,22 @@ d("client activity by date", () => {
   it("a day's list holds exactly the CVs counted for that day, in time order", async () => {
     const day = await getWorkspaceDay(wsId, { date: "2026-03-02", tz: "Asia/Kolkata" });
     expect(day.files.map((f) => f.fileName)).toEqual([`${TAG}-1.pdf`, `${TAG}-4.pdf`]);
+  });
+
+  it("the all-clients view includes this client and names it on each file", async () => {
+    const all = await getWorkspaceActivity(null, { from: "2026-03-02", to: "2026-03-02", tz: "Asia/Kolkata" });
+    expect(all.range.total).toBeGreaterThanOrEqual(2);
+    const day = await getWorkspaceDay(null, { date: "2026-03-02", tz: "Asia/Kolkata" });
+    expect(day.clients.find((c) => c.workspaceId === wsId)?.count).toBe(2);
+    expect(day.files.filter((f) => f.workspace.id === wsId)).toHaveLength(2);
+  });
+
+  it("an owner who has a workspace keeps their everyday pages to it", async () => {
+    // Promoting the original admin to owner must not flood their own candidate
+    // list with every client's CVs; cross-client reading happens on Clients pages.
+    const owner = { id: "o", email: "admin", name: "Admin", role: "OWNER" as const, workspaceId: "ws_default00000000000000000", workspaceName: "Default" };
+    expect(workspaceScope(owner)).toEqual({ workspaceId: "ws_default00000000000000000" });
+    expect(workspaceScope({ ...owner, workspaceId: null, workspaceName: null })).toEqual({});
   });
 
   it("an unknown time zone falls back to UTC rather than erroring", async () => {

@@ -10,9 +10,11 @@ import { ForbiddenError } from "./errors";
  * `workspaceScope` or it is not scoped, and that is visible at a glance in
  * review.
  *
- * The platform owner is the single deliberate exception — they operate the
- * service and can see across clients — and that exception is written once, here,
- * instead of as an `if` in every route.
+ * The platform owner can see across clients, but does so deliberately — through
+ * the Clients pages, which pass a workspace explicitly. Their everyday pages
+ * (dashboard, candidates, uploads) stay scoped to their own workspace when they
+ * have one, so taking on the owner role does not flood an operator's own
+ * candidate list with every client's CVs.
  */
 
 /**
@@ -29,13 +31,11 @@ import { ForbiddenError } from "./errors";
 export type WorkspaceScope = { workspaceId?: string };
 
 export function workspaceScope(session: SessionUser): WorkspaceScope {
+  if (session.workspaceId) return { workspaceId: session.workspaceId };
   if (session.role === "OWNER") return {};
-  if (!session.workspaceId) {
-    // A non-owner with no workspace cannot be scoped, so it must not be allowed
-    // to read anything. Returning {} here would hand it the whole database.
-    throw new ForbiddenError("This account is not attached to a client workspace");
-  }
-  return { workspaceId: session.workspaceId };
+  // A non-owner with no workspace cannot be scoped, so it must not be allowed
+  // to read anything. Returning {} here would hand it the whole database.
+  throw new ForbiddenError("This account is not attached to a client workspace");
 }
 
 /**
@@ -60,7 +60,7 @@ export function workspaceForWrite(session: SessionUser, explicit?: string | null
  */
 export function assertSameWorkspace(session: SessionUser, row: { workspaceId: string | null } | null): void {
   if (!row) return; // absent rows are a 404 decided by the caller, not a leak
-  if (session.role === "OWNER") return;
+  if (session.role === "OWNER" && !session.workspaceId) return;
   if (row.workspaceId !== session.workspaceId) {
     // Deliberately the same error a missing row produces, so probing ids cannot
     // be used to learn whether another client holds a given record.

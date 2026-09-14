@@ -114,16 +114,19 @@ export async function requestSignup(input: z.infer<typeof signupSchema>) {
   });
   await prisma.signupRequest.update({ where: { id: request.id }, data: { codeHash: hashCode(request.id, code) } });
 
+  // The request is kept even when the email cannot be sent: the owner can still
+  // approve it from the Clients page. Failing the whole sign-up because mail is
+  // not set up yet would turn a missing setting into a closed door.
+  let emailed = true;
   try {
     await emailCode(request, code);
   } catch (err) {
-    // A request whose code was never delivered can never be completed.
-    await prisma.signupRequest.delete({ where: { id: request.id } }).catch(() => undefined);
-    throw err;
+    emailed = false;
+    logger.error({ requestId: request.id, err: (err as Error).message }, "Sign-up code could not be emailed; request kept for approval from the Clients page");
   }
 
-  logger.info({ requestId: request.id, company: input.companyName }, "Sign-up requested; code sent for approval");
-  return { requestId: request.id, sentTo: maskEmail(env().SIGNUP_APPROVAL_EMAIL), expiresAt: request.expiresAt };
+  logger.info({ requestId: request.id, company: input.companyName, emailed }, "Sign-up requested");
+  return { requestId: request.id, emailed, sentTo: emailed ? maskEmail(env().SIGNUP_APPROVAL_EMAIL) : null, expiresAt: request.expiresAt };
 }
 
 export async function resendSignupCode(requestId: string) {
@@ -173,27 +176,39 @@ export async function verifySignup(input: z.infer<typeof verifySchema>): Promise
     throw new ValidationError(left > 0 ? `That code is not correct. ${left} ${left === 1 ? "try" : "tries"} left.` : "Too many incorrect codes. Request a new one.");
   }
 
+  return activate(request.id, "code");
+}
+
+/**
+ * Turn a request into a client and its administrator.
+ *
+ * Shared by the two ways a request is approved — the applicant entering the
+ * emailed code, or the owner pressing Approve — so both produce exactly the
+ * same account.
+ */
+async function activate(requestId: string, via: "code" | "owner"): Promise<SessionUser> {
+  const request = await prisma.signupRequest.findUniqueOrThrow({ where: { id: requestId } });
   const slug = await uniqueSlug(request.companyName);
   const user = await prisma.$transaction(async (tx) => {
-    // Claimed inside the transaction: two simultaneous submissions of the right
-    // code must not create two clients.
+    // Claimed inside the transaction: a code submission and an Approve click at
+    // the same moment must not create two clients.
     const claimed = await tx.signupRequest.updateMany({
       where: { id: request.id, consumedAt: null },
       data: { consumedAt: new Date() },
     });
-    if (claimed.count !== 1) throw new ValidationError("This code has already been used.");
+    if (claimed.count !== 1) throw new ValidationError("This request has already been completed.");
 
     if (await tx.user.findUnique({ where: { email: request.email }, select: { id: true } })) {
       throw new ConflictError("An account with this email already exists. Sign in instead.");
     }
-    const ws = await tx.workspace.create({ data: { name: request.companyName, slug } });
+    const ws = await tx.workspace.create({ data: { name: request.companyName, slug, createdVia: "SIGNUP" } });
     return tx.user.create({
       data: { workspaceId: ws.id, name: request.name, email: request.email, passwordHash: request.passwordHash, role: "ADMIN" },
       include: { workspace: { select: { name: true } } },
     });
   });
 
-  logger.info({ userId: user.id, workspaceId: user.workspaceId }, "Sign-up verified; client created");
+  logger.info({ userId: user.id, workspaceId: user.workspaceId, via }, "Sign-up approved; client created");
   return {
     id: user.id,
     email: user.email,
@@ -204,3 +219,32 @@ export async function verifySignup(input: z.infer<typeof verifySchema>): Promise
   };
 }
 
+
+/**
+ * Sign-ups still waiting for approval, newest first, for the owner's Clients page.
+ *
+ * Deliberately not limited to unexpired codes: the code only bounds how long the
+ * applicant can self-verify. The owner can still approve a request whose code
+ * lapsed — they know who it is — for a week, after which it is no longer shown.
+ */
+export async function listPendingSignups() {
+  return prisma.signupRequest.findMany({
+    where: { consumedAt: null, createdAt: { gte: new Date(Date.now() - 7 * 864e5) } },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, name: true, email: true, companyName: true, createdAt: true, expiresAt: true, attempts: true },
+  });
+}
+
+/** Approve from the admin account, without the emailed code. */
+export async function approveSignup(requestId: string) {
+  const request = await prisma.signupRequest.findUnique({ where: { id: requestId }, select: { consumedAt: true } });
+  if (!request || request.consumedAt) throw new ValidationError("This request is no longer pending.");
+  const user = await activate(requestId, "owner");
+  return { workspaceId: user.workspaceId, workspaceName: user.workspaceName, email: user.email };
+}
+
+/** Reject: the request is removed and its code stops working. */
+export async function rejectSignup(requestId: string) {
+  const { count } = await prisma.signupRequest.deleteMany({ where: { id: requestId, consumedAt: null } });
+  if (!count) throw new ValidationError("This request is no longer pending.");
+}

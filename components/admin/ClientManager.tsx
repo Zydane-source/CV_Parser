@@ -15,9 +15,17 @@ interface Workspace {
   isActive: boolean;
   createdAt: string;
   _count: { users: number; cvFiles: number };
+  createdVia: "SIGNUP" | "OWNER" | "SYSTEM";
+  contact: { name: string; email: string } | null;
   last7Days: number;
   lastFetchedAt: string | null;
 }
+
+const JOINED: Record<Workspace["createdVia"], { label: string; tone: "brand" | "neutral" }> = {
+  SIGNUP: { label: "Signed up", tone: "brand" },
+  OWNER: { label: "Added by you", tone: "neutral" },
+  SYSTEM: { label: "Your workspace", tone: "neutral" },
+};
 
 function slugify(name: string): string {
   return name
@@ -224,6 +232,7 @@ export function ClientManager() {
               <thead>
                 <tr>
                   <th>Client</th>
+                  <th>Joined</th>
                   <th>People</th>
                   <th className="text-right">Total CVs</th>
                   <th className="text-right">Last 7 days</th>
@@ -245,6 +254,11 @@ export function ClientManager() {
                         <ChevronRight size={14} className="text-ink-400 group-hover:text-brand-600" />
                       </Link>
                     </td>
+                    <td className="whitespace-nowrap">
+                      <Badge tone={JOINED[ws.createdVia]?.tone ?? "neutral"}>{JOINED[ws.createdVia]?.label ?? ws.createdVia}</Badge>
+                      <div className="numeric mt-1 text-xs text-ink-500">{formatDate(ws.createdAt)}</div>
+                      {ws.contact && <div className="mt-0.5 max-w-[12rem] truncate text-xs text-ink-500" title={`${ws.contact.name} · ${ws.contact.email}`}>{ws.contact.email}</div>}
+                    </td>
                     <td className="numeric"><span className="inline-flex items-center gap-1.5 text-ink-600"><Users size={13} className="text-ink-400" />{ws._count.users}</span></td>
                     <td className="numeric text-right"><span className="inline-flex items-center gap-1.5 font-semibold text-ink-900"><FileText size={13} className="text-ink-400" />{ws._count.cvFiles}</span></td>
                     <td className="numeric text-right text-ink-700">{ws.last7Days}</td>
@@ -252,9 +266,13 @@ export function ClientManager() {
                     <td><Badge tone={ws.isActive ? "success" : "neutral"}>{ws.isActive ? "Active" : "Suspended"}</Badge></td>
                     <td>
                       <div className="flex justify-end">
-                        <button type="button" disabled={busy === ws.id} onClick={() => toggleActive(ws)} className={ws.isActive ? "btn-danger btn-sm" : "btn-secondary btn-sm"}>
-                          {ws.isActive ? "Suspend" : "Restore"}
-                        </button>
+                        {ws.createdVia === "SYSTEM" ? (
+                          <span className="text-xs text-ink-400">—</span>
+                        ) : (
+                          <button type="button" disabled={busy === ws.id} onClick={() => toggleActive(ws)} className={ws.isActive ? "btn-danger btn-sm" : "btn-secondary btn-sm"}>
+                            {ws.isActive ? "Suspend" : "Restore"}
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

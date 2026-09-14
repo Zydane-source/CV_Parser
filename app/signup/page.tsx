@@ -15,7 +15,7 @@ import { api, ApiError } from "@/lib/client/api";
  * plainly — otherwise people would go looking in their own inbox for a code that
  * is never coming.
  */
-type Pending = { requestId: string; sentTo: string; expiresAt: string };
+type Pending = { requestId: string; emailed?: boolean; sentTo: string | null; expiresAt: string };
 
 function fieldErrors(err: unknown): Record<string, string> {
   if (!(err instanceof ApiError)) return {};
@@ -155,11 +155,27 @@ export default function SignupPage() {
               <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600" aria-hidden>
                 <MailCheck size={20} />
               </div>
+              {pending.emailed === false ? (
+                <>
+                  <h1 className="text-[1.375rem] font-semibold tracking-[-0.02em] text-ink-900">Request received</h1>
+                  <p className="mt-2 text-sm leading-relaxed text-ink-600">
+                    Your account request for <strong className="text-ink-900">{form.companyName}</strong> is with the CV Parser team
+                    for approval. Once it is approved, sign in with <strong className="text-ink-900">{form.email}</strong> and the
+                    password you chose.
+                  </p>
+                  <Link href="/login" className="btn-primary btn-lg mt-6 w-full">Go to sign in</Link>
+                </>
+              ) : (
+              <>
               <h1 className="text-[1.375rem] font-semibold tracking-[-0.02em] text-ink-900">Enter your verification code</h1>
               <p className="mt-2 text-sm leading-relaxed text-ink-600">
                 New accounts are approved by the CV Parser team. We have sent a 6-digit code to{" "}
                 <strong className="numeric text-ink-900">{pending.sentTo}</strong> — once they share it with you, enter it
                 here. It is valid for 15 minutes.
+              </p>
+              <p className="mt-2 text-[0.8125rem] leading-relaxed text-ink-500">
+                If the team approves your request directly instead, no code is needed — just{" "}
+                <Link href="/login" className="font-medium text-brand-700 hover:underline">sign in</Link> with the email and password you chose.
               </p>
 
               <form onSubmit={verify} className="mt-6" noValidate>
@@ -192,6 +208,8 @@ export default function SignupPage() {
                   {busy === "resend" ? "Sending…" : "Send a new code"}
                 </button>
               </div>
+              </>
+              )}
             </>
           )}
         </div>

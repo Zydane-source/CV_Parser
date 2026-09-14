@@ -37,7 +37,7 @@ const GROUPS: Array<{ label: string | null; items: NavItem[] }> = [
       // Managing people is an administrator's job, and running the platform is
       // the owner's; a recruiter shown either link would only meet a redirect.
       // Hiding them is a courtesy — the pages and the API enforce the rule.
-      { href: "/team", label: "Team", icon: UserCog, roles: ["ADMIN"] },
+      { href: "/team", label: "Team", icon: UserCog, roles: ["ADMIN", "OWNER"] },
       { href: "/clients", label: "Clients", icon: Building2, roles: ["OWNER"] },
       { href: "/settings", label: "Settings", icon: Settings },
     ],

@@ -61,6 +61,9 @@ model Workspace {
   slug      String   @unique
   /// Deactivating keeps the data and stops everyone in it signing in.
   isActive  Boolean  @default(true)
+  /// How the client came to exist: "SIGNUP" (Create account), "OWNER" (added
+  /// from the Clients page) or "SYSTEM" (the default workspace).
+  createdVia String  @default("OWNER")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

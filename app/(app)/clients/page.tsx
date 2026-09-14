@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import { PageHeader } from "@/components/ui";
 import { ClientManager } from "@/components/admin/ClientManager";
+import { ClientActivity } from "@/components/admin/ClientActivity";
+import { SignupRequests } from "@/components/admin/SignupRequests";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +23,12 @@ export default async function ClientsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Clients"
-        description="Each client works in their own space. Candidates, uploads, Drive folders and exports never cross between them."
+        description="Every client account, how it joined, and the CVs each has fetched. Click a client for its day-by-day history."
       />
+      {/* Waiting requests first: they are the only thing here that needs a decision. */}
+      <SignupRequests />
       <ClientManager />
+      <ClientActivity />
     </div>
   );
 }
