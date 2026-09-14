@@ -11,6 +11,32 @@ import { getFolderPath } from "@/services/google-drive/files";
 export const dynamic = "force-dynamic";
 
 /** GET /api/google-drive/callback?code=&state= – OAuth redirect target. */
+/**
+ * Turn Google's terse OAuth error code into something actionable.
+ *
+ * `access_denied` is the one worth spelling out: it means either that the
+ * person pressed Cancel, or — far more often during setup — that the OAuth
+ * consent screen is still in Testing and the Google account is not on its test
+ * user list. Those need opposite responses, and "Google returned: access_denied"
+ * points at neither.
+ */
+function describeOAuthError(code: string): string {
+  switch (code) {
+    case "access_denied":
+      return (
+        "Google refused the connection. Either permission was declined, or the OAuth consent screen is still in " +
+        "Testing and this Google account is not listed under Test users. Add the account in Google Cloud " +
+        "(Google Auth Platform → Audience → Test users), or publish the app, then try again."
+      );
+    case "admin_policy_enforced":
+      return "A Google Workspace policy blocks this app. A Workspace administrator has to allow it before Drive can be connected.";
+    case "org_internal":
+      return "This OAuth client only accepts accounts inside its own organisation. Sign in with an account from that organisation, or set the consent screen audience to External.";
+    default:
+      return `Google refused the connection (${code}). Check the OAuth client and consent screen in Google Cloud, then try again.`;
+  }
+}
+
 export async function GET(req: Request) {
   const appUrl = env().APP_URL.replace(/\/+$/, "");
   const url = new URL(req.url);
@@ -24,7 +50,7 @@ export async function GET(req: Request) {
     return NextResponse.redirect(u);
   };
 
-  if (error) return back({ error: `Google returned: ${error}` });
+  if (error) return back({ error: describeOAuthError(error) });
   const session = await getSession();
   if (!session) return NextResponse.redirect(`${appUrl}/login?next=/google-drive`);
   if (!code || !state || !(await verifyOAuthState(state, session.id))) return back({ error: "Invalid OAuth state. Please try connecting again." });

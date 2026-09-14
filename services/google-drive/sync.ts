@@ -77,7 +77,19 @@ export async function syncConnection(connectionId: string, opts: { full?: boolea
     return result;
   } catch (err) {
     const msg = errorMessage(err);
-    await prisma.googleDriveConnection.update({ where: { id: connectionId }, data: { lastSyncError: msg.slice(0, 500) } });
+    // invalid_grant means the refresh token is no longer usable: access was
+    // revoked, the password changed, or — while the consent screen is in
+    // Testing — Google expired it after seven days. None of those recover on
+    // their own, so say "reconnect" rather than repeating the raw error.
+    const needsReauth = /invalid_grant|invalid_rapt|token has been (expired|revoked)/i.test(msg);
+    await prisma.googleDriveConnection.update({
+      where: { id: connectionId },
+      data: {
+        lastSyncError: needsReauth
+          ? "Google access has expired or been revoked. Click Disconnect, then Connect Google Drive again to re-authorise."
+          : msg.slice(0, 500),
+      },
+    });
     // Invalid page token → force a full sync next time.
     if (/pageToken|page token/i.test(msg)) {
       await prisma.googleDriveConnection.update({ where: { id: connectionId }, data: { startPageToken: null } });
