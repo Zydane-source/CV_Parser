@@ -24,25 +24,42 @@ const str = (def = "") =>
     .optional()
     .transform((v) => (v === undefined ? def : v));
 
+/**
+ * Like `str`, but surrounding whitespace is removed.
+ *
+ * For credentials and URLs this is always what was meant: none of them can
+ * legitimately begin or end with a space, and a value pasted into a dashboard
+ * field very easily carries a trailing newline. A stray character in an OAuth
+ * client id does not produce a helpful message — Google answers the authorize
+ * request with a bare "invalid_request" — so trimming here removes a whole class
+ * of confusing failure. Passwords are deliberately excluded: a space could be
+ * part of one, and silently trimming it would break a valid login.
+ */
+const trimmed = (def = "") =>
+  z
+    .string()
+    .optional()
+    .transform((v) => (v === undefined ? def : v.trim()));
+
 const envSchema = z.object({
   NODE_ENV: str("development"),
-  APP_URL: str("http://localhost:3000"),
+  APP_URL: trimmed("http://localhost:3000"),
   AUTH_SECRET: str(""),
   TOKEN_ENCRYPTION_KEY: str(""),
   ADMIN_EMAIL: str("admin@example.com"),
   ADMIN_PASSWORD: str(""),
   ADMIN_NAME: str("Admin"),
 
-  DATABASE_URL: str(""),
-  REDIS_URL: str("redis://localhost:6379"),
+  DATABASE_URL: trimmed(""),
+  REDIS_URL: trimmed("redis://localhost:6379"),
   WORKER_CONCURRENCY: num(3),
   LLM_RATE_LIMIT_PER_MINUTE: num(60),
   MAX_RETRIES: num(3),
   RETRY_BACKOFF_MS: num(5000),
 
-  GOOGLE_CLIENT_ID: str(""),
-  GOOGLE_CLIENT_SECRET: str(""),
-  GOOGLE_REDIRECT_URI: str(""),
+  GOOGLE_CLIENT_ID: trimmed(""),
+  GOOGLE_CLIENT_SECRET: trimmed(""),
+  GOOGLE_REDIRECT_URI: trimmed(""),
   GOOGLE_DRIVE_FOLDER_ID: str(""),
   GOOGLE_SHEETS_SPREADSHEET_ID: str(""),
   GOOGLE_DRIVE_SYNC_INTERVAL_MINUTES: num(5),
