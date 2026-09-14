@@ -5,14 +5,24 @@ import { prisma } from "@/lib/db";
 import { AppError } from "@/lib/errors";
 import { getUserConnection } from "@/services/google-drive/oauth";
 import { getFolderPath } from "@/services/google-drive/files";
-import { addDriveSyncJob } from "@/services/processing/queue";
+import { triggerDriveSync } from "@/services/google-drive/trigger";
 import { stopWatch } from "@/services/google-drive/watch";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+// Selecting a folder also scans it, which is network-bound.
+export const maxDuration = 60;
 
 const schema = z.object({ folderId: z.string().min(1).max(200) });
 
-/** PUT /api/google-drive/folder { folderId } – select the folder to watch; triggers a full sync. */
+/**
+ * PUT /api/google-drive/folder { folderId } — choose the folder to watch.
+ *
+ * Saving the folder is the user's action; scanning it is a follow-up. The scan
+ * therefore cannot fail the request: previously it enqueued into a queue that
+ * nothing reads on a serverless deployment, so the folder saved correctly and
+ * the response was still a 500.
+ */
 export const PUT = handler(async (req: Request) => {
   const user = await requireUser();
   const { folderId } = await parseJson(req, schema);
@@ -25,6 +35,19 @@ export const PUT = handler(async (req: Request) => {
     where: { id: conn.id },
     data: { folderId, folderName: info.name, folderPath: info.path, startPageToken: null, lastSyncError: null },
   });
-  await addDriveSyncJob("folder-changed", { connectionId: conn.id, reason: "folder-changed" }, { jobId: `folder-${conn.id}-${Date.now()}` });
-  return ok({ folderId: updated.folderId, folderName: updated.folderName, folderPath: updated.folderPath });
+
+  // A new folder has no Changes cursor, so this is necessarily a full scan.
+  const sync = await triggerDriveSync(conn.id, "folder-changed", { full: true });
+
+  return ok({
+    folderId: updated.folderId,
+    folderName: updated.folderName,
+    folderPath: updated.folderPath,
+    sync:
+      sync.status === "ran"
+        ? { status: "ran", discovered: sync.result.discovered, enqueued: sync.result.enqueued }
+        : sync.status === "queued"
+          ? { status: "queued" }
+          : { status: "failed", error: sync.error },
+  });
 });

@@ -3,33 +3,25 @@ import { requireUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { randomToken } from "@/lib/crypto";
 import { getUserConnection } from "@/services/google-drive/oauth";
-import { addDriveSyncJob } from "@/services/processing/queue";
-import { syncConnection } from "@/services/google-drive/sync";
-import { effectiveProcessingMode } from "@/lib/processing-mode";
+import { triggerDriveSync } from "@/services/google-drive/trigger";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 // Listing a folder and registering each file is network-bound. 60s is the
-// Vercel Hobby ceiling; the sync itself is bounded by the Drive page size.
+// Vercel Hobby ceiling; the scan itself is bounded by the Drive page size.
 export const maxDuration = 60;
 
 /**
  * POST /api/google-drive/sync — "Sync Now".
  *
- * Two paths, because the platform decides which one is possible:
+ * Where a worker exists this enqueues and returns a batch id to watch. Where one
+ * cannot exist — any serverless deployment — the scan runs here and returns real
+ * counts, so the UI can report what happened rather than claiming "queued" for
+ * work nothing would ever pick up.
  *
- *   queue mode   a worker process consumes the drive-sync queue, so this
- *                enqueues and returns a batch id for the UI to watch.
- *
- *   inline mode  there is no worker and no Redis — which is exactly what a
- *                serverless deployment runs — so the sync executes here and
- *                returns the real counts. Enqueuing in that mode threw
- *                "No queue is configured", which is why Sync Now did nothing in
- *                production.
- *
- * Either way the discovered files are registered as CVFile rows and handed to
- * the existing pipeline through `enqueueCVFile`; nothing about extraction
- * changes.
+ * A manual sync always re-scans the folder rather than trusting the Changes
+ * cursor: the reason someone presses this button is usually that they believe
+ * the cursor missed something.
  */
 export const POST = handler(async () => {
   const user = await requireUser();
@@ -38,28 +30,22 @@ export const POST = handler(async () => {
   if (!conn.folderId) throw new AppError("Select a Drive folder first", { status: 400, code: "NO_FOLDER" });
 
   const batchId = `drive_${randomToken(9)}`;
+  const sync = await triggerDriveSync(conn.id, "manual", { full: true, batchId });
 
-  if (effectiveProcessingMode() === "inline") {
-    // `full: true` — a manual "Sync Now" should re-scan the folder rather than
-    // trust the Changes cursor, because the reason someone presses it is
-    // usually that they believe the cursor missed something.
-    const result = await syncConnection(conn.id, { full: true, batchId });
-    return ok({
-      queued: false,
-      ran: true,
-      batchId,
-      mode: result.mode,
-      discovered: result.discovered,
-      enqueued: result.enqueued,
-      reprocessed: result.reprocessed,
-      unchanged: result.unchanged,
-    });
+  if (sync.status === "failed") {
+    throw new AppError(`Sync could not be started: ${sync.error}`, { status: 502, code: "DRIVE_SYNC_FAILED" });
   }
 
-  const queueJobId = await addDriveSyncJob(
-    "manual",
-    { connectionId: conn.id, reason: "manual", batchId },
-    { jobId: `manual-${conn.id}-${Date.now()}` },
-  );
-  return ok({ queued: true, ran: false, queueJobId, batchId });
+  return sync.status === "ran"
+    ? ok({
+        ran: true,
+        queued: false,
+        batchId,
+        mode: sync.result.mode,
+        discovered: sync.result.discovered,
+        enqueued: sync.result.enqueued,
+        reprocessed: sync.result.reprocessed,
+        unchanged: sync.result.unchanged,
+      })
+    : ok({ ran: false, queued: true, batchId, queueJobId: sync.jobId });
 });
