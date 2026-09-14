@@ -9,6 +9,7 @@ import { resetEnvCache } from "@/lib/config";
 import { setOCRProvider } from "@/services/ocr";
 import { TesseractOCRProvider } from "@/services/ocr/tesseract-provider";
 import { enqueueCVFile, reprocessCVFile, retryFailed } from "@/services/processing/enqueue";
+import { makeWorkspace, dropWorkspace } from "../helpers/workspace";
 import { CV_QUEUE_NAME, getCVQueue, type CVJobData } from "@/services/processing/queue";
 import { processCVJob } from "@/services/processing/processor";
 import { updateCandidate } from "@/backend/candidates";
@@ -34,18 +35,23 @@ const d = infra ? describe : describe.skip;
 
 const TAG = `e2e_${Date.now()}`;
 const batchId = `up_${TAG}`;
+
+// The whole flow runs as one client, which is also what makes the duplicate and
+// retry assertions below meaningful: they are scoped operations now.
+const ws = infra ? await makeWorkspace("e2e") : { id: "", scope: {} };
 const ocr = new TesseractOCRProvider(process.env.OCR_CACHE_PATH || "./.tesseract-cache");
 
 async function uploadLike(file: string, name = file) {
-  // Mirrors app/api/uploads/route.ts without HTTP.
+  // Mirrors app/api/uploads/route.ts without HTTP — including its duplicate
+  // check, which is scoped to the uploading client.
   const buffer = await fixture(file);
   const hash = sha256Hex(buffer);
-  const existing = await prisma.cVFile.findFirst({ where: { fileHash: hash } });
+  const existing = await prisma.cVFile.findFirst({ where: { workspaceId: ws.id, fileHash: hash } });
   if (existing) return { duplicate: true, cvFile: existing };
   const key = buildObjectKey(name);
   await getStorage().put(key, buffer, mimeFor(file));
   const cvFile = await prisma.cVFile.create({
-    data: { sourceType: "MANUAL", fileName: `${TAG}_${name}`, mimeType: mimeFor(file), fileHash: hash, fileSize: buffer.length, storagePath: key, status: "PENDING" },
+    data: { workspaceId: ws.id, sourceType: "MANUAL", fileName: `${TAG}_${name}`, mimeType: mimeFor(file), fileHash: hash, fileSize: buffer.length, storagePath: key, status: "PENDING" },
   });
   const job = await enqueueCVFile(cvFile, { batchId });
   return { duplicate: false, cvFile, job };
@@ -99,6 +105,7 @@ d("end-to-end processing flow", () => {
     setLLMProvider(null);
     setOCRProvider(null);
     await prisma.cVFile.deleteMany({ where: { fileName: { startsWith: TAG } } });
+    await dropWorkspace(ws.id);
     // Remove the isolated test queue so repeated runs leave no Redis residue.
     await getCVQueue().obliterate({ force: true }).catch(() => undefined);
     await getCVQueue().close().catch(() => undefined);
@@ -111,8 +118,8 @@ d("end-to-end processing flow", () => {
     for (const f of files) uploaded.push(await uploadLike(f));
     expect(uploaded.every((u) => !u.duplicate)).toBe(true);
 
-    await waitFor(async () => (await batchProgress(batchId)).done >= files.length);
-    const progress = await batchProgress(batchId);
+    await waitFor(async () => (await batchProgress(ws.scope, batchId)).done >= files.length);
+    const progress = await batchProgress(ws.scope, batchId);
     expect(progress.total).toBe(files.length);
     expect(progress.failed).toBe(0);
 
@@ -153,7 +160,7 @@ d("end-to-end processing flow", () => {
 
   it("reprocess preserves manual corrections", async () => {
     const cv = await prisma.cVFile.findFirstOrThrow({ where: { fileName: `${TAG}_traditional.pdf` } });
-    await updateCandidate(cv.id, { jobRoleAppliedFor: "Senior Java Developer" });
+    await updateCandidate(ws.scope, cv.id, { jobRoleAppliedFor: "Senior Java Developer" });
     const job = await reprocessCVFile(cv.id, batchId);
     await waitFor(async () => (await prisma.processingJob.findUniqueOrThrow({ where: { id: job.id } })).completedAt !== null);
     const c = await prisma.candidate.findUniqueOrThrow({ where: { cvFileId: cv.id } });
@@ -180,7 +187,7 @@ d("end-to-end processing flow", () => {
 
     // Fix the "LLM" and retry all failed.
     setLLMProvider(new HeuristicLLM());
-    const n = await retryFailed(batchId);
+    const n = await retryFailed(ws.scope, batchId);
     expect(n).toBeGreaterThanOrEqual(1);
     // modern.pdf only has a headline role (inferred, confidence 0.7) → NEEDS_REVIEW is the correct terminal state.
     await waitFor(async () => ["PROCESSED", "NEEDS_REVIEW"].includes((await prisma.cVFile.findUniqueOrThrow({ where: { id: cvId } })).status));

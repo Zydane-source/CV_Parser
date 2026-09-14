@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { sha256Hex } from "@/lib/crypto";
 import { getStorage, buildObjectKey } from "@/services/storage";
 import { deleteCVs, getIgnoredDriveFileIds, unignoreDriveFiles } from "@/backend/delete";
+import { makeWorkspace, dropWorkspace } from "../helpers/workspace";
 
 /**
  * Deletion touches three stores: the database (with cascades), object storage
@@ -19,12 +20,17 @@ const d = dbUp ? describe : describe.skip;
 
 const TAG = `deltest_${Date.now()}`;
 
+// One throwaway client for the whole file. Deleting is a per-client operation
+// now, so every call below needs a workspace to act as.
+const ws = dbUp ? await makeWorkspace("delete") : { id: "", scope: {} };
+
 async function makeManualCv(name: string) {
   const bytes = Buffer.from(`${TAG}-${name}-${Math.random()}`);
   const key = buildObjectKey(`${name}.pdf`);
   await getStorage().put(key, bytes, "application/pdf");
   const cv = await prisma.cVFile.create({
     data: {
+      workspaceId: ws.id,
       sourceType: "MANUAL",
       fileName: `${TAG}_${name}.pdf`,
       mimeType: "application/pdf",
@@ -46,7 +52,8 @@ d("deleteCVs", () => {
 
   afterAll(async () => {
     await prisma.cVFile.deleteMany({ where: { fileName: { startsWith: TAG } } });
-    if (createdDriveIds.length) await unignoreDriveFiles(createdDriveIds);
+    if (createdDriveIds.length) await unignoreDriveFiles(ws.id, createdDriveIds);
+    await dropWorkspace(ws.id);
     await prisma.$disconnect();
   });
 
@@ -54,7 +61,7 @@ d("deleteCVs", () => {
     const { cv, key } = await makeManualCv("one");
     expect(await getStorage().exists(key)).toBe(true);
 
-    const res = await deleteCVs({ ids: [cv.id], ignoreFutureSync: true });
+    const res = await deleteCVs(ws.scope, { ids: [cv.id], ignoreFutureSync: true });
     expect(res).toMatchObject({ requested: 1, deleted: 1, storageObjectsRemoved: 1, notFound: [] });
 
     expect(await prisma.cVFile.count({ where: { id: cv.id } })).toBe(0);
@@ -66,7 +73,7 @@ d("deleteCVs", () => {
   it("deletes many at once and reports ids that do not exist", async () => {
     const a = await makeManualCv("bulk-a");
     const b = await makeManualCv("bulk-b");
-    const res = await deleteCVs({ ids: [a.cv.id, b.cv.id, "does-not-exist"], ignoreFutureSync: true });
+    const res = await deleteCVs(ws.scope, { ids: [a.cv.id, b.cv.id, "does-not-exist"], ignoreFutureSync: true });
     expect(res.deleted).toBe(2);
     expect(res.notFound).toEqual(["does-not-exist"]);
     expect(await getStorage().exists(a.key)).toBe(false);
@@ -77,7 +84,7 @@ d("deleteCVs", () => {
     const { cv } = await makeManualCv("rehash");
     const hash = cv.fileHash;
     expect(await prisma.cVFile.count({ where: { fileHash: hash } })).toBe(1);
-    await deleteCVs({ ids: [cv.id], ignoreFutureSync: true });
+    await deleteCVs(ws.scope, { ids: [cv.id], ignoreFutureSync: true });
     // Duplicate detection looks up the hash; with no row left, a re-upload is new.
     expect(await prisma.cVFile.count({ where: { fileHash: hash } })).toBe(0);
   });
@@ -87,6 +94,7 @@ d("deleteCVs", () => {
     createdDriveIds.push(driveFileId);
     const cv = await prisma.cVFile.create({
       data: {
+        workspaceId: ws.id,
         sourceType: "GOOGLE_DRIVE",
         sourceFileId: driveFileId,
         fileName: `${TAG}_from-drive.pdf`,
@@ -98,15 +106,16 @@ d("deleteCVs", () => {
       },
     });
 
-    const res = await deleteCVs({ ids: [cv.id], ignoreFutureSync: true });
+    const res = await deleteCVs(ws.scope, { ids: [cv.id], ignoreFutureSync: true });
     expect(res).toMatchObject({ deleted: 1, driveUnlinked: 1, driveIgnored: 1, storageObjectsRemoved: 0 });
-    expect(await getIgnoredDriveFileIds()).toContain(driveFileId);
+    expect(await getIgnoredDriveFileIds(ws.id)).toContain(driveFileId);
   });
 
   it("can leave a Drive file eligible for re-import", async () => {
     const driveFileId = `${TAG}_drivefile2`;
     const cv = await prisma.cVFile.create({
       data: {
+        workspaceId: ws.id,
         sourceType: "GOOGLE_DRIVE",
         sourceFileId: driveFileId,
         fileName: `${TAG}_from-drive-2.pdf`,
@@ -116,13 +125,13 @@ d("deleteCVs", () => {
         status: "PROCESSED",
       },
     });
-    const res = await deleteCVs({ ids: [cv.id], ignoreFutureSync: false });
+    const res = await deleteCVs(ws.scope, { ids: [cv.id], ignoreFutureSync: false });
     expect(res).toMatchObject({ deleted: 1, driveUnlinked: 1, driveIgnored: 0 });
-    expect(await getIgnoredDriveFileIds()).not.toContain(driveFileId);
+    expect(await getIgnoredDriveFileIds(ws.id)).not.toContain(driveFileId);
   });
 
   it("is a no-op for an empty match rather than an error", async () => {
-    const res = await deleteCVs({ ids: ["nope-1", "nope-2"], ignoreFutureSync: true });
+    const res = await deleteCVs(ws.scope, { ids: ["nope-1", "nope-2"], ignoreFutureSync: true });
     expect(res).toMatchObject({ requested: 2, deleted: 0 });
     expect(res.notFound).toEqual(["nope-1", "nope-2"]);
   });

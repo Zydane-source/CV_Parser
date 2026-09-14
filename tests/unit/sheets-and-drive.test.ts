@@ -80,7 +80,7 @@ describe("candidate search filters", () => {
   it("builds database-backed search across name, phone, role and file name", () => {
     const f = candidateFiltersSchema.parse({ q: "98765 43210", source: "MANUAL", status: "NEEDS_REVIEW", role: "Java", from: "2026-09-01", to: "2026-09-10", page: "2", pageSize: "10" });
     expect(f.page).toBe(2);
-    const where = buildCandidateWhere(f);
+    const where = buildCandidateWhere({ workspaceId: "ws1" }, f);
     expect(where.sourceType).toBe("MANUAL");
     expect(where.status).toBe("NEEDS_REVIEW");
     expect(where.OR).toHaveLength(4);

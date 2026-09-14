@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Activity, Cloud, LayoutDashboard, LogOut, Settings, Upload, Users, X } from "lucide-react";
+import { Activity, Building2, Cloud, LayoutDashboard, LogOut, Settings, Upload, UserCog, Users, X } from "lucide-react";
 import { api } from "@/lib/client/api";
 import { Avatar, cx } from "@/components/ui";
 
@@ -15,7 +15,9 @@ import { Avatar, cx } from "@/components/ui";
  * occasional. Six undifferentiated links make every destination look equally
  * likely, which is exactly what a recruiter does not need at nine in the morning.
  */
-const GROUPS: Array<{ label: string | null; items: Array<{ href: string; label: string; icon: typeof Users }> }> = [
+type NavItem = { href: string; label: string; icon: typeof Users; roles?: string[] };
+
+const GROUPS: Array<{ label: string | null; items: NavItem[] }> = [
   {
     label: null,
     items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
@@ -32,10 +34,19 @@ const GROUPS: Array<{ label: string | null; items: Array<{ href: string; label: 
     label: "Configure",
     items: [
       { href: "/google-drive", label: "Google Drive", icon: Cloud },
+      // Managing people is an administrator's job, and running the platform is
+      // the owner's; a recruiter shown either link would only meet a redirect.
+      // Hiding them is a courtesy — the pages and the API enforce the rule.
+      { href: "/team", label: "Team", icon: UserCog, roles: ["ADMIN"] },
+      { href: "/clients", label: "Clients", icon: Building2, roles: ["OWNER"] },
       { href: "/settings", label: "Settings", icon: Settings },
     ],
   },
 ];
+
+function visibleTo(role: string, items: NavItem[]): NavItem[] {
+  return items.filter((i) => !i.roles || i.roles.includes(role));
+}
 
 export function isActivePath(pathname: string, href: string): boolean {
   return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
@@ -46,7 +57,7 @@ export function Sidebar({
   open,
   onClose,
 }: {
-  user: { name: string; email: string; role: string };
+  user: { name: string; email: string; role: string; workspaceName?: string | null };
   open: boolean;
   onClose: () => void;
 }) {
@@ -107,7 +118,14 @@ export function Sidebar({
             <Image src="/logo-mark.png" alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0" priority />
             <span className="min-w-0">
               <span className="block truncate text-[0.8125rem] font-semibold text-ink-900">CV Parser</span>
-              <span className="block truncate text-[0.6875rem] leading-tight text-ink-500">Recruitment intake</span>
+              {/* Which client you are working in, where the product tagline used
+                  to sit. With several clients on one platform, "whose candidates
+                  am I looking at" is the more useful thing to always have on
+                  screen — and it is the line that makes a wrong-account sign-in
+                  obvious before anyone uploads to it. */}
+              <span className="block truncate text-[0.6875rem] leading-tight text-ink-500">
+                {user.workspaceName ?? (user.role === "OWNER" ? "All clients" : "Recruitment intake")}
+              </span>
             </span>
           </Link>
           <button type="button" onClick={onClose} className="btn-tertiary btn-sm ml-auto lg:hidden" aria-label="Close navigation">
@@ -122,7 +140,7 @@ export function Sidebar({
                 <div className="mb-1.5 px-3 text-[0.6875rem] font-semibold uppercase tracking-[0.06em] text-ink-400">{group.label}</div>
               )}
               <ul className="space-y-0.5">
-                {group.items.map(({ href, label, icon: Icon }) => {
+                {visibleTo(user.role, group.items).map(({ href, label, icon: Icon }) => {
                   const active = isActivePath(pathname, href);
                   return (
                     <li key={href}>

@@ -60,6 +60,14 @@ export class NotFoundError extends AppError {
   }
 }
 
+/** The request was valid but clashes with something that already exists. */
+export class ConflictError extends AppError {
+  constructor(message = "Already exists") {
+    super(message, { status: 409, code: "CONFLICT" });
+    this.name = "ConflictError";
+  }
+}
+
 export class RateLimitError extends AppError {
   constructor(message = "Too many requests") {
     super(message, { status: 429, code: "RATE_LIMITED", transient: true });

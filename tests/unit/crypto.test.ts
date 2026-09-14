@@ -30,7 +30,7 @@ describe("crypto", () => {
 
 describe("session tokens", () => {
   it("signs and verifies a session", async () => {
-    const user = { id: "u1", email: "a@b.c", name: "A", role: "ADMIN" as const };
+    const user = { id: "u1", email: "a@b.c", name: "A", role: "ADMIN" as const, workspaceId: "ws1", workspaceName: "Apex" };
     const token = await createSessionToken(user);
     expect(await verifySessionToken(token)).toEqual(user);
     expect(await verifySessionToken(token + "x")).toBeNull();

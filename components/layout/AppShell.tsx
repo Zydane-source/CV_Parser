@@ -23,6 +23,8 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/candidates/, "Candidates"],
   [/^\/jobs/, "Processing"],
   [/^\/google-drive/, "Google Drive"],
+  [/^\/team/, "Team"],
+  [/^\/clients/, "Clients"],
   [/^\/settings/, "Settings"],
 ];
 
@@ -34,7 +36,7 @@ export function AppShell({
   user,
   children,
 }: {
-  user: { name: string; email: string; role: string };
+  user: { name: string; email: string; role: string; workspaceName?: string | null };
   children: React.ReactNode;
 }) {
   const [navOpen, setNavOpen] = useState(false);
