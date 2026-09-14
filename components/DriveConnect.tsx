@@ -138,6 +138,18 @@ export function DriveConnect({ flash }: { flash?: { connected?: boolean; error?:
           <button className="btn-primary mt-5" onClick={connect} disabled={!data.configured || busy === "connect"}>
             <Cloud size={15} /> {busy === "connect" ? "Redirecting…" : "Connect Google Drive"}
           </button>
+
+          {/* The redirect URI used to be shown only while credentials were
+              missing — so it disappeared exactly when it was needed: after the
+              client exists, when a mismatch is the likeliest reason Google
+              rejects the request. Google compares it character for character. */}
+          {data.configured && (
+            <p className="mt-5 max-w-md text-xs text-ink-500">
+              Google must have this exact redirect URI registered on the OAuth client:
+              <br />
+              <code className="mt-1 inline-block break-all rounded bg-ink-100 px-1.5 py-0.5 text-ink-700">{data.redirectUri}</code>
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
