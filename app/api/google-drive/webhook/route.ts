@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { resolveWebhookConnection } from "@/services/google-drive/watch";
 import { addDriveSyncJob } from "@/services/processing/queue";
+import { syncConnection } from "@/services/google-drive/sync";
+import { effectiveProcessingMode } from "@/lib/processing-mode";
 import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
@@ -22,13 +24,23 @@ export async function POST(req: Request) {
   if (state === "sync") return new NextResponse(null, { status: 200 }); // initial handshake
 
   try {
-    await addDriveSyncJob(
-      "webhook",
-      { connectionId: conn.id, reason: "webhook" },
-      { jobId: `webhook-${conn.id}-${Math.floor(Date.now() / 5000)}`, delay: 2000 },
-    );
+    if (effectiveProcessingMode() === "inline") {
+      // No worker exists to consume a queued job, so the push is honoured here.
+      // Google retries on a non-2xx, so a failure must still return 200 once it
+      // has been recorded against the connection — otherwise a broken folder
+      // turns into a retry storm.
+      await syncConnection(conn.id).catch((err) => {
+        logger.warn({ connectionId: conn.id, err: (err as Error).message }, "Webhook-triggered sync failed");
+      });
+    } else {
+      await addDriveSyncJob(
+        "webhook",
+        { connectionId: conn.id, reason: "webhook" },
+        { jobId: `webhook-${conn.id}-${Math.floor(Date.now() / 5000)}`, delay: 2000 },
+      );
+    }
   } catch (err) {
-    logger.error({ err: (err as Error).message }, "Failed to queue webhook sync");
+    logger.error({ err: (err as Error).message }, "Failed to handle webhook sync");
     return new NextResponse(null, { status: 500 });
   }
   return new NextResponse(null, { status: 200 });

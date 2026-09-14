@@ -60,9 +60,23 @@ export function DriveConnect({ flash }: { flash?: { connected?: boolean; error?:
     setBusy("sync");
     setError(null);
     try {
-      const r = await api<{ batchId: string }>("/api/google-drive/sync", { method: "POST" });
+      const r = await api<{
+        batchId: string;
+        ran?: boolean;
+        discovered?: number;
+        enqueued?: number;
+        unchanged?: number;
+      }>("/api/google-drive/sync", { method: "POST" });
       setLastBatch(r.batchId);
-      setNotice("Sync queued. New CVs will appear under Processing shortly.");
+      // Say what happened rather than a fixed sentence: when the sync ran here
+      // the real counts are already known, and "queued" would be untrue.
+      setNotice(
+        r.ran
+          ? r.enqueued
+            ? `Found ${r.discovered} file(s); ${r.enqueued} new CV(s) queued for parsing.`
+            : `Found ${r.discovered} file(s) — nothing new to parse.`
+          : "Sync queued. New CVs will appear under Processing shortly.",
+      );
       setTimeout(() => mutate(), 3000);
     } catch (err) {
       setError((err as Error).message);
