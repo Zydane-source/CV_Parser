@@ -3,16 +3,17 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
-import { Cloud, CheckCircle2, FolderOpen, RefreshCw, Unplug, ChevronRight, Search, AlertTriangle, Radio } from "lucide-react";
+import { Cloud, CheckCircle2, FolderOpen, RefreshCw, Unplug, ChevronRight, Search, AlertTriangle, Radio, RotateCcw } from "lucide-react";
 import { api, fetcher } from "@/lib/client/api";
 import { formatDate } from "@/lib/client/format";
-import { Skeleton } from "@/components/ui";
+import { Skeleton, Alert } from "@/components/ui";
 
 interface Status {
   configured: boolean;
   redirectUri: string;
   webhooksEnabled: boolean;
   syncIntervalMinutes: number;
+  ignoredCount: number;
   connection: {
     id: string;
     email: string | null;
@@ -84,6 +85,20 @@ export function DriveConnect({ flash }: { flash?: { connected?: boolean; error?:
       setBusy(null);
     }
   };
+  const allowReimport = async () => {
+    setBusy("unignore");
+    setError(null);
+    try {
+      const r = await api<{ cleared: number }>("/api/google-drive/ignored", { method: "DELETE" });
+      setNotice(`${r.cleared} file(s) will be picked up again. Press Sync Now to re-import them.`);
+      await mutate();
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const disconnect = async () => {
     if (!confirm("Disconnect Google Drive? Existing parsed candidates are kept; automatic sync stops.")) return;
     setBusy("disconnect");
@@ -112,6 +127,21 @@ export function DriveConnect({ flash }: { flash?: { connected?: boolean; error?:
     <div className="space-y-5">
       {notice && <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm text-emerald-800">{notice}</div>}
       {error && <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">{error}</div>}
+
+      {data.connection && data.ignoredCount > 0 && (
+        <Alert
+          tone="info"
+          title={`${data.ignoredCount} file${data.ignoredCount === 1 ? "" : "s"} in Drive ${data.ignoredCount === 1 ? "is" : "are"} being skipped`}
+          action={
+            <button className="btn-secondary btn-sm" onClick={allowReimport} disabled={busy === "unignore"}>
+              <RotateCcw size={13} /> {busy === "unignore" ? "Clearing…" : "Allow re-import"}
+            </button>
+          }
+        >
+          CVs deleted here are remembered so a sync does not immediately bring them back. That is why a folder with files
+          in it can report nothing new to parse. Clear the list to import them again.
+        </Alert>
+      )}
 
       {!data.configured && (
         <div className="card border-amber-200 bg-amber-50 p-5">

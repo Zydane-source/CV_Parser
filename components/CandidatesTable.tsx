@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import useSWR from "swr";
-import { Search, RefreshCw, ExternalLink, Pencil, Eye, ChevronLeft, ChevronRight, Trash2, Plus, X, Users } from "lucide-react";
-import { EmptyState, Skeleton, TableSkeleton } from "@/components/ui";
+import { Search, RefreshCw, ExternalLink, Pencil, Eye, ChevronLeft, ChevronRight, Trash2, Plus, X, Users, Copy } from "lucide-react";
+import { EmptyState, Skeleton, TableSkeleton, Badge } from "@/components/ui";
 import { api, fetcher } from "@/lib/client/api";
 import { formatDate, SOURCE_LABEL } from "@/lib/client/format";
 import { StatusBadge } from "./StatusBadge";
@@ -41,6 +41,17 @@ interface ListResponse {
 }
 
 const STATUSES = ["PENDING", "PROCESSING", "PROCESSED", "NEEDS_REVIEW", "FAILED", "SKIPPED"];
+
+/**
+ * A CV skipped because the same content already exists.
+ *
+ * The processor records this as SKIPPED with a message naming the original, so
+ * the row is already in the list — it just looked like any other skip. These are
+ * still processable: reprocessing sets a flag the duplicate check honours.
+ */
+function isDuplicate(row: { status: string; statusMessage: string | null }): boolean {
+  return row.status === "SKIPPED" && /duplicate/i.test(row.statusMessage ?? "");
+}
 
 export function CandidatesTable({ threshold, initialStatus, initialQ }: { threshold: number; initialStatus?: string; initialQ?: string }) {
   // Seeded from the URL so the header search actually lands on filtered results.
@@ -308,7 +319,20 @@ export function CandidatesTable({ threshold, initialStatus, initialQ }: { thresh
                   <td>{row.candidate ? <ConfidenceBar value={row.candidate.overallConfidence} threshold={threshold} /> : <span className="text-gray-400">—</span>}</td>
                   <td>
                     <StatusBadge status={row.status} />
-                    {row.candidate?.isManuallyCorrected && <div className="mt-0.5 text-[10px] text-gray-500">edited</div>}
+                    {isDuplicate(row) && (
+                      <div className="mt-1">
+                        <Badge tone="warning" icon={<Copy size={11} />}>
+                          Already uploaded
+                        </Badge>
+                        {/* The original is named in statusMessage; showing it is
+                            the difference between "skipped" and "skipped because
+                            you already have this person". */}
+                        <div className="mt-0.5 max-w-[16rem] truncate text-[10px] text-ink-500" title={row.statusMessage ?? undefined}>
+                          {row.statusMessage}
+                        </div>
+                      </div>
+                    )}
+                    {row.candidate?.isManuallyCorrected && <div className="mt-0.5 text-[10px] text-ink-500">edited</div>}
                   </td>
                   <td className="whitespace-nowrap text-gray-600">{formatDate(row.candidate?.processedAt ?? null)}</td>
                   <td>
@@ -323,7 +347,7 @@ export function CandidatesTable({ threshold, initialStatus, initialQ }: { thresh
                         onClick={() => reprocess(row.id)}
                         disabled={busy === row.id || row.status === "PROCESSING" || row.status === "PENDING"}
                         className="rounded p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-900 disabled:opacity-40"
-                        title="Reprocess"
+                        title={isDuplicate(row) ? "Process anyway (ignores the duplicate check)" : "Reprocess"}
                       >
                         <RefreshCw size={15} className={busy === row.id ? "animate-spin" : ""} />
                       </button>

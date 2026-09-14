@@ -3,18 +3,21 @@ import { requireUser } from "@/lib/auth";
 import { getUserConnection, isGoogleConfigured, redirectUri } from "@/services/google-drive/oauth";
 import { webhooksPossible } from "@/services/google-drive/watch";
 import { getSettings } from "@/lib/settings";
+import { getIgnoredDriveFileIds } from "@/backend/delete";
 
 export const dynamic = "force-dynamic";
 
 /** GET /api/google-drive/status */
 export const GET = handler(async () => {
   const user = await requireUser();
-  const [conn, settings] = await Promise.all([getUserConnection(user.id), getSettings()]);
+  const [conn, settings, ignored] = await Promise.all([getUserConnection(user.id), getSettings(), getIgnoredDriveFileIds()]);
   return ok({
     configured: isGoogleConfigured(),
     redirectUri: redirectUri(),
     webhooksEnabled: webhooksPossible(),
     syncIntervalMinutes: settings.driveSyncIntervalMinutes,
+    // Files a sync will deliberately skip because they were deleted here before.
+    ignoredCount: ignored.length,
     connection: conn
       ? {
           id: conn.id,
