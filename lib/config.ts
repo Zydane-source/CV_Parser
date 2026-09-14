@@ -138,6 +138,19 @@ const envSchema = z.object({
   CONFIDENCE_THRESHOLD: num(0.75),
   MAX_CV_TEXT_CHARS: num(20000),
 
+  /**
+   * Outgoing mail, used for account-creation codes. Gmail works with an App
+   * Password (Google Account → Security → 2-Step Verification → App passwords);
+   * the account password itself is refused by Gmail SMTP.
+   */
+  SMTP_HOST: trimmed("smtp.gmail.com"),
+  SMTP_PORT: num(465),
+  SMTP_USER: trimmed(""),
+  SMTP_PASS: str(""),
+  MAIL_FROM: trimmed(""),
+  /** Where "Create account" verification codes are sent for approval. */
+  SIGNUP_APPROVAL_EMAIL: trimmed("caller.digital26@gmail.com"),
+
   LOG_LEVEL: str("info"),
 });
 

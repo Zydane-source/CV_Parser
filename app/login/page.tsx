@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { api } from "@/lib/client/api";
 import Image from "next/image";
+import Link from "next/link";
 
 /**
  * Sign-in.
@@ -130,9 +131,13 @@ function LoginForm() {
         </button>
       </form>
 
-      <p className="mt-6 text-center text-xs text-ink-400">
-        Accounts are created by an administrator. Contact yours if you need access.
+      <p className="mt-6 text-center text-sm text-ink-500">
+        New to CV Parser?{" "}
+        <Link href="/signup" className="font-medium text-brand-700 hover:underline">
+          Create account
+        </Link>
       </p>
+      <p className="mt-2 text-center text-xs text-ink-400">Joining an existing team? Ask its administrator to add you.</p>
     </div>
   );
 }

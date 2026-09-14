@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import useSWR from "swr";
 import { Building2, Check, ChevronRight, Copy, FileText, Plus, RefreshCw, Users } from "lucide-react";
 import { api, fetcher, ApiError } from "@/lib/client/api";
 import { Alert, Badge, EmptyState, Section, TableSkeleton, cx } from "@/components/ui";
 import { formatDate } from "@/lib/client/format";
-import { UserManager } from "./UserManager";
 
 interface Workspace {
   id: string;
@@ -15,6 +15,8 @@ interface Workspace {
   isActive: boolean;
   createdAt: string;
   _count: { users: number; cvFiles: number };
+  last7Days: number;
+  lastFetchedAt: string | null;
 }
 
 function slugify(name: string): string {
@@ -45,7 +47,6 @@ export function ClientManager() {
   const { data, error, isLoading, mutate } = useSWR<{ workspaces: Workspace[] }>("/api/workspaces", fetcher);
 
   const [creating, setCreating] = useState(false);
-  const [expanded, setExpanded] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [handover, setHandover] = useState<{ client: string; email: string; password: string } | null>(null);
@@ -168,7 +169,7 @@ export function ClientManager() {
             <div className="mt-5 border-t border-[var(--border)] pt-4">
               <h3 className="text-section-title">Their first administrator</h3>
               <p className="mt-0.5 text-meta">
-                This person signs in and adds the rest of their team. You will not see their candidates.
+                This person signs in and adds the rest of their team.
               </p>
               <div className="mt-3 grid gap-4 sm:grid-cols-2">
                 <div>
@@ -224,33 +225,31 @@ export function ClientManager() {
                 <tr>
                   <th>Client</th>
                   <th>People</th>
-                  <th>CVs</th>
+                  <th className="text-right">Total CVs</th>
+                  <th className="text-right">Last 7 days</th>
+                  <th>Last CV fetched</th>
                   <th>Status</th>
-                  <th>Created</th>
                   <th className="text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {workspaces.map((ws) => (
-                  <tr key={ws.id} className={cx(!ws.isActive && "opacity-60")} data-selected={expanded === ws.id}>
+                  <tr key={ws.id} className={cx(!ws.isActive && "opacity-60")}>
                     <td>
-                      <button
-                        type="button"
-                        onClick={() => setExpanded(expanded === ws.id ? null : ws.id)}
-                        className="flex items-center gap-2 text-left font-medium text-ink-900 hover:text-brand-700"
-                        aria-expanded={expanded === ws.id}
-                      >
-                        <ChevronRight size={14} className={cx("text-ink-400 transition-transform", expanded === ws.id && "rotate-90")} />
+                      {/* The client's name opens its activity: CVs fetched by date, and each one's time. */}
+                      <Link href={`/clients/${ws.id}`} className="group flex items-center gap-2 font-medium text-ink-900 hover:text-brand-700">
                         <span className="min-w-0">
-                          <span className="block truncate">{ws.name}</span>
+                          <span className="block truncate group-hover:underline">{ws.name}</span>
                           <span className="numeric block truncate text-xs font-normal text-ink-500">{ws.slug}</span>
                         </span>
-                      </button>
+                        <ChevronRight size={14} className="text-ink-400 group-hover:text-brand-600" />
+                      </Link>
                     </td>
                     <td className="numeric"><span className="inline-flex items-center gap-1.5 text-ink-600"><Users size={13} className="text-ink-400" />{ws._count.users}</span></td>
-                    <td className="numeric"><span className="inline-flex items-center gap-1.5 text-ink-600"><FileText size={13} className="text-ink-400" />{ws._count.cvFiles}</span></td>
+                    <td className="numeric text-right"><span className="inline-flex items-center gap-1.5 font-semibold text-ink-900"><FileText size={13} className="text-ink-400" />{ws._count.cvFiles}</span></td>
+                    <td className="numeric text-right text-ink-700">{ws.last7Days}</td>
+                    <td className="numeric whitespace-nowrap text-ink-500">{ws.lastFetchedAt ? formatDate(ws.lastFetchedAt) : "Never"}</td>
                     <td><Badge tone={ws.isActive ? "success" : "neutral"}>{ws.isActive ? "Active" : "Suspended"}</Badge></td>
-                    <td className="numeric whitespace-nowrap text-ink-500">{formatDate(ws.createdAt)}</td>
                     <td>
                       <div className="flex justify-end">
                         <button type="button" disabled={busy === ws.id} onClick={() => toggleActive(ws)} className={ws.isActive ? "btn-danger btn-sm" : "btn-secondary btn-sm"}>
@@ -265,17 +264,6 @@ export function ClientManager() {
           </div>
         )}
       </Section>
-
-      {/* Expanding a client reveals its people in place, rather than navigating
-          away — the owner is usually comparing clients, not settling into one. */}
-      {expanded && (
-        <div className="border-l-2 border-brand-600 pl-4">
-          <p className="mb-3 text-meta">
-            People in <strong className="text-ink-900">{workspaces.find((w) => w.id === expanded)?.name}</strong>
-          </p>
-          <UserManager workspaceId={expanded} />
-        </div>
-      )}
 
       <p className="text-xs text-ink-500">
         Suspending a client keeps every CV and account and only stops sign-in, so ending an engagement is reversible.

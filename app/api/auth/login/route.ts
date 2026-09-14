@@ -8,8 +8,7 @@ import { rateLimit, clientIp } from "@/lib/rate-limit";
 /**
  * The identifier is whatever the administrator set when seeding the account. It
  * is usually an email but a bare username such as "admin" is equally valid, so
- * this validates shape and length rather than email syntax. Accounts are only
- * ever created by an administrator; there is no public sign-up.
+ * this validates shape and length rather than email syntax.
  */
 const schema = z.object({
   email: z

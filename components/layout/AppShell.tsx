@@ -24,6 +24,7 @@ const TITLES: Array<[RegExp, string]> = [
   [/^\/jobs/, "Processing"],
   [/^\/google-drive/, "Google Drive"],
   [/^\/team/, "Team"],
+  [/^\/clients\/[^/]+$/, "Client"],
   [/^\/clients/, "Clients"],
   [/^\/settings/, "Settings"],
 ];

@@ -133,6 +133,7 @@ model CVFile {
   /// file, and one importing it must not block the other.
   @@unique([workspaceId, sourceType, sourceFileId])
   @@index([workspaceId])
+  @@index([workspaceId, createdAt])
   @@index([fileHash])
   @@index([driveConnectionId])
   @@index([sourceType])
@@ -297,4 +298,29 @@ model StoredFile {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+/// A pending "Create account" request.
+///
+/// Nothing is created in Workspace or User until the emailed code is entered, so
+/// an abandoned or unapproved sign-up leaves no account behind. The code itself
+/// is never stored — only an HMAC of it — and the password is hashed exactly as
+/// it would be on a real account.
+model SignupRequest {
+  id           String    @id @default(cuid())
+  name         String
+  /// The login identifier the account will have, lower-cased.
+  email        String
+  companyName  String
+  passwordHash String
+  codeHash     String
+  attempts     Int       @default(0)
+  expiresAt    DateTime
+  /// Last time a code was sent; used to throttle "resend".
+  sentAt       DateTime  @default(now())
+  consumedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([email])
+  @@index([expiresAt])
 }

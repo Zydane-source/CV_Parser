@@ -94,7 +94,17 @@ const userSelect = {
 
 /** Every client, with how many people and CVs each holds. Owner only. */
 export async function listWorkspaces() {
-  return prisma.workspace.findMany({ select: workspaceSelect, orderBy: { name: "asc" } });
+  const since = new Date(Date.now() - 7 * 864e5);
+  const [workspaces, recent, latest] = await Promise.all([
+    prisma.workspace.findMany({ select: workspaceSelect, orderBy: { name: "asc" } }),
+    prisma.cVFile.groupBy({ by: ["workspaceId"], where: { createdAt: { gte: since } }, _count: { _all: true } }),
+    prisma.cVFile.groupBy({ by: ["workspaceId"], _max: { createdAt: true } }),
+  ]);
+  // Two grouped queries for the whole list rather than two per client, so the
+  // page costs the same with fifty clients as with three.
+  const recentBy = new Map(recent.map((r) => [r.workspaceId, r._count._all]));
+  const latestBy = new Map(latest.map((r) => [r.workspaceId, r._max.createdAt]));
+  return workspaces.map((w) => ({ ...w, last7Days: recentBy.get(w.id) ?? 0, lastFetchedAt: latestBy.get(w.id) ?? null }));
 }
 
 /**

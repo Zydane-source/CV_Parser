@@ -12,7 +12,16 @@ const SESSION_COOKIE = "cvp_session";
 
 // "/api/jobs/drain" is listed here because a scheduler (Vercel Cron) calls it
 // with a bearer secret rather than a session cookie; the route authorizes itself.
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/health", "/api/google-drive/webhook", "/api/jobs/drain"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/api/auth/login",
+  // Account creation is reachable signed-out by definition. Each route rate-limits
+  // itself, and nothing becomes an account until the emailed code is accepted.
+  "/signup",
+  "/api/auth/signup",
+  "/api/auth/signup/verify",
+  "/api/auth/signup/resend",
+  "/api/health", "/api/google-drive/webhook", "/api/jobs/drain"];
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true;
