@@ -3,17 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  Activity,
-  Cloud,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  Settings,
-  Upload,
-  Users,
-  X,
-} from "lucide-react";
+import Image from "next/image";
+import { Activity, Cloud, LayoutDashboard, LogOut, Settings, Upload, Users, X } from "lucide-react";
 import { api } from "@/lib/client/api";
 import { Avatar, cx } from "@/components/ui";
 
@@ -111,9 +102,9 @@ export function Sidebar({
       >
         <div className="flex h-[var(--header-h)] items-center gap-2.5 border-b border-[var(--border)] px-4">
           <Link href="/" className="flex min-w-0 items-center gap-2.5" aria-label="CV Parser home">
-            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-brand-600 text-white shadow-[var(--shadow-card)]">
-              <FileText size={16} />
-            </span>
+            {/* The mark is already a rounded square with its own padding, so it
+                sits on the surface directly rather than inside a tinted tile. */}
+            <Image src="/logo-mark.png" alt="" width={32} height={32} className="h-8 w-8 flex-shrink-0" priority />
             <span className="min-w-0">
               <span className="block truncate text-[0.8125rem] font-semibold text-ink-900">CV Parser</span>
               <span className="block truncate text-[0.6875rem] leading-tight text-ink-500">Recruitment intake</span>

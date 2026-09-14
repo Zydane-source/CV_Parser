@@ -2,8 +2,9 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { AlertCircle, Eye, EyeOff, FileText, Loader2, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { AlertCircle, Eye, EyeOff, Loader2, ShieldCheck, Sparkles, Zap } from "lucide-react";
 import { api } from "@/lib/client/api";
+import Image from "next/image";
 
 /**
  * Sign-in.
@@ -47,15 +48,9 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="mb-8 flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-white shadow-[var(--shadow-raised)]">
-          <FileText size={21} />
-        </span>
-        <span>
-          <span className="block text-base font-semibold tracking-[-0.01em] text-ink-900">CV Parser</span>
-          <span className="block text-xs text-ink-500">Recruitment intake</span>
-        </span>
-      </div>
+      {/* The lockup already contains the product name and tagline, so repeating
+          them beside it would say everything twice. */}
+      <Image src="/logo-full.png" alt="CV Parser — Recruit smarter, faster" width={320} height={286} className="mb-8 h-auto w-[232px]" priority />
 
       <h1 className="text-[1.5rem] font-semibold tracking-[-0.02em] text-ink-900">Sign in</h1>
       <p className="mt-1.5 text-sm text-ink-500">Manage and process candidate resumes effortlessly.</p>
