@@ -222,10 +222,11 @@ export async function getDriveFile(connectionId: string, fileId: string): Promis
  * Download file bytes for processing. Google Docs are exported as PDF; other
  * types are downloaded as-is. The Drive file is never modified.
  */
-export async function downloadDriveFile(connectionId: string | null, fileId: string): Promise<Buffer> {
+export async function downloadDriveFile(workspaceId: string, connectionId: string | null, fileId: string): Promise<Buffer> {
   let connId = connectionId;
   if (!connId) {
-    const any = await getAnyActiveConnection();
+    // The fallback stays inside the file's own client — see getAnyActiveConnection.
+    const any = await getAnyActiveConnection(workspaceId);
     if (!any) throw new AppError("No active Google Drive connection is available to download this file", { status: 400, code: "GOOGLE_NOT_CONNECTED" });
     connId = any.id;
   }

@@ -2,7 +2,7 @@ import { handler, ok } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { AppError } from "@/lib/errors";
 import { randomToken } from "@/lib/crypto";
-import { getUserConnection } from "@/services/google-drive/oauth";
+import { getWorkspaceConnection } from "@/services/google-drive/oauth";
 import { triggerDriveSync } from "@/services/google-drive/trigger";
 
 export const dynamic = "force-dynamic";
@@ -25,7 +25,7 @@ export const maxDuration = 60;
  */
 export const POST = handler(async () => {
   const user = await requireUser();
-  const conn = await getUserConnection(user.id);
+  const conn = await getWorkspaceConnection(user.workspaceId);
   if (!conn) throw new AppError("Google Drive is not connected", { status: 400, code: "GOOGLE_NOT_CONNECTED" });
   if (!conn.folderId) throw new AppError("Select a Drive folder first", { status: 400, code: "NO_FOLDER" });
 

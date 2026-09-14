@@ -54,7 +54,7 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       buffer = await getStorage().get(cvFile.storagePath);
     } else {
       if (!cvFile.sourceFileId) throw new AppError("Drive file has no source file id", { code: "NO_SOURCE_ID" });
-      buffer = await downloadDriveFile(cvFile.driveConnectionId, cvFile.sourceFileId);
+      buffer = await downloadDriveFile(cvFile.workspaceId, cvFile.driveConnectionId, cvFile.sourceFileId);
     }
 
     // 2. Content hash + cross-source duplicate detection (Drive files only – manual

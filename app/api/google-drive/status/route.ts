@@ -1,6 +1,6 @@
 import { handler, ok } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
-import { getUserConnection, isGoogleConfigured, redirectUri } from "@/services/google-drive/oauth";
+import { getWorkspaceConnection, isGoogleConfigured, redirectUri } from "@/services/google-drive/oauth";
 import { webhooksPossible } from "@/services/google-drive/watch";
 import { getSettings } from "@/lib/settings";
 import { getIgnoredDriveFileIds } from "@/backend/delete";
@@ -13,7 +13,7 @@ export const GET = handler(async () => {
   // The ignore list belongs to a client, so an owner with no workspace of their
   // own simply has none to report rather than being shown someone else's.
   const [conn, settings, ignored] = await Promise.all([
-    getUserConnection(user.id),
+    getWorkspaceConnection(user.workspaceId),
     getSettings(),
     user.workspaceId ? getIgnoredDriveFileIds(user.workspaceId) : Promise.resolve([]),
   ]);

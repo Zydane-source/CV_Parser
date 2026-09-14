@@ -27,7 +27,7 @@ export const GET = handler(async (req: Request, ctx: Ctx) => {
   if (!cv) throw new NotFoundError("CV not found");
 
   const inline = new URL(req.url).searchParams.get("inline") === "1";
-  const buffer = cv.sourceType === "MANUAL" && cv.storagePath ? await getStorage().get(cv.storagePath) : await downloadDriveFile(cv.driveConnectionId, cv.sourceFileId!);
+  const buffer = cv.sourceType === "MANUAL" && cv.storagePath ? await getStorage().get(cv.storagePath) : await downloadDriveFile(cv.workspaceId, cv.driveConnectionId, cv.sourceFileId!);
   const safeName = cv.fileName.replace(/["\r\n]/g, "_");
   return new Response(new Uint8Array(buffer), {
     headers: {

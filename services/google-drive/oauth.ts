@@ -92,19 +92,25 @@ export async function completeOAuth(code: string, userId: string) {
     logger.warn({ err: (err as Error).message }, "Could not fetch Google account email");
   }
 
-  // One active connection per user: replace any existing one, keeping folder selection.
-  const existing = await prisma.googleDriveConnection.findFirst({ where: { userId, isActive: true } });
   const e = env();
 
   // The connection belongs to the client, not only to the person who linked it:
   // a CV imported through it is that client's, whoever pressed Connect.
-  const owner = await prisma.user.findUnique({ where: { id: userId }, select: { workspaceId: true } });
-  if (!owner?.workspaceId) {
+  const linker = await prisma.user.findUnique({ where: { id: userId }, select: { workspaceId: true } });
+  if (!linker?.workspaceId) {
     throw new AppError("Connect Google Drive from a client workspace account", { status: 400, code: "NO_WORKSPACE" });
   }
 
+  // One active connection per client, not per person. Keyed on the user, a
+  // colleague pressing Connect would have made a second connection to the same
+  // folder, and both would then sync it.
+  const existing = await prisma.googleDriveConnection.findFirst({
+    where: { workspaceId: linker.workspaceId, isActive: true },
+  });
+
   const data = {
-    workspaceId: owner.workspaceId,
+    workspaceId: linker.workspaceId,
+    // Who most recently authorised it — the tokens in use are theirs.
     userId,
     googleAccountEmail: email,
     accessTokenEnc: encryptSecret(tokens.access_token),
@@ -149,14 +155,39 @@ export async function getAuthorizedClient(connectionId: string): Promise<OAuth2C
   return client;
 }
 
-/** The active connection for a user (or null). */
-export async function getUserConnection(userId: string) {
-  return prisma.googleDriveConnection.findFirst({ where: { userId, isActive: true }, orderBy: { createdAt: "desc" } });
+/**
+ * The active Drive connection for a client (or null).
+ *
+ * Resolved by workspace rather than by the person signed in, because the folder
+ * is the client's. Keyed on the user, a recruiter whose administrator had
+ * already connected Drive would be told "Not connected" and, pressing Connect,
+ * would create a second connection syncing the same folder twice.
+ *
+ * Null workspace — the platform owner — has no Drive of its own, and gets null.
+ */
+export async function getWorkspaceConnection(workspaceId: string | null) {
+  if (!workspaceId) return null;
+  return prisma.googleDriveConnection.findFirst({
+    where: { workspaceId, isActive: true },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
-/** Any active connection (used by the worker to download Drive files when the file's own connection is gone). */
-export async function getAnyActiveConnection() {
-  return prisma.googleDriveConnection.findFirst({ where: { isActive: true }, orderBy: { createdAt: "desc" } });
+/**
+ * A fallback connection for downloading a Drive file whose own connection is gone
+ * (the row is set null when a connection is deleted).
+ *
+ * Restricted to the file's client. Platform-wide, this would reach for whichever
+ * connection happened to be newest and use *that* client's Google credentials to
+ * fetch this file — a request made under the wrong identity. It would usually
+ * just 404, and would quietly succeed in the one case that matters: two clients
+ * connected to the same shared folder.
+ */
+export async function getAnyActiveConnection(workspaceId: string) {
+  return prisma.googleDriveConnection.findFirst({
+    where: { workspaceId, isActive: true },
+    orderBy: { createdAt: "desc" },
+  });
 }
 
 /** Disconnect: revoke the token at Google (best effort) and deactivate. */

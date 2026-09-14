@@ -3,7 +3,7 @@ import { handler, ok, parseJson } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { AppError } from "@/lib/errors";
-import { getUserConnection } from "@/services/google-drive/oauth";
+import { getWorkspaceConnection } from "@/services/google-drive/oauth";
 import { getFolderPath } from "@/services/google-drive/files";
 import { triggerDriveSync } from "@/services/google-drive/trigger";
 import { stopWatch } from "@/services/google-drive/watch";
@@ -26,7 +26,7 @@ const schema = z.object({ folderId: z.string().min(1).max(200) });
 export const PUT = handler(async (req: Request) => {
   const user = await requireUser();
   const { folderId } = await parseJson(req, schema);
-  const conn = await getUserConnection(user.id);
+  const conn = await getWorkspaceConnection(user.workspaceId);
   if (!conn) throw new AppError("Google Drive is not connected", { status: 400, code: "GOOGLE_NOT_CONNECTED" });
 
   const info = await getFolderPath(conn.id, folderId);

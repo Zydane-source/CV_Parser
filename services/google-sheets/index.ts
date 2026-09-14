@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { env } from "@/lib/config";
 import { AppError } from "@/lib/errors";
 import { getSettings } from "@/lib/settings";
-import { getAuthorizedClient, getUserConnection } from "@/services/google-drive/oauth";
+import { getAuthorizedClient, getWorkspaceConnection } from "@/services/google-drive/oauth";
 import { iterateCandidates, type CandidateFilters, type CandidateRow } from "@/backend/candidates";
 import type { WorkspaceScope } from "@/lib/tenant";
 
@@ -53,7 +53,7 @@ export async function exportCandidatesToSheets(
   filters: Omit<CandidateFilters, "page" | "pageSize">,
   spreadsheetIdOverride?: string,
 ): Promise<ExportResult> {
-  const conn = await getUserConnection(userId);
+  const conn = await getWorkspaceConnection(scope.workspaceId ?? null);
   if (!conn) {
     throw new AppError("Connect Google Drive first – the Sheets export uses your Google account.", { status: 400, code: "GOOGLE_NOT_CONNECTED" });
   }
