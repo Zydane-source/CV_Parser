@@ -2,6 +2,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
 import { errorMessage } from "@/lib/errors";
+import type { WorkspaceScope } from "@/lib/tenant";
 import { getStorage } from "@/services/storage";
 import { isRedisConfigured } from "@/lib/redis";
 import { withTimeout } from "@/lib/timeout";
@@ -33,11 +34,15 @@ export interface DeleteResult {
   notFound: string[];
 }
 
-export async function deleteCVs(req: DeleteRequest): Promise<DeleteResult> {
+export async function deleteCVs(scope: WorkspaceScope, req: DeleteRequest): Promise<DeleteResult> {
+  // Ids outside the caller's workspace simply do not match, so they are reported
+  // as notFound rather than deleted. Every later step works from these rows, so
+  // this single where is what keeps the whole operation inside one client.
   const rows = await prisma.cVFile.findMany({
-    where: { id: { in: req.ids } },
+    where: { ...scope, id: { in: req.ids } },
     select: {
       id: true,
+      workspaceId: true,
       fileName: true,
       sourceType: true,
       sourceFileId: true,
@@ -82,7 +87,7 @@ export async function deleteCVs(req: DeleteRequest): Promise<DeleteResult> {
   const driveRows = rows.filter((r) => r.sourceType === "GOOGLE_DRIVE" && r.sourceFileId);
   if (req.ignoreFutureSync && driveRows.length) {
     for (const row of driveRows) {
-      await ignoreDriveFile(row.sourceFileId!, row.driveConnectionId, row.fileName);
+      await ignoreDriveFile(row.workspaceId, row.sourceFileId!, row.driveConnectionId, row.fileName);
       result.driveIgnored++;
     }
   }
@@ -109,30 +114,47 @@ export async function deleteCVs(req: DeleteRequest): Promise<DeleteResult> {
   return result;
 }
 
-const IGNORE_KEY = "drive:ignored-file-ids";
+/**
+ * The ignore list is stored per workspace.
+ *
+ * Drive file ids are global, and two clients can legitimately be connected to
+ * the same shared folder. A single list would mean one client deleting a CV
+ * silently suppressed it for the other, which looks exactly like the "0 files
+ * found" bug and would be just as hard to diagnose.
+ */
+const ignoreKey = (workspaceId: string) => `drive:ignored-file-ids:${workspaceId}`;
 
 /** Record a Drive file id that must not be re-imported by a later sync. */
-export async function ignoreDriveFile(fileId: string, connectionId: string | null, fileName: string): Promise<void> {
-  const current = await getIgnoredDriveFileIds();
+export async function ignoreDriveFile(
+  workspaceId: string,
+  fileId: string,
+  connectionId: string | null,
+  fileName: string,
+): Promise<void> {
+  const current = await getIgnoredDriveFileIds(workspaceId);
   if (current.includes(fileId)) return;
   const next = [...current, fileId].slice(-5000);
   await prisma.setting.upsert({
-    where: { key: IGNORE_KEY },
-    create: { key: IGNORE_KEY, value: next },
+    where: { key: ignoreKey(workspaceId) },
+    create: { key: ignoreKey(workspaceId), value: next },
     update: { value: next },
   });
-  logger.info({ fileId, connectionId, fileName }, "Drive file ignored for future syncs");
+  logger.info({ workspaceId, fileId, connectionId, fileName }, "Drive file ignored for future syncs");
 }
 
-export async function getIgnoredDriveFileIds(): Promise<string[]> {
-  const row = await prisma.setting.findUnique({ where: { key: IGNORE_KEY } });
+export async function getIgnoredDriveFileIds(workspaceId: string): Promise<string[]> {
+  const row = await prisma.setting.findUnique({ where: { key: ignoreKey(workspaceId) } });
   return Array.isArray(row?.value) ? (row!.value as string[]) : [];
 }
 
 /** Allow a previously deleted Drive file to be imported again. */
-export async function unignoreDriveFiles(fileIds: string[]): Promise<number> {
-  const current = await getIgnoredDriveFileIds();
+export async function unignoreDriveFiles(workspaceId: string, fileIds: string[]): Promise<number> {
+  const current = await getIgnoredDriveFileIds(workspaceId);
   const next = current.filter((id) => !fileIds.includes(id));
-  await prisma.setting.upsert({ where: { key: IGNORE_KEY }, create: { key: IGNORE_KEY, value: next }, update: { value: next } });
+  await prisma.setting.upsert({
+    where: { key: ignoreKey(workspaceId) },
+    create: { key: ignoreKey(workspaceId), value: next },
+    update: { value: next },
+  });
   return current.length - next.length;
 }

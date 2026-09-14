@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import type { WorkspaceScope } from "@/lib/tenant";
 
 export interface DashboardStats {
   total: number;
@@ -12,11 +13,11 @@ export interface DashboardStats {
   last24h: number;
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
+export async function getDashboardStats(scope: WorkspaceScope): Promise<DashboardStats> {
   const [byStatus, bySource, last24h] = await Promise.all([
-    prisma.cVFile.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.cVFile.groupBy({ by: ["sourceType"], _count: { _all: true } }),
-    prisma.cVFile.count({ where: { createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } } }),
+    prisma.cVFile.groupBy({ by: ["status"], where: { ...scope }, _count: { _all: true } }),
+    prisma.cVFile.groupBy({ by: ["sourceType"], where: { ...scope }, _count: { _all: true } }),
+    prisma.cVFile.count({ where: { ...scope, createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } } }),
   ]);
   const count = (s: string) => byStatus.find((r) => r.status === s)?._count._all ?? 0;
   const src = (s: string) => bySource.find((r) => r.sourceType === s)?._count._all ?? 0;

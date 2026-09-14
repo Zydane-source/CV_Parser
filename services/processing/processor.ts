@@ -64,8 +64,11 @@ export async function processCVJob(data: CVJobData, attempt: number, maxAttempts
       await prisma.cVFile.update({ where: { id: cvFile.id }, data: { fileHash: hash, fileSize: buffer.length } });
     }
     if (cvFile.sourceType === "GOOGLE_DRIVE" && !data.reprocess) {
+      // Scoped to this file's own client. Unscoped, a CV another agency had
+      // already processed would skip this one — and the skip message, which the
+      // user sees, would quote that other client's file name and id.
       const dup = await prisma.cVFile.findFirst({
-        where: { fileHash: hash, id: { not: cvFile.id }, candidate: { isNot: null } },
+        where: { workspaceId: cvFile.workspaceId, fileHash: hash, id: { not: cvFile.id }, candidate: { isNot: null } },
         select: { id: true, fileName: true },
       });
       if (dup) {

@@ -3,6 +3,7 @@ import { handler, ok, parseJson } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { candidateUpdateSchema, getCandidateDetail, updateCandidate } from "@/backend/candidates";
 import { deleteCVs } from "@/backend/delete";
+import { workspaceScope } from "@/lib/tenant";
 import { NotFoundError } from "@/lib/errors";
 
 export const dynamic = "force-dynamic";
@@ -12,18 +13,19 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /** GET /api/candidates/:id – full detail (id is the CV file id). */
 export const GET = handler(async (_req: Request, ctx: Ctx) => {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await ctx.params;
-  return ok(await getCandidateDetail(idSchema.parse(id)));
+  return ok(await getCandidateDetail(workspaceScope(user), idSchema.parse(id)));
 });
 
 /** PATCH /api/candidates/:id – manual correction (marks is_manually_corrected). */
 export const PATCH = handler(async (req: Request, ctx: Ctx) => {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await ctx.params;
   const patch = await parseJson(req, candidateUpdateSchema);
-  const candidate = await updateCandidate(idSchema.parse(id), patch);
-  return ok({ candidate, detail: await getCandidateDetail(id) });
+  const scope = workspaceScope(user);
+  const candidate = await updateCandidate(scope, idSchema.parse(id), patch);
+  return ok({ candidate, detail: await getCandidateDetail(scope, id) });
 });
 
 /**
@@ -35,10 +37,10 @@ export const PATCH = handler(async (req: Request, ctx: Ctx) => {
  * not immediately reappear.
  */
 export const DELETE = handler(async (req: Request, ctx: Ctx) => {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await ctx.params;
   const ignoreFutureSync = new URL(req.url).searchParams.get("ignoreFutureSync") !== "false";
-  const result = await deleteCVs({ ids: [idSchema.parse(id)], ignoreFutureSync });
+  const result = await deleteCVs(workspaceScope(user), { ids: [idSchema.parse(id)], ignoreFutureSync });
   if (result.deleted === 0) throw new NotFoundError("CV not found");
   return ok(result);
 });

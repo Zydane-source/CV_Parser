@@ -5,6 +5,7 @@ import { RateLimitError } from "@/lib/errors";
 import { rateLimit } from "@/lib/rate-limit";
 import { candidateFiltersSchema } from "@/backend/candidates";
 import { exportCandidatesToSheets } from "@/services/google-sheets";
+import { workspaceScope } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -21,6 +22,6 @@ export const POST = handler(async (req: Request) => {
   if (!rl.allowed) throw new RateLimitError("Too many exports. Please wait a few minutes.");
   const body = req.headers.get("content-type")?.includes("application/json") ? await parseJson(req, schema) : {};
   const filters = candidateFiltersSchema.omit({ page: true, pageSize: true }).parse(body.filters ?? {});
-  const result = await exportCandidatesToSheets(user.id, filters, body.spreadsheetId);
+  const result = await exportCandidatesToSheets(workspaceScope(user), user.id, filters, body.spreadsheetId);
   return ok(result);
 });

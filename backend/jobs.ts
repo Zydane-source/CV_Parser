@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import type { WorkspaceScope } from "@/lib/tenant";
 
 export const jobFiltersSchema = z.object({
   batchId: z.string().max(100).optional(),
@@ -27,8 +28,10 @@ export const jobSelect = {
   cvFile: { select: { fileName: true, sourceType: true, status: true, candidate: { select: { id: true, candidateName: true, overallConfidence: true } } } },
 } satisfies Prisma.ProcessingJobSelect;
 
-export async function listJobs(f: JobFilters) {
-  const where: Prisma.ProcessingJobWhereInput = {};
+export async function listJobs(scope: WorkspaceScope, f: JobFilters) {
+  // A job has no workspace of its own: it belongs to whichever client owns the
+  // CV it is processing, so the restriction goes through the cvFile relation.
+  const where: Prisma.ProcessingJobWhereInput = { cvFile: { ...scope } };
   if (f.batchId) where.batchId = f.batchId;
   if (f.status) where.status = f.status;
   const [total, items] = await Promise.all([
@@ -45,10 +48,13 @@ export async function listJobs(f: JobFilters) {
  * job rows, and counting those inflated the totals and made "Retry all failed
  * (N)" disagree with the number of CVs the retry action actually re-queues.
  */
-export async function batchProgress(batchId?: string) {
+export async function batchProgress(scope: WorkspaceScope, batchId?: string) {
+  // A batch id is client-supplied and guessable, so scope rather than trust it:
+  // asking for another client's batch must return an empty progress summary,
+  // not their counts.
   const where: Prisma.CVFileWhereInput = batchId
-    ? { jobs: { some: { batchId } } }
-    : { jobs: { some: { createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } } } };
+    ? { ...scope, jobs: { some: { batchId } } }
+    : { ...scope, jobs: { some: { createdAt: { gte: new Date(Date.now() - 24 * 3600 * 1000) } } } };
   const rows = await prisma.cVFile.groupBy({ by: ["status"], where, _count: { _all: true } });
   const c = (s: string) => rows.find((r) => r.status === s)?._count._all ?? 0;
   const total = rows.reduce((a, r) => a + r._count._all, 0);

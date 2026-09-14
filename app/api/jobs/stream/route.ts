@@ -1,6 +1,7 @@
 import { getSession } from "@/lib/auth";
 import { jobFiltersSchema, listJobs, batchProgress } from "@/backend/jobs";
 import { getDashboardStats } from "@/backend/stats";
+import { workspaceScope } from "@/lib/tenant";
 import { getWorkerHealth } from "@/lib/worker-health";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +16,7 @@ export async function GET(req: Request) {
   const session = await getSession();
   if (!session) return new Response("Unauthorized", { status: 401 });
 
+  const scope = workspaceScope(session);
   const url = new URL(req.url);
   const parsed = jobFiltersSchema.safeParse(Object.fromEntries(url.searchParams));
   const filters = parsed.success ? parsed.data : jobFiltersSchema.parse({});
@@ -29,9 +31,9 @@ export async function GET(req: Request) {
         if (closed) return;
         try {
           const [jobs, progress, stats, worker] = await Promise.all([
-            listJobs({ ...filters, pageSize: Math.min(filters.pageSize, 100) }),
-            batchProgress(filters.batchId),
-            getDashboardStats(),
+            listJobs(scope, { ...filters, pageSize: Math.min(filters.pageSize, 100) }),
+            batchProgress(scope, filters.batchId),
+            getDashboardStats(scope),
             getWorkerHealth(),
           ]);
           const payload = JSON.stringify({ at: Date.now(), progress, stats, jobs: jobs.items, total: jobs.total, worker });

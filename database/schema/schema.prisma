@@ -34,7 +34,12 @@ enum ProcessingStatus {
 }
 
 enum UserRole {
+  /// Runs the platform: creates client workspaces and their first account, and
+  /// is the only role that can see across workspace boundaries.
+  OWNER
+  /// Administers one client workspace: manages its people and settings.
   ADMIN
+  /// Works inside one client workspace.
   RECRUITER
 }
 
@@ -47,6 +52,25 @@ enum ExtractionMethod {
   NONE
 }
 
+/// One client of the agency. Everything a client can see hangs off this row.
+model Workspace {
+  id        String   @id @default(cuid())
+  /// Shown in the UI, e.g. "Apex Ventures".
+  name      String
+  /// Stable, URL-safe handle. Unique so it can identify a workspace in a link.
+  slug      String   @unique
+  /// Deactivating keeps the data and stops everyone in it signing in.
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users            User[]
+  cvFiles          CVFile[]
+  driveConnections GoogleDriveConnection[]
+
+  @@index([isActive])
+}
+
 model User {
   id           String   @id @default(cuid())
   /// Login identifier, stored lower-cased. Usually an email, but a bare username
@@ -56,16 +80,26 @@ model User {
   name         String
   passwordHash String
   role         UserRole @default(RECRUITER)
+  /// Null only for an OWNER, who belongs to the platform rather than a client.
+  workspaceId  String?
+  /// Deactivated accounts keep their history but cannot sign in.
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  workspace        Workspace?              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   uploads          CVFile[]
   driveConnections GoogleDriveConnection[]
   sheetsExports    SheetsExport[]
+
+  @@index([workspaceId])
 }
 
 model CVFile {
   id                String           @id @default(cuid())
+  /// The client this CV belongs to. Candidate and ProcessingJob reach their
+  /// workspace through here, so this single column is the isolation boundary.
+  workspaceId       String
   sourceType        SourceType
   /// Google Drive file ID for Drive files; null for manual uploads.
   sourceFileId      String?
@@ -89,12 +123,16 @@ model CVFile {
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
 
+  workspace       Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   uploadedBy      User?                  @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
   driveConnection GoogleDriveConnection? @relation(fields: [driveConnectionId], references: [id], onDelete: SetNull)
   candidate       Candidate?
   jobs            ProcessingJob[]
 
-  @@unique([sourceType, sourceFileId])
+  /// Scoped to the workspace: two clients may legitimately hold the same Drive
+  /// file, and one importing it must not block the other.
+  @@unique([workspaceId, sourceType, sourceFileId])
+  @@index([workspaceId])
   @@index([fileHash])
   @@index([driveConnectionId])
   @@index([sourceType])
@@ -185,6 +223,7 @@ model ProcessingJob {
 
 model GoogleDriveConnection {
   id                 String    @id @default(cuid())
+  workspaceId        String
   userId             String
   googleAccountEmail String?
   /// AES-256-GCM encrypted OAuth tokens (see lib/crypto.ts).
@@ -208,9 +247,11 @@ model GoogleDriveConnection {
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
 
-  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  files CVFile[]
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  files     CVFile[]
 
+  @@index([workspaceId])
   @@index([userId])
   @@index([isActive])
 }

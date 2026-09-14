@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { RateLimitError } from "@/lib/errors";
 import { rateLimit } from "@/lib/rate-limit";
 import { deleteCVs, deleteRequestSchema } from "@/backend/delete";
+import { workspaceScope } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -18,5 +19,5 @@ export const POST = handler(async (req: Request) => {
   const rl = await rateLimit(`bulk-delete:${user.id}`, 20, 60);
   if (!rl.allowed) throw new RateLimitError("Too many delete requests. Please wait a moment.");
   const body = await parseJson(req, deleteRequestSchema);
-  return ok(await deleteCVs(body));
+  return ok(await deleteCVs(workspaceScope(user), body));
 });

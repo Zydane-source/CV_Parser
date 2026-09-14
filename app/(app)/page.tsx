@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Activity, AlertTriangle, CheckCircle2, Clock, Cloud, FileText, Files, Upload, XCircle } from "lucide-react";
 import { getDashboardStats } from "@/backend/stats";
+import { requireUser } from "@/lib/auth";
+import { workspaceScope } from "@/lib/tenant";
 import { prisma } from "@/lib/db";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -12,9 +14,15 @@ import { Avatar, EmptyState, PageHeader, Section } from "@/components/ui";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const user = await requireUser();
+  const scope = workspaceScope(user);
+
   const [stats, recent] = await Promise.all([
-    getDashboardStats(),
+    getDashboardStats(scope),
+    // The only query on this page that does not go through backend/, so it is
+    // also the only one the compiler could not have caught: scope it by hand.
     prisma.cVFile.findMany({
+      where: { ...scope },
       orderBy: { createdAt: "desc" },
       take: 8,
       select: {

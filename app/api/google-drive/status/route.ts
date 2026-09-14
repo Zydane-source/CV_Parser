@@ -10,7 +10,13 @@ export const dynamic = "force-dynamic";
 /** GET /api/google-drive/status */
 export const GET = handler(async () => {
   const user = await requireUser();
-  const [conn, settings, ignored] = await Promise.all([getUserConnection(user.id), getSettings(), getIgnoredDriveFileIds()]);
+  // The ignore list belongs to a client, so an owner with no workspace of their
+  // own simply has none to report rather than being shown someone else's.
+  const [conn, settings, ignored] = await Promise.all([
+    getUserConnection(user.id),
+    getSettings(),
+    user.workspaceId ? getIgnoredDriveFileIds(user.workspaceId) : Promise.resolve([]),
+  ]);
   return ok({
     configured: isGoogleConfigured(),
     redirectUri: redirectUri(),

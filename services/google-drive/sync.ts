@@ -49,12 +49,12 @@ export async function syncConnection(connectionId: string, opts: { full?: boolea
       result.mode = "incremental";
     }
     // Files the user deleted from the app must not be silently re-imported.
-    const ignored = new Set(await getIgnoredDriveFileIds());
+    const ignored = new Set(await getIgnoredDriveFileIds(conn.workspaceId));
     if (ignored.size) files = files.filter((f) => !ignored.has(f.id));
     result.discovered = files.length;
 
     for (const f of files) {
-      const outcome = await upsertDriveFile(conn.id, f, opts.batchId);
+      const outcome = await upsertDriveFile({ id: conn.id, workspaceId: conn.workspaceId }, f, opts.batchId);
       if (outcome === "enqueued") result.enqueued++;
       else if (outcome === "reprocessed") result.reprocessed++;
       else result.unchanged++;
@@ -100,10 +100,28 @@ export async function syncConnection(connectionId: string, opts: { full?: boolea
 
 type Outcome = "enqueued" | "reprocessed" | "unchanged";
 
-/** Create or refresh the CVFile row for a Drive file and enqueue processing when needed. */
-export async function upsertDriveFile(connectionId: string, f: DriveCvFile, batchId?: string): Promise<Outcome> {
+/**
+ * Create or refresh the CVFile row for a Drive file and enqueue processing when needed.
+ *
+ * Takes the connection as `{ id, workspaceId }` rather than an id: which client
+ * an imported CV belongs to is decided by the connection it arrived through, and
+ * the caller is already holding that row. Re-reading it here would be one extra
+ * query per file in a loop that runs over a whole folder.
+ */
+export async function upsertDriveFile(
+  conn: { id: string; workspaceId: string },
+  f: DriveCvFile,
+  batchId?: string,
+): Promise<Outcome> {
+  const connectionId = conn.id;
   const existing = await prisma.cVFile.findUnique({
-    where: { sourceType_sourceFileId: { sourceType: "GOOGLE_DRIVE", sourceFileId: f.id } },
+    where: {
+      workspaceId_sourceType_sourceFileId: {
+        workspaceId: conn.workspaceId,
+        sourceType: "GOOGLE_DRIVE",
+        sourceFileId: f.id,
+      },
+    },
     include: { candidate: { select: { id: true } } },
   });
   const modified = f.modifiedTime ? new Date(f.modifiedTime) : null;
@@ -111,6 +129,7 @@ export async function upsertDriveFile(connectionId: string, f: DriveCvFile, batc
   if (!existing) {
     const created = await prisma.cVFile.create({
       data: {
+        workspaceId: conn.workspaceId,
         sourceType: "GOOGLE_DRIVE",
         sourceFileId: f.id,
         fileName: f.name,

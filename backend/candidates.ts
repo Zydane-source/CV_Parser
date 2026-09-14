@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { NotFoundError, ValidationError } from "@/lib/errors";
+import type { WorkspaceScope } from "@/lib/tenant";
 import { normalizePhone } from "@/services/cv-parser/phone";
 import { validateName, validateRole } from "@/services/cv-parser/validate";
 
@@ -24,8 +25,15 @@ export const candidateFiltersSchema = z.object({
 
 export type CandidateFilters = z.infer<typeof candidateFiltersSchema>;
 
-export function buildCandidateWhere(f: Partial<CandidateFilters>): Prisma.CVFileWhereInput {
-  const where: Prisma.CVFileWhereInput = {};
+/**
+ * The where clause for a candidate listing.
+ *
+ * Takes the scope first and seeds the clause with it, so a filter cannot be
+ * built without one: every read below, and every future caller, starts from a
+ * where that is already restricted to a single client.
+ */
+export function buildCandidateWhere(scope: WorkspaceScope, f: Partial<CandidateFilters>): Prisma.CVFileWhereInput {
+  const where: Prisma.CVFileWhereInput = { ...scope };
   if (f.source) where.sourceType = f.source;
   if (f.status) where.status = f.status;
   if (f.role) where.candidate = { ...(where.candidate as object), jobRoleAppliedFor: { contains: f.role, mode: "insensitive" } };
@@ -93,8 +101,8 @@ export const candidateSelect = {
 
 export type CandidateRow = Prisma.CVFileGetPayload<{ select: typeof candidateSelect }>;
 
-export async function listCandidates(f: CandidateFilters) {
-  const where = buildCandidateWhere(f);
+export async function listCandidates(scope: WorkspaceScope, f: CandidateFilters) {
+  const where = buildCandidateWhere(scope, f);
   const nullsLast: Prisma.SortOrderInput = { sort: f.order, nulls: "last" };
   const orderBy: Prisma.CVFileOrderByWithRelationInput =
     f.sort === "createdAt"
@@ -119,19 +127,22 @@ export async function listCandidates(f: CandidateFilters) {
 }
 
 /** Iterate all matching rows in pages (for exports) without loading everything at once. */
-export async function* iterateCandidates(f: Omit<CandidateFilters, "page" | "pageSize">, pageSize = 500) {
+export async function* iterateCandidates(scope: WorkspaceScope, f: Omit<CandidateFilters, "page" | "pageSize">, pageSize = 500) {
   let page = 1;
   for (;;) {
-    const res = await listCandidates({ ...f, page, pageSize });
+    const res = await listCandidates(scope, { ...f, page, pageSize });
     for (const row of res.items) yield row;
     if (page >= res.pages) break;
     page++;
   }
 }
 
-export async function getCandidateDetail(cvFileId: string) {
-  const row = await prisma.cVFile.findUnique({
-    where: { id: cvFileId },
+export async function getCandidateDetail(scope: WorkspaceScope, cvFileId: string) {
+  // findFirst, not findUnique: an id on its own is not authority to read a row.
+  // A CV belonging to another client matches nothing here and surfaces as the
+  // same 404 an invented id gives, so ids cannot be probed for existence.
+  const row = await prisma.cVFile.findFirst({
+    where: { id: cvFileId, ...scope },
     select: {
       ...candidateSelect,
       driveCreatedTime: true,
@@ -172,8 +183,8 @@ export const candidateUpdateSchema = z
 export type CandidateUpdate = z.infer<typeof candidateUpdateSchema>;
 
 /** Apply a manual correction. Marks the record corrected and clears review flags for corrected fields. */
-export async function updateCandidate(cvFileId: string, patch: CandidateUpdate) {
-  const cvFile = await prisma.cVFile.findUnique({ where: { id: cvFileId }, include: { candidate: true } });
+export async function updateCandidate(scope: WorkspaceScope, cvFileId: string, patch: CandidateUpdate) {
+  const cvFile = await prisma.cVFile.findFirst({ where: { id: cvFileId, ...scope }, include: { candidate: true } });
   if (!cvFile) throw new NotFoundError("Candidate not found");
 
   const data: Prisma.CandidateUncheckedUpdateInput = {};
@@ -252,11 +263,14 @@ export async function updateCandidate(cvFileId: string, patch: CandidateUpdate) 
 }
 
 /** Distinct job roles for the filter dropdown (top N by frequency). */
-export async function topJobRoles(limit = 50) {
+export async function topJobRoles(scope: WorkspaceScope, limit = 50) {
   const rows = await prisma.candidate.groupBy({
     by: ["jobRoleAppliedFor"],
     _count: { _all: true },
-    where: { jobRoleAppliedFor: { not: "Not Found" } },
+    // Candidate has no workspace column of its own; it reaches one through its
+    // CV file. Without this join the filter dropdown would quietly advertise
+    // the roles every other client is hiring for.
+    where: { jobRoleAppliedFor: { not: "Not Found" }, cvFile: { ...scope } },
     orderBy: { _count: { jobRoleAppliedFor: "desc" } },
     take: limit,
   });

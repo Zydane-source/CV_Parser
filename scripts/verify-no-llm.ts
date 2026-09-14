@@ -81,6 +81,7 @@ async function main() {
   const { getStorage, buildObjectKey } = await import("@/services/storage");
   const { processCVJob } = await import("@/services/processing/processor");
   const { sha256Hex } = await import("@/lib/crypto");
+  const { defaultWorkspaceId } = await import("@/lib/tenant");
 
   // --- configuration ------------------------------------------------------
   if (e.EXTRACTION_ENGINE !== "local") fail("default engine is not local", e.EXTRACTION_ENGINE);
@@ -108,6 +109,7 @@ async function main() {
   await getStorage().put(key, buffer, "application/pdf");
   const cvFile = await prisma.cVFile.create({
     data: {
+      workspaceId: await defaultWorkspaceId(),
       sourceType: "MANUAL",
       fileName,
       mimeType: "application/pdf",

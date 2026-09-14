@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { RateLimitError } from "@/lib/errors";
 import { rateLimit } from "@/lib/rate-limit";
 import { candidateFiltersSchema, iterateCandidates } from "@/backend/candidates";
+import { workspaceScope } from "@/lib/tenant";
 import { UTF8_BOM, csvRow, csvFileName } from "@/services/export/csv";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export const GET = handler(async (req: Request) => {
   const raw: Record<string, string> = {};
   url.searchParams.forEach((v, k) => (raw[k] = v));
   const { columns, ...filters } = querySchema.parse(raw);
+  const scope = workspaceScope(user);
   const appUrl = `${url.protocol}//${url.host}`;
 
   const headers = columns === "all" ? ALL_HEADERS : CORE_HEADERS;
@@ -43,7 +45,7 @@ export const GET = handler(async (req: Request) => {
     async start(controller) {
       try {
         controller.enqueue(encoder.encode(UTF8_BOM + csvRow(headers)));
-        for await (const row of iterateCandidates(filters)) {
+        for await (const row of iterateCandidates(scope, filters)) {
           const c = row.candidate;
           const core = [c?.candidateName ?? "Not Found", c?.phoneNumber ?? "Not Found", c?.jobRoleAppliedFor ?? "Not Found"];
           if (columns === "core") {

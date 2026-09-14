@@ -9,6 +9,7 @@ import { getSettings } from "@/lib/settings";
 import { getStorage, buildObjectKey } from "@/services/storage";
 import { validateUploadedFile } from "@/services/cv-parser/file-validation";
 import { enqueueCVFile } from "@/services/processing/enqueue";
+import { workspaceForWrite } from "@/lib/tenant";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,6 +50,9 @@ export const POST = handler(async (req: Request) => {
     throw new ValidationError(`Too many files in one request (max ${settings.maxFilesPerRequest}). Upload in smaller batches.`);
   }
 
+  // Resolved once: every CV in this request belongs to the uploader's client.
+  const workspaceId = workspaceForWrite(user);
+
   const maxBytes = settings.maxFileSizeMb * 1024 * 1024;
   const storage = getStorage();
   const results: UploadOutcome[] = [];
@@ -61,9 +65,11 @@ export const POST = handler(async (req: Request) => {
       const valid = await validateUploadedFile(buffer, originalName, maxBytes);
       const hash = sha256Hex(buffer);
 
-      // Duplicate detection (content hash across all sources).
+      // Duplicate detection (content hash across all sources) — within this
+      // client only. Unscoped it would both leak another client's cvFileId and
+      // refuse a legitimate upload because an unrelated agency holds the same CV.
       const existing = await prisma.cVFile.findFirst({
-        where: { fileHash: hash },
+        where: { workspaceId, fileHash: hash },
         select: { id: true, status: true, candidate: { select: { id: true } } },
         orderBy: { createdAt: "asc" },
       });
@@ -76,6 +82,7 @@ export const POST = handler(async (req: Request) => {
       await storage.put(key, buffer, valid.mimeType);
       const cvFile = await prisma.cVFile.create({
         data: {
+          workspaceId,
           sourceType: "MANUAL",
           fileName: valid.fileName,
           mimeType: valid.mimeType,

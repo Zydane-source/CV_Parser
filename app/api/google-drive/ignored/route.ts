@@ -1,6 +1,7 @@
 import { handler, ok } from "@/lib/api";
 import { requireAdmin, requireUser } from "@/lib/auth";
 import { getIgnoredDriveFileIds, unignoreDriveFiles } from "@/backend/delete";
+import { workspaceForWrite } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -17,14 +18,17 @@ export const dynamic = "force-dynamic";
  *   DELETE – stop skipping them, so the next sync picks them up again
  */
 export const GET = handler(async () => {
-  await requireUser();
-  const ids = await getIgnoredDriveFileIds();
+  const user = await requireUser();
+  const ids = await getIgnoredDriveFileIds(workspaceForWrite(user));
   return ok({ count: ids.length });
 });
 
 export const DELETE = handler(async () => {
-  await requireAdmin();
-  const ids = await getIgnoredDriveFileIds();
-  const cleared = await unignoreDriveFiles(ids);
+  const user = await requireAdmin();
+  // workspaceForWrite, not workspaceScope: clearing the list is an action on one
+  // client's list, and there is no "all clients" version of it to fall back to.
+  const workspaceId = workspaceForWrite(user);
+  const ids = await getIgnoredDriveFileIds(workspaceId);
+  const cleared = await unignoreDriveFiles(workspaceId, ids);
   return ok({ cleared });
 });

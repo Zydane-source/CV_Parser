@@ -4,16 +4,19 @@ import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { NotFoundError } from "@/lib/errors";
 import { reprocessCVFile } from "@/services/processing/enqueue";
+import { workspaceScope } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ id: string }> };
 
 /** POST /api/candidates/:id/reprocess – re-run the pipeline (manual corrections preserved). */
 export const POST = handler(async (_req: Request, ctx: Ctx) => {
-  await requireUser();
+  const user = await requireUser();
   const { id } = await ctx.params;
   const cvFileId = z.string().min(1).max(64).parse(id);
-  const cv = await prisma.cVFile.findUnique({ where: { id: cvFileId }, select: { id: true } });
+  // The existence check is also the access check: a CV in another workspace does
+  // not match, so it 404s instead of being re-queued at another client's expense.
+  const cv = await prisma.cVFile.findFirst({ where: { id: cvFileId, ...workspaceScope(user) }, select: { id: true } });
   if (!cv) throw new NotFoundError("CV not found");
   const job = await reprocessCVFile(cvFileId);
   return ok({ job });

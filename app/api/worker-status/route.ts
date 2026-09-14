@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { getWorkerHealth } from "@/lib/worker-health";
 import { prisma } from "@/lib/db";
 import { effectiveProcessingMode } from "@/lib/processing-mode";
+import { workspaceScope } from "@/lib/tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -11,11 +12,15 @@ export const dynamic = "force-dynamic";
  * Unlike /api/health this includes the provider error text, so it stays behind auth.
  */
 export const GET = handler(async () => {
-  await requireUser();
+  const user = await requireUser();
   const mode = effectiveProcessingMode();
   const [worker, pending] = await Promise.all([
     mode === "inline" ? Promise.resolve({ online: true, count: 0, workers: [], configError: null }) : getWorkerHealth(),
-    prisma.processingJob.count({ where: { status: { in: ["PENDING", "PROCESSING"] } } }),
+    // Worker liveness is a property of the deployment, but this count is shown
+    // to the user as "your backlog", so it counts only their own client's work.
+    prisma.processingJob.count({
+      where: { status: { in: ["PENDING", "PROCESSING"] }, cvFile: { ...workspaceScope(user) } },
+    }),
   ]);
   // In inline mode there is no worker process by design; the browser and the
   // cron drain the queue, so the "no worker" alarm must not fire.

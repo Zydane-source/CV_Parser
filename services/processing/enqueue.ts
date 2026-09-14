@@ -1,5 +1,6 @@
 import type { CVFile, ProcessingJob } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import type { WorkspaceScope } from "@/lib/tenant";
 import { getSettings } from "@/lib/settings";
 import { effectiveProcessingMode } from "@/lib/processing-mode";
 import { isRedisConfigured } from "@/lib/redis";
@@ -65,10 +66,16 @@ export async function reprocessCVFile(cvFileId: string, batchId?: string): Promi
   return enqueueCVFile({ id: cvFileId }, { batchId, reprocess: true });
 }
 
-/** Retry every FAILED CV (optionally limited to a batch). */
-export async function retryFailed(batchId?: string): Promise<number> {
+/**
+ * Retry every FAILED CV for one client (optionally limited to a batch).
+ *
+ * The scope is not optional: "retry everything that failed" is exactly the kind
+ * of bulk action that, unscoped, quietly re-queues other clients' work and spends
+ * their processing budget.
+ */
+export async function retryFailed(scope: WorkspaceScope, batchId?: string): Promise<number> {
   const failed = await prisma.cVFile.findMany({
-    where: { status: "FAILED", ...(batchId ? { jobs: { some: { batchId } } } : {}) },
+    where: { ...scope, status: "FAILED", ...(batchId ? { jobs: { some: { batchId } } } : {}) },
     select: { id: true },
   });
   let n = 0;

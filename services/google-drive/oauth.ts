@@ -95,7 +95,16 @@ export async function completeOAuth(code: string, userId: string) {
   // One active connection per user: replace any existing one, keeping folder selection.
   const existing = await prisma.googleDriveConnection.findFirst({ where: { userId, isActive: true } });
   const e = env();
+
+  // The connection belongs to the client, not only to the person who linked it:
+  // a CV imported through it is that client's, whoever pressed Connect.
+  const owner = await prisma.user.findUnique({ where: { id: userId }, select: { workspaceId: true } });
+  if (!owner?.workspaceId) {
+    throw new AppError("Connect Google Drive from a client workspace account", { status: 400, code: "NO_WORKSPACE" });
+  }
+
   const data = {
+    workspaceId: owner.workspaceId,
     userId,
     googleAccountEmail: email,
     accessTokenEnc: encryptSecret(tokens.access_token),
