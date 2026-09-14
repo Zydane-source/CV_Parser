@@ -1,6 +1,7 @@
 import { google, type drive_v3 } from "googleapis";
 import { AppError } from "@/lib/errors";
 import { SUPPORTED_MIME_TYPES } from "@/lib/config";
+import { logger } from "@/lib/logger";
 import { getAuthorizedClient, getAnyActiveConnection } from "./oauth";
 
 /**
@@ -31,10 +32,28 @@ export const DRIVE_SUPPORTED_MIMES = [...Object.keys(SUPPORTED_MIME_TYPES), GOOG
 
 const FILE_FIELDS = "id,name,mimeType,size,md5Checksum,createdTime,modifiedTime,webViewLink,trashed,parents";
 
+/** Every extension the app can parse, derived from the same map as the mime types. */
+const SUPPORTED_EXTS = Object.values(SUPPORTED_MIME_TYPES).flat();
+
+/**
+ * Whether a Drive file is one this app can parse.
+ *
+ * Drive's declared mime type is not reliable for uploaded files: a PDF that
+ * arrived over a sync client, a browser that guessed badly, or a file copied
+ * from another account can all be reported as `application/octet-stream`.
+ * Filtering on mime alone therefore silently ignores real CVs, and the folder
+ * looks empty while plainly containing files.
+ *
+ * So the name decides when the mime type does not. Extraction identifies the
+ * real format from magic bytes later anyway, which means being generous here
+ * costs nothing: an actual non-CV is rejected at parse time with a clear reason.
+ */
 export function isSupportedDriveFile(file: Pick<drive_v3.Schema$File, "mimeType" | "name" | "trashed">): boolean {
   if (file.trashed) return false;
-  if (!file.mimeType) return false;
-  return DRIVE_SUPPORTED_MIMES.includes(file.mimeType);
+  if (file.mimeType === FOLDER_MIME) return false;
+  if (file.mimeType && DRIVE_SUPPORTED_MIMES.includes(file.mimeType)) return true;
+  const name = (file.name ?? "").toLowerCase();
+  return SUPPORTED_EXTS.some((ext) => name.endsWith(ext));
 }
 
 export function toDriveCvFile(f: drive_v3.Schema$File): DriveCvFile {
@@ -118,19 +137,30 @@ async function getFileMeta(drive: drive_v3.Drive, fileId: string, fields: string
 /** List all supported CV files directly inside a folder. */
 export async function listCvFilesInFolder(connectionId: string, folderId: string): Promise<DriveCvFile[]> {
   const drive = await driveClient(connectionId);
-  const mimeQ = DRIVE_SUPPORTED_MIMES.map((m) => `mimeType = '${m}'`).join(" or ");
   const out: DriveCvFile[] = [];
+  let seen = 0;
+  const rejected: string[] = [];
   let pageToken: string | undefined;
   do {
     const page: drive_v3.Schema$FileList = await listPage(drive, {
-      q: `'${escapeQ(folderId)}' in parents and trashed = false and (${mimeQ})`,
+      // Everything except folders. Deciding what is parseable happens in code,
+      // where the file name can be consulted as well as the declared mime type.
+      q: `'${escapeQ(folderId)}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`,
       fields: `nextPageToken, files(${FILE_FIELDS})`,
       pageSize: 1000,
       pageToken,
     });
-    for (const f of page.files ?? []) if (isSupportedDriveFile(f)) out.push(toDriveCvFile(f));
+    for (const f of page.files ?? []) {
+      seen++;
+      if (isSupportedDriveFile(f)) out.push(toDriveCvFile(f));
+      else if (rejected.length < 10) rejected.push(`${f.name ?? "?"} (${f.mimeType ?? "no mime"})`);
+    }
     pageToken = page.nextPageToken ?? undefined;
   } while (pageToken);
+
+  // "Found 0 files" in a folder that visibly has files is the hardest kind of
+  // report to act on, so record what was there and why it was passed over.
+  logger.info({ folderId, seen, supported: out.length, rejected }, "Listed Drive folder");
   return out;
 }
 
