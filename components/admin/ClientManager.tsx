@@ -107,6 +107,7 @@ export function ClientManager() {
         <Alert
           tone="success"
           title={`${handover.client} is ready — copy these now`}
+          onDismiss={() => setHandover(null)}
           action={
             <button type="button" onClick={copyHandover} className="btn-secondary btn-sm">
               {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? "Copied" : "Copy"}
@@ -119,17 +120,15 @@ export function ClientManager() {
           <p className="mt-1 text-xs opacity-80">
             The password is stored hashed and cannot be shown again. Their administrator can add the rest of their team themselves.
           </p>
-          <button type="button" onClick={() => setHandover(null)} className="btn-tertiary btn-sm mt-2 px-0">
-            Dismiss
-          </button>
         </Alert>
       )}
 
       {formError && <Alert tone="danger" title="That did not work">{formError}</Alert>}
 
+      {/* The heading counts rather than restating: the page header above already
+          names this and explains the isolation. */}
       <Section
-        title="Clients"
-        description="Each client has their own candidates, uploads, Drive folder and exports. None of it is visible to the others."
+        title={isLoading ? "Clients" : `${workspaces.length} ${workspaces.length === 1 ? "client" : "clients"}`}
         actions={
           <button type="button" onClick={() => setCreating((v) => !v)} className={creating ? "btn-secondary btn-sm" : "btn-primary btn-sm"}>
             <Plus size={14} /> {creating ? "Cancel" : "New client"}

@@ -9,6 +9,19 @@ import { AuthError, ForbiddenError } from "./errors";
 export const SESSION_COOKIE = "cvp_session";
 const SESSION_TTL_SECONDS = 60 * 60 * 12; // 12 hours
 
+/**
+ * Session payload version.
+ *
+ * Bumped when a claim the application relies on is added, so that tokens issued
+ * before the change are rejected rather than decoded with the new field missing.
+ *
+ * Version 2 added the workspace. Without this, a session signed in before the
+ * deploy would come back as a workspace-less user — which query scoping refuses
+ * — and every page would 403 until the twelve-hour cookie expired. Rejecting the
+ * token instead sends them to the sign-in page, which is a state they recognise.
+ */
+const SESSION_VERSION = 2;
+
 export interface SessionUser {
   id: string;
   email: string;
@@ -43,6 +56,7 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 
 export async function createSessionToken(user: SessionUser): Promise<string> {
   return new SignJWT({
+    v: SESSION_VERSION,
     email: user.email,
     name: user.name,
     role: user.role,
@@ -61,6 +75,8 @@ export async function verifySessionToken(token: string): Promise<SessionUser | n
   try {
     const { payload } = await jwtVerify(token, secretKey(), { issuer: "cv-parser" });
     if (!payload.sub) return null;
+    // Treated exactly like an invalid signature: the caller redirects to sign-in.
+    if (payload.v !== SESSION_VERSION) return null;
     return {
       id: payload.sub,
       email: String(payload.email ?? ""),

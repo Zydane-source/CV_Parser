@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { SignJWT } from "jose";
 import { encryptSecret, decryptSecret, sha256Hex, randomToken } from "@/lib/crypto";
 import { createSessionToken, verifySessionToken } from "@/lib/auth";
 
@@ -35,5 +36,20 @@ describe("session tokens", () => {
     expect(await verifySessionToken(token)).toEqual(user);
     expect(await verifySessionToken(token + "x")).toBeNull();
     expect(await verifySessionToken("garbage")).toBeNull();
+  });
+
+  it("rejects a session issued before the workspace claim existed", async () => {
+    // The regression this guards: a cookie from the previous deploy verifies
+    // fine but carries no wsId, so it decodes to a workspace-less user and every
+    // scoped query refuses it — a 403 on every page for twelve hours. It must be
+    // treated as no session at all, so the user is simply asked to sign in.
+    const stale = await new SignJWT({ email: "a@b.c", name: "A", role: "ADMIN" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setSubject("u1")
+      .setIssuedAt()
+      .setIssuer("cv-parser")
+      .setExpirationTime("12h")
+      .sign(new TextEncoder().encode(process.env.AUTH_SECRET!));
+    expect(await verifySessionToken(stale)).toBeNull();
   });
 });

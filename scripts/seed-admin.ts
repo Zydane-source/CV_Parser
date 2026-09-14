@@ -58,13 +58,21 @@ async function upsert(email: string, password: string, name: string, role: UserR
 async function main() {
   const workspaceId = await defaultWorkspace();
 
-  await upsert(
-    process.env.ADMIN_EMAIL ?? "",
-    process.env.ADMIN_PASSWORD ?? "",
-    process.env.ADMIN_NAME ?? "Admin",
-    "ADMIN",
-    workspaceId,
-  );
+  // Each block is independent so the script can be pointed at a live database to
+  // add just one account. Requiring ADMIN_EMAIL here would mean that adding an
+  // owner to production also reset the existing administrator's password — a
+  // surprise nobody would ask for and few would notice until they were locked out.
+  if (process.env.ADMIN_EMAIL) {
+    await upsert(
+      process.env.ADMIN_EMAIL,
+      process.env.ADMIN_PASSWORD ?? "",
+      process.env.ADMIN_NAME ?? "Admin",
+      "ADMIN",
+      workspaceId,
+    );
+  } else {
+    console.log("· ADMIN_EMAIL not set — no client administrator created or updated.");
+  }
 
   if (process.env.OWNER_EMAIL) {
     await upsert(

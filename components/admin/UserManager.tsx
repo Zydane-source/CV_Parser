@@ -117,6 +117,7 @@ export function UserManager({ workspaceId, canAdd = true }: { workspaceId?: stri
         <Alert
           tone="success"
           title="Account ready — copy these now"
+          onDismiss={() => setHandover(null)}
           action={
             <button type="button" onClick={copyHandover} className="btn-secondary btn-sm">
               {copied ? <Check size={14} /> : <Copy size={14} />} {copied ? "Copied" : "Copy"}
@@ -129,17 +130,16 @@ export function UserManager({ workspaceId, canAdd = true }: { workspaceId?: stri
           <p className="mt-1 text-xs opacity-80">
             The password is stored hashed, so it cannot be shown again. Ask them to change it after signing in.
           </p>
-          <button type="button" onClick={() => setHandover(null)} className="btn-tertiary btn-sm mt-2 px-0">
-            Dismiss
-          </button>
         </Alert>
       )}
 
       {formError && <Alert tone="danger" title="That did not work">{formError}</Alert>}
 
+      {/* The heading counts rather than restating: the page header above (or the
+          "People in X" label, when nested under a client) already names this, so
+          a second "People" was only taking up room. */}
       <Section
-        title="People"
-        description="Who can sign in to this client and what they may do."
+        title={isLoading ? "People" : `${users.length} ${users.length === 1 ? "person" : "people"}`}
         actions={
           canAdd && (
             <button type="button" onClick={() => setAdding((v) => !v)} className={adding ? "btn-secondary btn-sm" : "btn-primary btn-sm"}>
