@@ -142,10 +142,11 @@ const envSchema = z.object({
   DRAIN_BACKGROUND_CHAINS: num(6),
   /**
    * How long one drain call keeps starting new CVs (it stops at 70% of this).
-   * Sized so the slowest realistic tail — a few scanned PDFs queued for OCR —
-   * still finishes inside Vercel's 60s limit.
+   * Sized so the slowest realistic tail still finishes inside Vercel's 60s limit.
+   * Measured in production: a chain's first link, which also starts the OCR
+   * engine, ran to 57.7s on a 36s budget. 30s leaves room for that.
    */
-  DRAIN_TIME_BUDGET_MS: num(36000),
+  DRAIN_TIME_BUDGET_MS: num(30000),
   BLOB_READ_WRITE_TOKEN: str(""),
 
   STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob", "database"]).optional().default("local"),
