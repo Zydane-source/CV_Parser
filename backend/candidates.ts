@@ -75,6 +75,12 @@ export const candidateSelect = {
   statusMessage: true,
   createdAt: true,
   updatedAt: true,
+  /**
+   * How many times this CV has been parsed: every processing run that finished
+   * with a result — the first parse plus each reprocess or changed-file re-sync.
+   * Failed and in-flight runs are not parses, so they are not counted.
+   */
+  _count: { select: { jobs: { where: { status: { in: ["PROCESSED", "NEEDS_REVIEW"] } } } } },
   candidate: {
     select: {
       id: true,
@@ -99,7 +105,13 @@ export const candidateSelect = {
   },
 } satisfies Prisma.CVFileSelect;
 
-export type CandidateRow = Prisma.CVFileGetPayload<{ select: typeof candidateSelect }>;
+type CandidateRecord = Prisma.CVFileGetPayload<{ select: typeof candidateSelect }>;
+export type CandidateRow = Omit<CandidateRecord, "_count"> & { parseCount: number };
+
+/** Prisma's nested `_count` flattened into a field that says what it means. */
+function withParseCount<T extends { _count: { jobs: number } }>({ _count, ...rest }: T): Omit<T, "_count"> & { parseCount: number } {
+  return { ...rest, parseCount: _count.jobs };
+}
 
 export async function listCandidates(scope: WorkspaceScope, f: CandidateFilters) {
   const where = buildCandidateWhere(scope, f);
@@ -123,7 +135,7 @@ export async function listCandidates(scope: WorkspaceScope, f: CandidateFilters)
       take: f.pageSize,
     }),
   ]);
-  return { items, total, page: f.page, pageSize: f.pageSize, pages: Math.max(1, Math.ceil(total / f.pageSize)) };
+  return { items: items.map(withParseCount), total, page: f.page, pageSize: f.pageSize, pages: Math.max(1, Math.ceil(total / f.pageSize)) };
 }
 
 /** Iterate all matching rows in pages (for exports) without loading everything at once. */
@@ -168,7 +180,7 @@ export async function getCandidateDetail(scope: WorkspaceScope, cvFileId: string
     },
   });
   if (!row) throw new NotFoundError("Candidate not found");
-  const { storagePath, ...rest } = row;
+  const { storagePath, ...rest } = withParseCount(row);
   return { ...rest, hasStoredFile: Boolean(storagePath) };
 }
 

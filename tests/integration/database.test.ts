@@ -63,6 +63,24 @@ d("database persistence", () => {
     expect(detail.status).toBe("NEEDS_REVIEW");
   });
 
+  it("counts each finished parse of a CV, but not failed or in-flight runs", async () => {
+    const before = await listCandidates(ws.scope, candidateFiltersSchema.parse({ q: TAG }));
+    expect(before.items.find((i) => i.id === cvFileId)?.parseCount).toBe(1);
+    expect((await getCandidateDetail(ws.scope, cvFileId)).parseCount).toBe(1);
+
+    // A reprocess that succeeded, one that failed, and one still running.
+    await prisma.processingJob.createMany({
+      data: [
+        { cvFileId, status: "PROCESSED", attempts: 1, completedAt: new Date() },
+        { cvFileId, status: "FAILED", attempts: 3, completedAt: new Date() },
+        { cvFileId, status: "PROCESSING", attempts: 1 },
+      ],
+    });
+    const after = await listCandidates(ws.scope, candidateFiltersSchema.parse({ q: TAG }));
+    expect(after.items.find((i) => i.id === cvFileId)?.parseCount).toBe(2);
+    await prisma.processingJob.deleteMany({ where: { cvFileId, NOT: { status: "NEEDS_REVIEW" } } });
+  });
+
   it("search + filters are database-backed and paginated", async () => {
     const byPhone = await listCandidates(ws.scope, candidateFiltersSchema.parse({ q: "98765 43210", pageSize: 5 }));
     expect(byPhone.items.some((i) => i.id === cvFileId)).toBe(true);
