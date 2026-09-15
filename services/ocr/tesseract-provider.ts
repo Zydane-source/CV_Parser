@@ -3,6 +3,16 @@ import { promises as fs } from "node:fs";
 import sharp from "sharp";
 import type { OCROptions, OCRProvider, OCRResult } from "./types";
 import { renderPdfPagesToImages } from "./pdf-render";
+import { withTimeout } from "@/lib/timeout";
+
+/**
+ * Longest a single OCR call may take before it is abandoned.
+ *
+ * A healthy recognition takes one to three seconds. Anything past this is a
+ * wedged worker, and on a serverless platform waiting for it means the whole
+ * invocation — and every CV queued behind it — dies at the platform limit.
+ */
+const RECOGNIZE_TIMEOUT_MS = 25_000;
 
 type TesseractWorker = Awaited<ReturnType<typeof import("tesseract.js").createWorker>>;
 
@@ -28,15 +38,34 @@ export class TesseractOCRProvider implements OCRProvider {
       await this.worker.terminate();
       this.worker = null;
     }
-    await fs.mkdir(this.cachePath, { recursive: true });
+    // A read-only filesystem is fine if the language data is already there.
+    await fs.mkdir(this.cachePath, { recursive: true }).catch(() => undefined);
     const { createWorker } = await import("tesseract.js");
     const langList = langs.split(/[+,]/).map((l) => l.trim()).filter(Boolean);
-    this.worker = await createWorker(langList, 1, {
-      cachePath: this.cachePath,
-      gzip: true,
-    });
+    this.worker = await withTimeout(
+      createWorker(langList, 1, {
+        cachePath: this.cachePath,
+        gzip: true,
+        // Without a handler, an error inside the worker thread surfaces as an
+        // uncaught exception in the host process instead of a rejected promise.
+        errorHandler: (err: unknown) => {
+          this.discardWorker();
+          void err;
+        },
+      }),
+      RECOGNIZE_TIMEOUT_MS,
+      "OCR engine did not start in time",
+    );
     this.workerLangs = langs;
     return this.worker;
+  }
+
+  /** Drop a worker that failed, so the next CV starts a fresh one instead of reusing a broken one. */
+  private discardWorker() {
+    const w = this.worker;
+    this.worker = null;
+    this.workerLangs = "";
+    if (w) void w.terminate().catch(() => undefined);
   }
 
   /** Serialise OCR calls – a Tesseract worker handles one image at a time. */
@@ -58,10 +87,15 @@ export class TesseractOCRProvider implements OCRProvider {
   }
 
   private async recognize(image: Buffer, langs: string): Promise<{ text: string; confidence: number }> {
-    const worker = await this.getWorker(langs);
-    const prepared = await TesseractOCRProvider.preprocess(image);
-    const { data } = await worker.recognize(prepared);
-    return { text: data.text ?? "", confidence: Math.max(0, Math.min(1, (data.confidence ?? 0) / 100)) };
+    try {
+      const worker = await this.getWorker(langs);
+      const prepared = await TesseractOCRProvider.preprocess(image);
+      const { data } = await withTimeout(worker.recognize(prepared), RECOGNIZE_TIMEOUT_MS, "OCR timed out on this page");
+      return { text: data.text ?? "", confidence: Math.max(0, Math.min(1, (data.confidence ?? 0) / 100)) };
+    } catch (err) {
+      this.discardWorker();
+      throw err;
+    }
   }
 
   async extractFromImage(image: Buffer, _mimeType: string, opts: OCROptions): Promise<OCRResult> {

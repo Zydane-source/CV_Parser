@@ -3,57 +3,88 @@
 import { useEffect, useRef, useState } from "react";
 
 /**
- * Drives CV processing from the browser when the deployment has no worker
+ * Keeps CV processing moving from the browser when the deployment has no worker
  * process (PROCESSING_MODE=inline, e.g. on Vercel).
  *
- * Each call to /api/jobs/drain runs inside its own serverless invocation and
- * processes a small number of CVs, so a batch completes as a series of short
- * requests instead of one long-running job. Calls are strictly sequential: a
- * second request while one is in flight would only contend for the same rows.
+ * Normally the server processes in the background by itself (background chains,
+ * see services/processing/background.ts) and this only *nudges*: while CVs are
+ * pending it asks /api/jobs/kick every few seconds to make sure chains are
+ * running. That is cheap and idempotent, and closing the tab changes nothing.
  *
- * A scheduled cron performs the same drain server-side, so closing the tab
- * delays a batch rather than stalling it.
+ * If a deployment cannot run background chains (no CRON_SECRET), it falls back
+ * to draining from the tab, with a few requests in parallel. A failed or timed
+ * out request is retried rather than ending the loop — previously a single 504
+ * stopped all processing until the page was reloaded.
  */
+const NUDGE_EVERY_MS = 8_000;
+const TAB_LANES = 3;
+
 export function useDrainPump({ enabled, pending }: { enabled: boolean; pending: number }) {
   const [draining, setDraining] = useState(false);
-  const inFlight = useRef(false);
-  const stopped = useRef(false);
+  const [background, setBackground] = useState<boolean | null>(null);
+  const running = useRef(false);
+  const mounted = useRef(true);
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
 
   useEffect(() => {
-    stopped.current = false;
+    mounted.current = true;
     return () => {
-      stopped.current = true;
+      mounted.current = false;
     };
   }, []);
 
   useEffect(() => {
-    if (!enabled || pending <= 0 || inFlight.current) return;
+    if (!enabled || pending <= 0 || running.current) return;
+    running.current = true;
+    setDraining(true);
 
-    let cancelled = false;
-    const pump = async () => {
-      inFlight.current = true;
-      setDraining(true);
-      try {
-        // Keep going while this component is mounted and work remains.
-        for (;;) {
-          if (cancelled || stopped.current) break;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+    const tabLane = async () => {
+      let failures = 0;
+      while (mounted.current && failures < 5) {
+        try {
           const res = await fetch("/api/jobs/drain", { method: "POST", credentials: "same-origin" });
-          if (!res.ok) break;
+          if (!res.ok) throw new Error(String(res.status));
+          failures = 0;
           const j = (await res.json()) as { remaining: number; claimed: number };
-          if (j.remaining <= 0 || j.claimed === 0) break;
+          if (j.remaining <= 0 && j.claimed === 0) return;
+        } catch {
+          failures++;
+          await sleep(1500 * failures);
         }
-      } catch {
-        // Network hiccup: the next status refresh re-triggers the pump.
-      } finally {
-        inFlight.current = false;
-        setDraining(false);
       }
     };
-    void pump();
-    return () => {
-      cancelled = true;
-    };
+
+    void (async () => {
+      try {
+        while (mounted.current && pendingRef.current > 0) {
+          let bg = false;
+          try {
+            const res = await fetch("/api/jobs/kick", { method: "POST", credentials: "same-origin" });
+            if (res.ok) {
+              const j = (await res.json()) as { background: boolean; pending: number };
+              bg = j.background;
+              setBackground(bg);
+              if (j.pending <= 0) break;
+            }
+          } catch {
+            // Offline for a moment: try again on the next tick.
+          }
+          if (!bg) {
+            // No background processing on this deployment: do the work from here.
+            await Promise.all(Array.from({ length: TAB_LANES }, tabLane));
+            break;
+          }
+          await sleep(NUDGE_EVERY_MS);
+        }
+      } finally {
+        running.current = false;
+        if (mounted.current) setDraining(false);
+      }
+    })();
   }, [enabled, pending]);
 
-  return { draining };
+  return { draining, background };
 }

@@ -9,6 +9,7 @@ import { getSettings } from "@/lib/settings";
 import { getStorage, buildObjectKey } from "@/services/storage";
 import { validateUploadedFile } from "@/services/cv-parser/file-validation";
 import { enqueueCVFile } from "@/services/processing/enqueue";
+import { kickAfterResponse } from "@/services/processing/background";
 import { workspaceForWrite } from "@/lib/tenant";
 
 export const runtime = "nodejs";
@@ -100,5 +101,8 @@ export const POST = handler(async (req: Request) => {
     }
   }
 
-  return ok({ batchId: batchId ?? null, results, queued: results.filter((r) => r.status === "queued").length });
+  const queued = results.filter((r) => r.status === "queued").length;
+  // Processing starts on the server as soon as this responds, with or without a browser watching.
+  if (queued) kickAfterResponse(req, "upload");
+  return ok({ batchId: batchId ?? null, results, queued });
 });

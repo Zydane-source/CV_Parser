@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { resolveWebhookConnection } from "@/services/google-drive/watch";
 import { triggerDriveSync } from "@/services/google-drive/trigger";
+import { kickAfterResponse } from "@/services/processing/background";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,8 @@ export async function POST(req: Request) {
   // Never fail the webhook on a sync problem: Google retries on a non-2xx, so a
   // broken folder would become a retry storm. triggerDriveSync records the
   // reason against the connection for the UI to show.
-  await triggerDriveSync(conn.id, "webhook");
+  const sync = await triggerDriveSync(conn.id, "webhook");
+  // A CV dropped into the folder is processed straight away, not when someone next opens the app.
+  if (sync.status === "ran" && sync.result.enqueued + sync.result.reprocessed > 0) kickAfterResponse(req, "drive-webhook");
   return new NextResponse(null, { status: 200 });
 }

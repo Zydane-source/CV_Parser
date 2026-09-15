@@ -24,7 +24,7 @@ export function WorkerBanner() {
     revalidateOnFocus: true,
   });
   const inline = data?.mode === "inline";
-  const { draining } = useDrainPump({ enabled: Boolean(inline), pending: data?.pending ?? 0 });
+  const { draining, background } = useDrainPump({ enabled: Boolean(inline), pending: data?.pending ?? 0 });
 
   if (!data) return null;
 
@@ -35,7 +35,11 @@ export function WorkerBanner() {
           <Loader2 size={15} className="animate-spin" />
           <span>
             Processing {data.pending} CV{data.pending === 1 ? "" : "s"}…
-            <span className="ml-1 text-xs text-blue-700">Keep this tab open to finish faster. A scheduled task also picks up anything left behind.</span>
+            <span className="ml-1 text-xs text-blue-700">
+              {background === false
+                ? "Keep this tab open until it finishes."
+                : "This runs on the server — you can close this tab or keep working."}
+            </span>
           </span>
         </div>
       </div>

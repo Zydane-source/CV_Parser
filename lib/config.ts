@@ -119,8 +119,20 @@ const envSchema = z.object({
     .default(() => (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME ? "inline" : "queue")),
   /** Shared secret for the scheduled drain endpoint (Vercel Cron sends it). */
   CRON_SECRET: str(""),
-  /** Max CVs one drain invocation will process, and how long it may run. */
+  /**
+   * No longer read. It capped each drain call at a fixed number of CVs, and the
+   * value 2 left most of every invocation idle. Calls are now bounded by
+   * DRAIN_TIME_BUDGET_MS and run DRAIN_CONCURRENCY CVs at once. Kept in the
+   * schema so deployments that still set it do not fail validation.
+   */
   DRAIN_BATCH_SIZE: num(2),
+  /** Safety cap on CVs per drain call; the time budget is the real limit. */
+  DRAIN_MAX_PER_CALL: num(200),
+  /** CVs processed at the same time within one drain call. */
+  DRAIN_CONCURRENCY: num(4),
+  /** Most background processing chains running at once (each is one invocation at a time). */
+  DRAIN_BACKGROUND_CHAINS: num(3),
+  /** How long one drain call keeps starting new CVs (it stops at 70% of this). */
   DRAIN_TIME_BUDGET_MS: num(45000),
   BLOB_READ_WRITE_TOKEN: str(""),
 

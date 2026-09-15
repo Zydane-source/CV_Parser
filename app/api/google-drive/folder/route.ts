@@ -6,6 +6,7 @@ import { AppError } from "@/lib/errors";
 import { getWorkspaceConnection } from "@/services/google-drive/oauth";
 import { getFolderPath } from "@/services/google-drive/files";
 import { triggerDriveSync } from "@/services/google-drive/trigger";
+import { kickAfterResponse } from "@/services/processing/background";
 import { stopWatch } from "@/services/google-drive/watch";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export const PUT = handler(async (req: Request) => {
 
   // A new folder has no Changes cursor, so this is necessarily a full scan.
   const sync = await triggerDriveSync(conn.id, "folder-changed", { full: true });
+  if (sync.status === "ran" && sync.result.enqueued + sync.result.reprocessed > 0) kickAfterResponse(req, "drive-folder");
 
   return ok({
     folderId: updated.folderId,

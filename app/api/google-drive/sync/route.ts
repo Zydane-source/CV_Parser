@@ -4,6 +4,7 @@ import { AppError } from "@/lib/errors";
 import { randomToken } from "@/lib/crypto";
 import { getWorkspaceConnection } from "@/services/google-drive/oauth";
 import { triggerDriveSync } from "@/services/google-drive/trigger";
+import { kickAfterResponse } from "@/services/processing/background";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,7 +24,7 @@ export const maxDuration = 60;
  * cursor: the reason someone presses this button is usually that they believe
  * the cursor missed something.
  */
-export const POST = handler(async () => {
+export const POST = handler(async (req: Request) => {
   const user = await requireUser();
   const conn = await getWorkspaceConnection(user.workspaceId);
   if (!conn) throw new AppError("Google Drive is not connected", { status: 400, code: "GOOGLE_NOT_CONNECTED" });
@@ -31,6 +32,7 @@ export const POST = handler(async () => {
 
   const batchId = `drive_${randomToken(9)}`;
   const sync = await triggerDriveSync(conn.id, "manual", { full: true, batchId });
+  if (sync.status === "ran" && sync.result.enqueued + sync.result.reprocessed > 0) kickAfterResponse(req, "drive-sync");
 
   if (sync.status === "failed") {
     throw new AppError(`Sync could not be started: ${sync.error}`, { status: 502, code: "DRIVE_SYNC_FAILED" });
