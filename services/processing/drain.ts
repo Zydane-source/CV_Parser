@@ -39,6 +39,13 @@ export interface DrainOptions {
   max?: number;
   timeBudgetMs?: number;
   concurrency?: number;
+  /**
+   * Called once, the moment the call stops taking new CVs because its time is
+   * nearly up — before the CVs already in hand have finished. A background chain
+   * starts its successor here: waiting for the tail first is what let links run
+   * into the platform limit and die without handing over.
+   */
+  onStopClaiming?: () => void;
 }
 
 /**
@@ -115,6 +122,15 @@ export async function drainPendingJobs(opts: DrainOptions = {}): Promise<DrainRe
     return 0;
   });
 
+  let stopNotified = false;
+  const stopClaiming = () => {
+    result.timedOut = true;
+    if (!stopNotified) {
+      stopNotified = true;
+      opts.onStopClaiming?.();
+    }
+  };
+
   // One lane: claim, process, repeat — until the budget or the queue runs out.
   const lane = async () => {
     for (;;) {
@@ -122,7 +138,7 @@ export async function drainPendingJobs(opts: DrainOptions = {}): Promise<DrainRe
       // Stop starting new CVs with room left to finish the ones in hand, rather
       // than be killed mid-write by the platform.
       if (Date.now() - started > budget * 0.7) {
-        result.timedOut = true;
+        stopClaiming();
         return;
       }
       result.claimed++;

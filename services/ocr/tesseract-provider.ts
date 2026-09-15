@@ -27,9 +27,15 @@ export class TesseractOCRProvider implements OCRProvider {
   private workerLangs = "";
   private queue: Promise<unknown> = Promise.resolve();
   private cachePath: string;
+  private pdfScale: number;
 
-  constructor(cachePath: string) {
+  /**
+   * @param pdfScale How large scanned PDF pages are rendered for OCR, relative to
+   *   72 dpi. Rendered pages go to Tesseract as they are — see preprocess.
+   */
+  constructor(cachePath: string, opts: { pdfScale?: number } = {}) {
     this.cachePath = path.resolve(cachePath);
+    this.pdfScale = opts.pdfScale ?? 2;
   }
 
   private async getWorker(langs: string): Promise<TesseractWorker> {
@@ -75,21 +81,31 @@ export class TesseractOCRProvider implements OCRProvider {
     return next;
   }
 
-  /** Normalise the input for OCR: PNG, grayscale, upscaled if small, sharpened. */
-  static async preprocess(image: Buffer): Promise<Buffer> {
+  /**
+   * Normalise the input for OCR: PNG, grayscale, sharpened, and resized.
+   *
+   * Uploaded images are upscaled when small, because a phone screenshot of a CV
+   * really is too coarse to read. Pages we rendered ourselves are not: the
+   * renderer already chose their resolution, and doubling it again only
+   * quadrupled the pixels Tesseract had to scan without adding any detail.
+   */
+  static async preprocess(image: Buffer, opts: { upscale?: boolean } = {}): Promise<Buffer> {
     const meta = await sharp(image).metadata();
     const width = meta.width ?? 0;
     let pipeline = sharp(image).rotate().grayscale().normalise();
-    if (width > 0 && width < 1400) {
+    if ((opts.upscale ?? true) && width > 0 && width < 1400) {
       pipeline = pipeline.resize({ width: Math.min(width * 2, 2400), withoutEnlargement: false });
+    } else if (width > 2600) {
+      // A full-resolution phone photo: past this, more pixels cost time, not accuracy.
+      pipeline = pipeline.resize({ width: 2400 });
     }
     return pipeline.sharpen().png().toBuffer();
   }
 
-  private async recognize(image: Buffer, langs: string): Promise<{ text: string; confidence: number }> {
+  private async recognize(image: Buffer, langs: string, upscale = true): Promise<{ text: string; confidence: number }> {
     try {
       const worker = await this.getWorker(langs);
-      const prepared = await TesseractOCRProvider.preprocess(image);
+      const prepared = await TesseractOCRProvider.preprocess(image, { upscale });
       const { data } = await withTimeout(worker.recognize(prepared), RECOGNIZE_TIMEOUT_MS, "OCR timed out on this page");
       return { text: data.text ?? "", confidence: Math.max(0, Math.min(1, (data.confidence ?? 0) / 100)) };
     } catch (err) {
@@ -106,12 +122,12 @@ export class TesseractOCRProvider implements OCRProvider {
   }
 
   async extractFromScannedPDF(pdf: Buffer, opts: OCROptions): Promise<OCRResult> {
-    const pages = await renderPdfPagesToImages(pdf, opts.maxPages);
+    const pages = await renderPdfPagesToImages(pdf, opts.maxPages, this.pdfScale);
     return this.run(async () => {
       const texts: string[] = [];
       let confSum = 0;
       for (const page of pages) {
-        const r = await this.recognize(page, opts.languages);
+        const r = await this.recognize(page, opts.languages, false);
         texts.push(r.text);
         confSum += r.confidence;
       }

@@ -128,12 +128,24 @@ const envSchema = z.object({
   DRAIN_BATCH_SIZE: num(2),
   /** Safety cap on CVs per drain call; the time budget is the real limit. */
   DRAIN_MAX_PER_CALL: num(200),
-  /** CVs processed at the same time within one drain call. */
-  DRAIN_CONCURRENCY: num(4),
-  /** Most background processing chains running at once (each is one invocation at a time). */
-  DRAIN_BACKGROUND_CHAINS: num(3),
-  /** How long one drain call keeps starting new CVs (it stops at 70% of this). */
-  DRAIN_TIME_BUDGET_MS: num(45000),
+  /**
+   * CVs processed at the same time within one drain call. Kept modest: OCR is
+   * serialised per instance, so extra lanes only help documents that need no OCR
+   * and otherwise queue behind the scanned ones.
+   */
+  DRAIN_CONCURRENCY: num(3),
+  /**
+   * Most background processing chains running at once. This is where real
+   * parallelism comes from — every chain is a separate instance with its own CPU
+   * and OCR engine.
+   */
+  DRAIN_BACKGROUND_CHAINS: num(6),
+  /**
+   * How long one drain call keeps starting new CVs (it stops at 70% of this).
+   * Sized so the slowest realistic tail — a few scanned PDFs queued for OCR —
+   * still finishes inside Vercel's 60s limit.
+   */
+  DRAIN_TIME_BUDGET_MS: num(36000),
   BLOB_READ_WRITE_TOKEN: str(""),
 
   STORAGE_DRIVER: z.enum(["local", "s3", "vercel-blob", "database"]).optional().default("local"),

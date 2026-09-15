@@ -73,9 +73,19 @@ function backgroundLink(req: Request, url: URL) {
   after(async () => {
     try {
       await beat(chainId);
-      const result = await drainPendingJobs({});
+      // Hand over as soon as this link stops taking work, while CVs already in
+      // hand are still finishing, so the chain survives a slow tail.
+      let successor: Promise<boolean> | null = null;
+      const result = await drainPendingJobs({
+        timeBudgetMs: env().DRAIN_TIME_BUDGET_MS,
+        onStopClaiming: () => {
+          successor = beat(chainId).then(() => startLink(origin, chainId, 0));
+        },
+      });
       const nextIdle = result.claimed === 0 ? idle + 1 : 0;
-      if (result.remaining > 0 && nextIdle < 2) {
+      if (successor) {
+        if (!(await successor)) await endChain(chainId);
+      } else if (result.remaining > 0 && nextIdle < 2) {
         await beat(chainId);
         if (!(await startLink(origin, chainId, nextIdle))) await endChain(chainId);
       } else {

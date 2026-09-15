@@ -112,8 +112,20 @@ d("serverless processing", () => {
 
   it("stops starting new CVs when the time budget runs low", async () => {
     await makeJobs(30);
-    const res = await drainPendingJobs({ concurrency: 1, timeBudgetMs: 1_000 });
+    let handoffs = 0;
+    let finishedBeforeHandoff = -1;
+    const res = await drainPendingJobs({
+      concurrency: 3,
+      timeBudgetMs: 1_000,
+      onStopClaiming: () => {
+        handoffs++;
+        finishedBeforeHandoff = processed.length;
+      },
+    });
     expect(res.timedOut).toBe(true);
+    // Signalled exactly once, across all lanes, and before the in-flight CVs finished.
+    expect(handoffs).toBe(1);
+    expect(finishedBeforeHandoff).toBeLessThanOrEqual(res.processed);
     expect(res.processed).toBeGreaterThan(0);
     expect(res.remaining).toBeGreaterThan(0);
     // Leave the rest for the next test's accounting.
@@ -130,15 +142,15 @@ d("serverless processing", () => {
     try {
       const first = await kickBackgroundDrain("https://app.example", "test");
       expect(first.background).toBe(true);
-      expect(first.started).toBe(3); // 50 waiting, cap of 3
+      expect(first.started).toBe(6); // 50 waiting, cap of 6
       expect(calls.every((u) => u.startsWith("https://app.example/api/jobs/drain?background=1&chain="))).toBe(true);
-      expect(await activeChains()).toBe(3);
+      expect(await activeChains()).toBe(6);
 
       // A second kick while those are running adds nothing: this is what makes
       // the browser's every-few-seconds nudge safe.
       const second = await kickBackgroundDrain("https://app.example", "test");
       expect(second.started).toBe(0);
-      expect(calls).toHaveLength(3);
+      expect(calls).toHaveLength(6);
     } finally {
       fetchSpy.mockRestore();
       await prisma.processingJob.updateMany({ where: { status: "PENDING" }, data: { status: "SKIPPED" } });

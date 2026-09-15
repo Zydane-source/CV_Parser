@@ -110,8 +110,9 @@ export async function kickBackgroundDrain(origin: string, reason: string): Promi
   await recoverStaleJobs().catch(() => 0);
   const [pending, active] = await Promise.all([prisma.processingJob.count({ where: { status: "PENDING" } }), activeChains()]);
   const max = Math.max(1, env().DRAIN_BACKGROUND_CHAINS);
-  // Roughly one chain per 10 waiting CVs, never beyond the cap.
-  const wanted = pending === 0 ? 0 : Math.min(max - active, Math.ceil(pending / 10));
+  // Roughly one chain per 8 waiting CVs — about what one link gets through when
+  // the batch is scanned PDFs — never beyond the cap.
+  const wanted = pending === 0 ? 0 : Math.min(max - active, Math.ceil(pending / 8));
   let started = 0;
   for (let i = 0; i < wanted; i++) {
     const chainId = randomUUID();
