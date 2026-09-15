@@ -128,6 +128,8 @@ export async function getWorkspaceDay(workspaceId: string | null, q: z.infer<typ
       uploadedBy: { select: { name: true } },
       workspace: { select: { id: true, name: true } },
       candidate: { select: { candidateName: true } },
+      // Same definition as the Candidates list: runs that finished with a result.
+      _count: { select: { jobs: { where: { status: { in: ["PROCESSED", "NEEDS_REVIEW"] } } } } },
     },
   });
   // Per-client counts for the day, so the all-clients view can say "12 from
@@ -138,5 +140,5 @@ export async function getWorkspaceDay(workspaceId: string | null, q: z.infer<typ
     entry.count++;
     byClient.set(f.workspace.id, entry);
   }
-  return { date: q.date, tz, files, clients: [...byClient.values()].sort((a, b) => b.count - a.count) };
+  return { date: q.date, tz, files: files.map(({ _count, ...f }) => ({ ...f, parseCount: _count.jobs })), clients: [...byClient.values()].sort((a, b) => b.count - a.count) };
 }

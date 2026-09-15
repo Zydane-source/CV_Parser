@@ -195,6 +195,19 @@ d("client activity by date", () => {
   it("a day's list holds exactly the CVs counted for that day, in time order", async () => {
     const day = await getWorkspaceDay(wsId, { date: "2026-03-02", tz: "Asia/Kolkata" });
     expect(day.files.map((f) => f.fileName)).toEqual([`${TAG}-1.pdf`, `${TAG}-4.pdf`]);
+    expect(day.files.map((f) => f.parseCount)).toEqual([0, 0]);
+
+    // Two finished parses and a failed one on the first file: the owner's list counts 2.
+    const first = day.files[0].id;
+    await prisma.processingJob.createMany({
+      data: [
+        { cvFileId: first, status: "PROCESSED", completedAt: new Date() },
+        { cvFileId: first, status: "NEEDS_REVIEW", completedAt: new Date() },
+        { cvFileId: first, status: "FAILED", completedAt: new Date() },
+      ],
+    });
+    const again = await getWorkspaceDay(wsId, { date: "2026-03-02", tz: "Asia/Kolkata" });
+    expect(again.files.find((f) => f.id === first)?.parseCount).toBe(2);
   });
 
   it("the all-clients view includes this client and names it on each file", async () => {

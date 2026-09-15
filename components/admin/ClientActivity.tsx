@@ -7,6 +7,7 @@ import { CalendarDays, ChevronDown, Cloud, FileText, Upload, X } from "lucide-re
 import { fetcher } from "@/lib/client/api";
 import { Badge, EmptyState, Section, Skeleton, TableSkeleton, cx } from "@/components/ui";
 import { StatusBadge } from "@/components/StatusBadge";
+import { ParseCount } from "@/components/ParseCount";
 
 interface DayActivity {
   day: string;
@@ -32,6 +33,7 @@ interface DayResponse {
     uploadedBy: { name: string } | null;
     workspace: { id: string; name: string };
     candidate: { candidateName: string } | null;
+    parseCount: number;
   }>;
   clients: Array<{ workspaceId: string; name: string; count: number }>;
 }
@@ -274,7 +276,12 @@ function DayDetail({ base, allClients, day, tz, onClose }: { base: string; allCl
                   <td className="numeric whitespace-nowrap text-ink-900">{fmtTime(f.createdAt)}</td>
                   {allClients && <td className="whitespace-nowrap font-medium text-ink-900">{f.workspace.name}</td>}
                   <td className="max-w-[16rem] truncate" title={f.fileName}>{f.fileName}</td>
-                  <td className="whitespace-nowrap">{f.candidate?.candidateName ?? <span className="text-ink-400">—</span>}</td>
+                  <td className="whitespace-nowrap">
+                    <span className="inline-flex items-center gap-2">
+                      {f.candidate?.candidateName ?? <span className="text-ink-400">—</span>}
+                      <ParseCount count={f.parseCount} />
+                    </span>
+                  </td>
                   <td className="whitespace-nowrap">
                     {f.sourceType === "GOOGLE_DRIVE" ? (
                       <Badge icon={<Cloud size={12} />}>Drive</Badge>
